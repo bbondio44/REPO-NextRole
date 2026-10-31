@@ -1,0 +1,21 @@
+name: Funcionalidad
+description: Tarea asociada a una HU
+title: "[TASK] "
+body:
+  - type: input
+    id: hu
+    attributes:
+      label: Historia de usuario
+      placeholder: HU-03
+  - type: textarea
+    id: description
+    attributes:
+      label: Descripción
+    validations:
+      required: true
+  - type: textarea
+    id: criteria
+    attributes:
+      label: Criterios de aceptación
+    validations:
+      required: true

@@ -1,0 +1,16 @@
+name: Bug
+description: Reporte de defecto
+title: "[BUG] "
+body:
+  - type: textarea
+    id: steps
+    attributes:
+      label: Pasos para reproducir
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Resultado esperado y actual
+    validations:
+      required: true
