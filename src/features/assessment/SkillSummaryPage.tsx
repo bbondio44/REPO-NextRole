@@ -43,7 +43,7 @@ export function SkillSummaryPage() {
       )}
 
       <Card className="mt-3 flex flex-col items-center gap-2 text-center">
-        <Mascot className="h-20 w-20" />
+        <Mascot className="h-20 w-20" pose="thumbsUp" />
         <p className="text-xs font-bold uppercase tracking-wide text-primary-600">¡Diagnóstico completado!</p>
         <h1 className="text-lg font-extrabold text-neutral-950">Resumen de habilidades</h1>
         <p className="text-sm text-neutral-500">

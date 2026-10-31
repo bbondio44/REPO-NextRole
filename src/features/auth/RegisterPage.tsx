@@ -35,7 +35,7 @@ export function RegisterPage() {
   return (
     <AuthShell eyebrow="Paso 1 de 6">
       <div className="flex flex-col items-center text-center">
-        <Mascot />
+        <Mascot pose="thumbsUp" />
         <h1 className="mt-4 text-2xl font-extrabold">Creá tu cuenta en NextRole</h1>
         <p className="mt-1 text-sm text-white/60">Descubrí tu próximo rol y acelerá tu carrera tecnológica.</p>
       </div>
