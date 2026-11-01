@@ -37,7 +37,7 @@ export function ProfileOnboardingPage() {
             Completá estos 3 datos para que podamos recomendarte tus roles ideales.
           </p>
           <div className="mt-2 flex justify-end">
-            <Mascot className="h-16 w-16" />
+            <Mascot className="h-16 w-16" pose="laptop" />
           </div>
         </div>
 
