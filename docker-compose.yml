@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: nextrole
+      POSTGRES_USER: nextrole
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nextrole_local}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - nextrole-postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U nextrole -d nextrole"]
+      interval: 5s
+      retries: 10
+volumes:
+  nextrole-postgres:

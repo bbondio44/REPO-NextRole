@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: nextrole-api
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/nextrole}
+    username: ${SPRING_DATASOURCE_USERNAME:nextrole}
+    password: ${SPRING_DATASOURCE_PASSWORD:nextrole_local}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  jackson:
+    time-zone: UTC
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: never
+    include-stacktrace: never
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+nextrole:
+  security:
+    jwt-secret: ${JWT_SECRET:}
+    issuer: nextrole-api
+    access-minutes: 15
+    refresh-days: 14
+    cookie-secure: ${COOKIE_SECURE:false}
+    allowed-origins: ${ALLOWED_ORIGINS:http://localhost:5173}
