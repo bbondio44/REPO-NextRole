@@ -64,6 +64,34 @@ src/
   types/          # tipos de dominio (Skill, Role, SkillGapItem, etc.)
 ```
 
+## Ramas del repositorio
+
+El repositorio de NextRole utiliza distintas ramas para conservar las versiones del proyecto y organizar su evolución.
+
+| Rama | Descripción |
+|---|---|
+| `main` | Rama principal. Contiene NextRole V1 consolidada, incluyendo frontend, backend y documentación. |
+| `develop-v2` | Rama de desarrollo de NextRole V2. Se utiliza para incorporar mejoras y nuevas funcionalidades sin afectar la versión estable. |
+| `develop` | Rama de desarrollo utilizada durante la construcción inicial de V1. Se conserva como referencia histórica. |
+| `Frontend-beta` | Rama utilizada para desarrollar y probar las primeras versiones del frontend. |
+| `feature/backend-mvp-core` | Rama utilizada para implementar el backend inicial de NextRole con Spring Boot. |
+| `integration/nextrole-v2` | Rama utilizada para consolidar el frontend actualizado, el backend y la documentación antes de integrarlos en `main` mediante la Pull Request #4. |
+
+### Versiones del proyecto
+
+- **V1 (`main`):** versión consolidada del proyecto, con frontend React, backend Spring Boot, PostgreSQL y documentación.
+- **V2 (`develop-v2`):** evolución del proyecto, enfocada en mejorar la autoevaluación de competencias, la recomendación de roles IT, el motor de matching y el diagnóstico de brechas.
+
+La V2 se desarrollará de manera independiente, utilizando GitHub Spec Kit y Codex para organizar las especificaciones, la planificación y la implementación.
+
+### Flujo de trabajo
+
+Las nuevas funcionalidades de V2 se desarrollarán en ramas específicas creadas a partir de `develop-v2`. Una vez implementadas y validadas, se integrarán mediante Pull Requests.
+
+Cuando V2 alcance una versión estable, sus cambios podrán integrarse en `main`, conservando el historial de versiones anteriores.
+
+
+
 ## Pendiente / simplificaciones conocidas
 
 - Branding: se usa un logo y una mascota placeholder en SVG (los assets reales
