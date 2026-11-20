@@ -81,7 +81,7 @@ export function RoleDetailPage() {
         </div>
 
         <Card className="mt-5 flex items-center gap-3 bg-primary-50">
-          <Mascot className="h-10 w-10 shrink-0" />
+          <Mascot className="h-10 w-10 shrink-0" pose="thinking" />
           <div>
             <p className="text-xs font-bold uppercase tracking-wide text-primary-600">Tip motivacional</p>
             <p className="text-sm text-neutral-600">

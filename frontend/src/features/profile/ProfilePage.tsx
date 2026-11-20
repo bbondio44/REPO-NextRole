@@ -21,7 +21,7 @@ export function ProfilePage() {
   return (
     <AppShell title="Perfil">
       <div className="flex flex-col items-center text-center">
-        <Mascot className="h-20 w-20" />
+        <Mascot className="h-20 w-20" pose="cool" />
         <h1 className="mt-2 text-lg font-extrabold text-neutral-950">
           {account?.firstName} {account?.lastName}
         </h1>
