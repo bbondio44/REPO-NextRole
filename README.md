@@ -1,5 +1,7 @@
 # NextRole — Frontend
 
+Para iniciar el entorno completo de desarrollo con PostgreSQL, Spring Boot y React/Vite, seguí [la guía de Docker Compose para NextRole V2](docs/V2/entorno-docker-desarrollo.md).
+
 Primera versión funcional del frontend de **NextRole** ("Potencia tu futuro IT"),
 construida a partir del Workspace del proyecto (branding, arquitectura y modelo
 de datos) y de los wireframes de Figma (`wireframe_AF1.png` a `AF5.png` en la

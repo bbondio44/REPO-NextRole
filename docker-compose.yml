@@ -2,16 +2,67 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: nextrole
-      POSTGRES_USER: nextrole
+      POSTGRES_DB: ${POSTGRES_DB:-nextrole}
+      POSTGRES_USER: ${POSTGRES_USER:-nextrole}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-nextrole_local}
-    ports:
-      - "127.0.0.1:5432:5432"
     volumes:
       - nextrole-postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U nextrole -d nextrole"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-nextrole} -d ${POSTGRES_DB:-nextrole}"]
       interval: 5s
+      timeout: 3s
       retries: 10
+      start_period: 5s
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?Copy .env.example to .env and set JWT_SECRET}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:5173}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      PORT: 8080
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8090}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      VITE_HOST: 0.0.0.0
+      VITE_API_PROXY_TARGET: http://backend:8080
+    ports:
+      - "127.0.0.1:${FRONTEND_PORT:-5173}:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend-node-modules:/app/node_modules
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:5173/').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped
+
 volumes:
   nextrole-postgres:
+  frontend-node-modules:
