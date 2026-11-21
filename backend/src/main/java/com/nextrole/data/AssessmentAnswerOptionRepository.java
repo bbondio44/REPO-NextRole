@@ -9,4 +9,7 @@ public interface AssessmentAnswerOptionRepository
         extends JpaRepository<AssessmentAnswerOption, AssessmentAnswerOptionId> {
     List<AssessmentAnswerOption> findByIdQuestionnaireVersionIdAndIdCompetencyCodeOrderByIdLevel(
             UUID questionnaireVersionId, String competencyCode);
+
+    List<AssessmentAnswerOption> findByIdQuestionnaireVersionIdOrderByIdCompetencyCodeAscIdLevelAsc(
+            UUID questionnaireVersionId);
 }

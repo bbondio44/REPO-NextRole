@@ -7,6 +7,9 @@ import {
 } from '@/services/mockData'
 import { type Account, storage } from '@/services/storage'
 import type {
+  AssessmentAttempt,
+  AssessmentCatalog,
+  AssessmentSavedAnswer,
   AcademicProfile,
   KnowledgeLevel,
   LearningResource,
@@ -15,6 +18,72 @@ import type {
   SkillGapItem,
   SkillGapStatus,
 } from '@/types/domain'
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? ''
+let accessToken: string | null = null
+let refreshInFlight: Promise<Account | null> | null = null
+
+interface BackendAccount {
+  firstName: string
+  lastName: string
+  email: string
+}
+
+interface BackendAuthResponse {
+  accessToken: string
+  user: BackendAccount
+}
+
+async function responseError(response: Response): Promise<Error> {
+  const body = await response.json().catch(() => null) as { message?: string; code?: string } | null
+  return new Error(body?.message ?? body?.code ?? `La API respondió ${response.status}`)
+}
+
+async function acceptAuthResponse(response: Response): Promise<Account> {
+  if (!response.ok) throw await responseError(response)
+  const auth = await response.json() as BackendAuthResponse
+  accessToken = auth.accessToken
+  const account = { firstName: auth.user.firstName, lastName: auth.user.lastName, email: auth.user.email }
+  storage.setAccount(account)
+  return account
+}
+
+async function refreshSession(): Promise<Account | null> {
+  if (refreshInFlight) return refreshInFlight
+  refreshInFlight = (async () => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/refresh`, {
+      method: 'POST',
+      credentials: 'include',
+    })
+    if (response.status === 401) {
+      accessToken = null
+      return null
+    }
+    return acceptAuthResponse(response)
+  })().finally(() => { refreshInFlight = null })
+  return refreshInFlight
+}
+
+async function authenticatedFetch(path: string, init: RequestInit = {}): Promise<Response> {
+  if (!accessToken) await refreshSession()
+  if (!accessToken) throw new Error('Iniciá sesión para continuar')
+
+  const send = () => {
+    const headers = new Headers(init.headers)
+    headers.set('Authorization', `Bearer ${accessToken}`)
+    return fetch(`${API_BASE_URL}${path}`, { ...init, headers, credentials: 'include' })
+  }
+
+  let response = await send()
+  if (response.status === 401) {
+    accessToken = null
+    await refreshSession()
+    if (!accessToken) throw await responseError(response)
+    response = await send()
+  }
+  if (!response.ok) throw await responseError(response)
+  return response
+}
 
 /**
  * Esta capa imita los endpoints REST descriptos en la "Guía de Desarrollo
@@ -39,24 +108,86 @@ export interface RegisterInput {
 }
 
 export async function registerAccount(input: RegisterInput): Promise<Account> {
-  const account: Account = { firstName: input.firstName, lastName: input.lastName, email: input.email }
-  storage.setAccount(account)
-  return delay(account)
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({
+      firstName: input.firstName,
+      lastName: input.lastName,
+      email: input.email,
+      password: input.password,
+      confirmPassword: input.password,
+      acceptTerms: true,
+    }),
+  })
+  return acceptAuthResponse(response)
 }
 
-export async function login(email: string, _password: string): Promise<Account> {
-  const existing = storage.getSession().account
-  const account = existing ?? { firstName: 'Estudiante', lastName: '', email }
-  storage.setAccount(account)
-  return delay(account)
+export async function login(email: string, password: string): Promise<Account> {
+  const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify({ email, password }),
+  })
+  return acceptAuthResponse(response)
 }
 
 export async function getCurrentAccount(): Promise<Account | null> {
-  return delay(storage.getSession().account)
+  if (accessToken) return storage.getSession().account
+  return refreshSession()
 }
 
-export function logout() {
-  storage.clear()
+export async function logout() {
+  try {
+    await fetch(`${API_BASE_URL}/api/v1/auth/logout`, { method: 'POST', credentials: 'include' })
+  } catch {
+    // Clear local state even if the backend is temporarily unavailable.
+  } finally {
+    accessToken = null
+    storage.clear()
+  }
+}
+
+export async function getAssessmentCatalog(): Promise<AssessmentCatalog> {
+  const response = await authenticatedFetch('/api/v2/assessment-catalog/current')
+  return response.json() as Promise<AssessmentCatalog>
+}
+
+export async function getCurrentAssessmentAttempt(): Promise<AssessmentAttempt | null> {
+  const response = await authenticatedFetch('/api/v2/assessment-attempts/current')
+  if (response.status === 204) return null
+  return response.json() as Promise<AssessmentAttempt>
+}
+
+export async function createAssessmentAttempt(): Promise<AssessmentAttempt> {
+  const response = await authenticatedFetch('/api/v2/assessment-attempts', { method: 'POST' })
+  return response.json() as Promise<AssessmentAttempt>
+}
+
+export async function getOrStartAssessment(): Promise<AssessmentAttempt> {
+  const existing = await getCurrentAssessmentAttempt()
+  if (existing) return existing
+  await getAssessmentCatalog()
+  return createAssessmentAttempt()
+}
+
+export async function getAssessmentAttempt(attemptId: string): Promise<AssessmentAttempt> {
+  const response = await authenticatedFetch(`/api/v2/assessment-attempts/${encodeURIComponent(attemptId)}`)
+  return response.json() as Promise<AssessmentAttempt>
+}
+
+export async function saveAssessmentAnswer(
+  attemptId: string,
+  competencyCode: string,
+  level: KnowledgeLevel,
+): Promise<AssessmentSavedAnswer> {
+  const response = await authenticatedFetch(
+    `/api/v2/assessment-attempts/${encodeURIComponent(attemptId)}/answers/${encodeURIComponent(competencyCode)}`,
+    { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ level }) },
+  )
+  return response.json() as Promise<AssessmentSavedAnswer>
 }
 
 // ---------- Perfil académico ----------

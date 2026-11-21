@@ -24,5 +24,12 @@ public class AssessmentQuestionnaireVersion {
     @Column(name = "is_current", nullable = false)
     public boolean current;
 
+    public AssessmentQuestionnaireVersion(UUID id, String versionCode, Instant publishedAt, boolean current) {
+        this.id = id;
+        this.versionCode = versionCode;
+        this.publishedAt = publishedAt;
+        this.current = current;
+    }
+
     protected AssessmentQuestionnaireVersion() {}
 }

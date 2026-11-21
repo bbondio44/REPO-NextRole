@@ -23,5 +23,12 @@ public class AssessmentAnswer {
     @Column(name = "updated_at", nullable = false)
     public Instant updatedAt;
 
+    public AssessmentAnswer(AssessmentAnswerId id, UUID questionnaireVersionId, short level, Instant updatedAt) {
+        this.id = id;
+        this.questionnaireVersionId = questionnaireVersionId;
+        this.level = level;
+        this.updatedAt = updatedAt;
+    }
+
     protected AssessmentAnswer() {}
 }

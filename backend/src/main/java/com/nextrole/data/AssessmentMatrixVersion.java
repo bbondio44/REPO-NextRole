@@ -24,5 +24,12 @@ public class AssessmentMatrixVersion {
     @Column(name = "is_current", nullable = false)
     public boolean current;
 
+    public AssessmentMatrixVersion(UUID id, String versionCode, Instant publishedAt, boolean current) {
+        this.id = id;
+        this.versionCode = versionCode;
+        this.publishedAt = publishedAt;
+        this.current = current;
+    }
+
     protected AssessmentMatrixVersion() {}
 }

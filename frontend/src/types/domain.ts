@@ -1,5 +1,52 @@
 export type KnowledgeLevel = 0 | 1 | 2 | 3 | 4
 
+export interface AssessmentAnswerOption {
+  level: KnowledgeLevel
+  description: string
+}
+
+export interface AssessmentQuestion {
+  competencyCode: string
+  position: number
+  title: string
+  question: string
+  options: AssessmentAnswerOption[]
+}
+
+export interface AssessmentCatalog {
+  questionnaireVersion: string
+  questions: AssessmentQuestion[]
+}
+
+export interface AssessmentAttempt {
+  attemptId: string
+  status: 'DRAFT' | 'COMPLETED' | 'DISCARDED'
+  createdAt: string
+  completedAt: string | null
+  questionnaireVersion: string
+  matrixVersion: string
+  answeredCount: number
+  totalQuestions: number
+  answers: Record<string, KnowledgeLevel>
+  questions: AssessmentQuestion[]
+  results?: AssessmentRoleResult[]
+}
+
+export interface AssessmentRoleResult {
+  roleId: string
+  scoreNumerator: string
+  scoreDenominator: string
+  displayPercentage: string
+  rankPosition: number
+}
+
+export interface AssessmentSavedAnswer {
+  competencyCode: string
+  level: KnowledgeLevel
+  answeredCount: number
+  totalQuestions: number
+}
+
 export const KNOWLEDGE_LEVEL_LABEL: Record<KnowledgeLevel, string> = {
   0: 'Sin conocimientos',
   1: 'Inicial',

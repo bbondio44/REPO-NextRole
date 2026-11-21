@@ -45,5 +45,15 @@ public class AssessmentAttempt {
     @Column(name = "source_attempt_id")
     public UUID sourceAttemptId;
 
+    public AssessmentAttempt(UUID id, UUID userId, AssessmentAttemptStatus status,
+                             UUID questionnaireVersionId, UUID matrixVersionId, Instant createdAt) {
+        this.id = id;
+        this.userId = userId;
+        this.status = status;
+        this.questionnaireVersionId = questionnaireVersionId;
+        this.matrixVersionId = matrixVersionId;
+        this.createdAt = createdAt;
+    }
+
     protected AssessmentAttempt() {}
 }

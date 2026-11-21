@@ -1,113 +1,97 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
 
 import { AppShell } from '@/components/layout/AppShell'
-import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { LevelPicker } from '@/components/ui/LevelPicker'
 import { ProgressBar } from '@/components/ui/ProgressBar'
-import { getSkillCatalog, getSkillLevels, setSkillLevel } from '@/services/api'
-import type { KnowledgeLevel } from '@/types/domain'
+import { getOrStartAssessment, saveAssessmentAnswer } from '@/services/api'
+import type { AssessmentAttempt, KnowledgeLevel } from '@/types/domain'
+
+const ATTEMPT_QUERY_KEY = ['assessment-attempt']
 
 export function SkillAssessmentPage() {
-  const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [activeCategory, setActiveCategory] = useState<string>('all')
-  const [pending, setPending] = useState(false)
+  const [savingCompetency, setSavingCompetency] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+  const { data: attempt, isLoading, isError, error } = useQuery({
+    queryKey: ATTEMPT_QUERY_KEY,
+    queryFn: getOrStartAssessment,
+  })
 
-  const { data: catalog } = useQuery({ queryKey: ['skill-catalog'], queryFn: getSkillCatalog })
-  const { data: levels } = useQuery({ queryKey: ['skill-levels'], queryFn: getSkillLevels })
-
-  const totalSkills = catalog?.skills.length ?? 0
-  const evaluatedCount = Object.keys(levels ?? {}).length
-  const pct = totalSkills ? Math.round((evaluatedCount / totalSkills) * 100) : 0
-
-  const visibleSkills = useMemo(() => {
-    if (!catalog) return []
-    if (activeCategory === 'all') return catalog.skills
-    return catalog.skills.filter((s) => s.categoryId === activeCategory)
-  }, [catalog, activeCategory])
-
-  async function handleSelect(skillId: string, level: KnowledgeLevel) {
-    setPending(true)
-    await setSkillLevel(skillId, level)
-    await queryClient.invalidateQueries({ queryKey: ['skill-levels'] })
-    setPending(false)
+  async function handleSelect(competencyCode: string, level: KnowledgeLevel) {
+    if (!attempt || attempt.status !== 'DRAFT') return
+    setSavingCompetency(competencyCode)
+    setSaveError(null)
+    try {
+      const saved = await saveAssessmentAnswer(attempt.attemptId, competencyCode, level)
+      queryClient.setQueryData<AssessmentAttempt>(ATTEMPT_QUERY_KEY, (current) => {
+        if (!current) return current
+        return {
+          ...current,
+          answers: { ...current.answers, [saved.competencyCode]: saved.level },
+          answeredCount: saved.answeredCount,
+        }
+      })
+    } catch {
+      setSaveError('No pudimos guardar tu respuesta. Revisá tu conexión e intentá de nuevo.')
+    } finally {
+      setSavingCompetency(null)
+    }
   }
 
-  return (
-    <AppShell title="Habilidades" subtitle="Autoevaluación de habilidades" showBack>
-      <div className="flex items-center justify-between text-xs font-semibold text-primary-600">
-        <span>ETAPA 3 DE 6</span>
-        <span className="text-neutral-400">
-          {evaluatedCount} de {totalSkills} evaluadas ({pct}%)
-        </span>
-      </div>
-      <div className="mt-2">
-        <ProgressBar value={pct} />
-      </div>
-      <div className="mt-2">
-        <Badge tone="success">Perfil base listo</Badge>
-      </div>
+  if (isLoading) {
+    return <AppShell title="Autoevaluación técnica" showBack><p role="status">Cargando tu evaluación…</p></AppShell>
+  }
 
-      <h1 className="mt-4 text-lg font-extrabold text-neutral-950">Autoevaluación de habilidades</h1>
-      <p className="mt-1 text-sm text-neutral-500">
-        Calificá tu nivel con honestidad para detectar brechas reales. Si no evaluás una competencia, no la vamos a
-        contar como "sin conocimientos" — simplemente la dejamos pendiente.
+  if (isError || !attempt) {
+    return (
+      <AppShell title="Autoevaluación técnica" showBack>
+        <p role="alert">{error instanceof Error ? error.message : 'No pudimos cargar tu evaluación.'}</p>
+      </AppShell>
+    )
+  }
+
+  const progress = attempt.totalQuestions > 0 ? (attempt.answeredCount / attempt.totalQuestions) * 100 : 0
+
+  return (
+    <AppShell title="Autoevaluación técnica" subtitle={`Cuestionario ${attempt.questionnaireVersion}`} showBack>
+      <div className="flex items-center justify-between text-xs font-semibold text-primary-700">
+        <span>{attempt.answeredCount} de {attempt.totalQuestions} respondidas</span>
+        <span>{Math.round(progress)}%</span>
+      </div>
+      <div className="mt-2"><ProgressBar value={progress} /></div>
+      <p className="mt-3 text-sm text-neutral-600">
+        Declarás tu nivel en cada competencia. El nivel 0 es una respuesta válida; podés cambiar tus respuestas
+        mientras esta evaluación esté en curso.
       </p>
 
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-        <CategoryChip label="Todas" active={activeCategory === 'all'} onClick={() => setActiveCategory('all')} />
-        {catalog?.categories.map((cat) => (
-          <CategoryChip
-            key={cat.id}
-            label={cat.name}
-            active={activeCategory === cat.id}
-            onClick={() => setActiveCategory(cat.id)}
-          />
+      {saveError && <p className="mt-3 text-sm text-red-600" role="alert">{saveError}</p>}
+
+      <div className="mt-4 space-y-3">
+        {attempt.questions.map((question) => (
+          <Card key={question.competencyCode}>
+            <p className="text-xs font-semibold text-primary-700">Competencia {question.position} de {attempt.totalQuestions}</p>
+            <h2 className="mt-1 text-sm font-bold text-neutral-950">{question.title}</h2>
+            <p className="mt-2 text-sm leading-relaxed text-neutral-700">{question.question}</p>
+            <div className="mt-3">
+              <LevelPicker
+                value={attempt.answers[question.competencyCode] ?? null}
+                options={question.options}
+                onChange={(level) => handleSelect(question.competencyCode, level)}
+              />
+            </div>
+            {savingCompetency === question.competencyCode && <p className="mt-2 text-xs text-neutral-500" role="status">Guardando…</p>}
+          </Card>
         ))}
       </div>
 
-      <div className="mt-4 space-y-3">
-        {visibleSkills.map((skill) => {
-          const current = levels?.[skill.id] ?? null
-          return (
-            <Card key={skill.id}>
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <p className="text-sm font-semibold text-neutral-900">{skill.name}</p>
-                  <p className="text-xs text-neutral-400">{skill.description}</p>
-                </div>
-                {current !== null && <Badge tone="primary">Evaluado</Badge>}
-              </div>
-              <div className="mt-3">
-                <LevelPicker value={current} onChange={(level) => handleSelect(skill.id, level)} />
-              </div>
-            </Card>
-          )
-        })}
-      </div>
-
       <div className="mt-6">
-        <Button fullWidth disabled={pending || evaluatedCount === 0} onClick={() => navigate('/habilidades/resumen')}>
-          Ver mi diagnóstico →
+        <Button fullWidth disabled={attempt.status !== 'COMPLETED'}>
+          Ver resultados cuando finalices las 31 preguntas
         </Button>
       </div>
     </AppShell>
-  )
-}
-
-function CategoryChip({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
-  return (
-    <button
-      onClick={onClick}
-      className={`shrink-0 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition-colors ${
-        active ? 'border-primary-500 bg-primary-500 text-white' : 'border-neutral-200 bg-white text-neutral-500'
-      }`}
-    >
-      {label}
-    </button>
   )
 }
