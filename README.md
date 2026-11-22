@@ -1,29 +1,51 @@
-# Guía de GitHub Spec Kit y Codex CLI — NextRole V2
+# NextRole — Potencia tu futuro IT
 
-Esta guía explica cómo utilizar **GitHub Spec Kit junto con Codex CLI** para organizar el desarrollo de NextRole V2.
+Proyecto universitario de desarrollo de software orientado a la creación de una plataforma de orientación profesional para personas interesadas en iniciar o desarrollar su carrera en el sector tecnológico.
 
-Su objetivo es facilitar el **trabajo en equipo y el desarrollo consistente de funcionalidades**, permitiendo que todos los integrantes compartan requisitos, decisiones técnicas y criterios de aceptación. Así se reducen las contradicciones, el trabajo duplicado y los problemas al integrar cambios realizados por diferentes desarrolladores.
+## Objetivo
 
-## 1. ¿Qué es GitHub Spec Kit?
+Desarrollar una plataforma que permita evaluar competencias técnicas, identificar roles IT compatibles con el perfil del usuario y recomendar recursos de formación para reducir las brechas de conocimientos.
 
-**GitHub Spec Kit** es una herramienta que permite aplicar el enfoque de **desarrollo guiado por especificaciones (SDD)** con asistentes de inteligencia artificial como Codex.
+## Funcionalidades principales
 
-En lugar de pedirle directamente a la IA que programe una funcionalidad, Spec Kit organiza el desarrollo en etapas documentadas:
+La plataforma contempla:
 
-1. **Constitución:** establece las reglas generales que deben respetarse en el proyecto.
-2. **Especificación (`spec.md`):** define qué debe hacer la funcionalidad y cuáles son sus requisitos.
-3. **Aclaraciones:** resuelve dudas y decisiones pendientes.
-4. **Plan (`plan.md`):** establece cómo se implementará técnicamente.
-5. **Tareas (`tasks.md`):** divide el trabajo en pasos concretos y verificables.
-6. **Implementación:** Codex desarrolla la funcionalidad siguiendo los documentos aprobados.
-7. **Verificación:** se comprueba que el resultado coincida con lo especificado.
+- Registro e inicio de sesión.
+- Gestión del perfil académico y técnico.
+- Autoevaluación de competencias.
+- Recomendación de roles IT según afinidad.
+- Exploración de roles y sus requisitos.
+- Identificación de brechas de competencias.
+- Recomendación de recursos de formación.
 
-**Spec Kit organiza y documenta el proceso; Codex ayuda a ejecutarlo.** El equipo sigue siendo responsable de revisar y aprobar las decisiones.
+## Versiones del proyecto
 
-### Ejemplo en NextRole
+**NextRole V1:** primera versión funcional integrada de la plataforma, con frontend, backend y base de datos. Se conserva como versión consolidada en la rama `main`.
 
-Para desarrollar el sistema de autoevaluación y recomendación de roles IT, primero se definieron las competencias evaluables, los niveles de conocimiento, las reglas de afinidad y los criterios de aceptación.
+**NextRole V2:** evolución del proyecto enfocada en mejorar la autoevaluación de competencias, el motor de matching, la recomendación de roles IT y la experiencia de usuario. Su desarrollo se realiza en la rama `develop-v2`.
 
-Estas decisiones quedaron documentadas en `specs/001-autoevaluacion-matching/`, permitiendo implementar, probar y mejorar la funcionalidad sin redefinir sus reglas en cada sesión.
+## Ramas del repositorio
 
-De esta manera, distintos integrantes pueden continuar el desarrollo utilizando una misma referencia, evitando implementaciones inconsistentes.
+El repositorio utiliza distintas ramas para conservar las versiones del proyecto y organizar su evolución.
+
+| Rama | Descripción |
+|---|---|
+| `main` | Rama principal que contiene NextRole V1 consolidada. |
+| `develop-v2` | Rama base de desarrollo e integración de NextRole V2. |
+| `develop` | Rama histórica utilizada durante el desarrollo inicial de V1. |
+| `Frontend-beta` | Rama utilizada para desarrollar y probar las primeras versiones del frontend. |
+| `feature/backend-mvp-core` | Rama utilizada para implementar el backend inicial con Spring Boot. |
+| `integration/nextrole-v2` | Rama histórica utilizada para integrar frontend, backend y documentación antes de consolidar V1. |
+
+Las nuevas funcionalidades de V2 se desarrollan tomando `develop-v2` como referencia y se integran mediante Pull Requests una vez implementadas y validadas.
+
+## Guías de trabajo
+
+Para facilitar la colaboración y mantener un desarrollo consistente, NextRole V2 establece procedimientos compartidos para el uso de Git y el desarrollo de funcionalidades mediante inteligencia artificial.
+
+- [Cómo trabajar con Git y GitHub](docs/GUIA_GIT_NEXTROLE.md)
+- [Guía para usar GitHub Spec Kit con una IA](docs/GUIA_SDD_NEXTROLE.md)
+
+---
+
+**NextRole — Potencia tu futuro IT**
