@@ -4,10 +4,11 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { SkillAssessmentPage } from '@/features/assessment/SkillAssessmentPage'
-import { getOrStartAssessment, saveAssessmentAnswer } from '@/services/api'
+import { completeAssessmentAttempt, getOrStartAssessment, saveAssessmentAnswer } from '@/services/api'
 import type { AssessmentAttempt, AssessmentQuestion } from '@/types/domain'
 
 vi.mock('@/services/api', () => ({
+  completeAssessmentAttempt: vi.fn(),
   getOrStartAssessment: vi.fn(),
   saveAssessmentAnswer: vi.fn(),
 }))
@@ -50,6 +51,13 @@ describe('SkillAssessmentPage V2', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     vi.mocked(getOrStartAssessment).mockResolvedValue(attempt())
+    vi.mocked(completeAssessmentAttempt).mockImplementation(async (attemptId) => ({
+      ...attempt(),
+      attemptId,
+      status: 'COMPLETED',
+      completedAt: '2026-11-21T12:00:00Z',
+      results: [],
+    }))
     vi.mocked(saveAssessmentAnswer).mockImplementation(async (_attemptId, competencyCode, level) => ({
       competencyCode,
       level,
@@ -87,6 +95,17 @@ describe('SkillAssessmentPage V2', () => {
   it('keeps results navigation disabled while the attempt is a draft', async () => {
     renderPage()
 
-    expect(await screen.findByRole('button', { name: /Ver resultados/ })).toBeDisabled()
+    expect(await screen.findByRole('button', { name: /Finalizar evaluación/ })).toBeDisabled()
+  })
+
+  it('submits a complete assessment for persisted matching results', async () => {
+    const answers = Object.fromEntries(questions.map((question) => [question.competencyCode, 2])) as AssessmentAttempt['answers']
+    vi.mocked(getOrStartAssessment).mockResolvedValue(attempt(answers))
+    renderPage()
+
+    const submit = await screen.findByRole('button', { name: /Finalizar evaluación/ })
+    expect(submit).toBeEnabled()
+    fireEvent.click(submit)
+    await waitFor(() => expect(completeAssessmentAttempt).toHaveBeenCalledWith('attempt-1'))
   })
 })

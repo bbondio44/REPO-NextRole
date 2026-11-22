@@ -43,4 +43,31 @@ describe('assessment API client', () => {
     expect(new Headers((assessmentRequest[1] as RequestInit).headers).get('Authorization')).toBe('Bearer test-access-token')
     expect(JSON.parse((assessmentRequest[1] as RequestInit).body as string)).toEqual({ level: 0 })
   })
+
+  it('retrieves persisted completion results from the V2 endpoint without changing server rank order', async () => {
+    const completed = {
+      attemptId: 'attempt-2',
+      status: 'COMPLETED',
+      results: [
+        { roleId: 'qa-jr', scoreNumerator: '50', scoreDenominator: '1', displayPercentage: '50.0', rankPosition: 1 },
+        { roleId: 'backend-dev-jr', scoreNumerator: '95', scoreDenominator: '1', displayPercentage: '95.0', rankPosition: 2 },
+      ],
+    }
+    fetchMock.mockResolvedValueOnce(new Response(JSON.stringify({
+      accessToken: 'test-access-token',
+      user: { firstName: 'Ada', lastName: 'Prueba', email: 'ada@example.test' },
+    }), { status: 200, headers: { 'Content-Type': 'application/json' } }))
+      .mockResolvedValueOnce(new Response(JSON.stringify(completed), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      }))
+
+    await api.login('ada@example.test', 'password')
+    const result = await api.completeAssessmentAttempt('attempt-2')
+
+    expect(fetchMock.mock.calls[1][0]).toBe('/api/v2/assessment-attempts/attempt-2/complete')
+    expect((fetchMock.mock.calls[1][1] as RequestInit).method).toBe('POST')
+    expect(result.results?.map((role) => role.rankPosition)).toEqual([1, 2])
+    expect(result.results?.[0].roleId).toBe('qa-jr')
+  })
 })

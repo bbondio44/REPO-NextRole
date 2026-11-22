@@ -2,7 +2,7 @@
 
 **Feature Branch**: [001-autoevaluacion-matching]
 **Created**: 2026-11-20
-**Status**: Draft — las decisiones funcionales aprobadas están incorporadas. Los niveles esperados admitidos son 1–4; la matriz V2 vigente conserva sus asignaciones aprobadas de 1–3.
+**Status**: Approved — las decisiones funcionales aprobadas están incorporadas. Los niveles esperados admitidos son 1–4; la matriz V2 vigente conserva sus asignaciones aprobadas de 1–3.
 
 ## User Scenarios & Testing
 

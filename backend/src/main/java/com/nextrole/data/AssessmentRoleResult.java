@@ -26,5 +26,14 @@ public class AssessmentRoleResult {
     @Column(name = "rank_position", nullable = false)
     public short rankPosition;
 
+    public AssessmentRoleResult(AssessmentRoleResultId id, BigInteger scoreNumerator, BigInteger scoreDenominator,
+                                BigDecimal displayPercentage, short rankPosition) {
+        this.id = id;
+        this.scoreNumerator = scoreNumerator;
+        this.scoreDenominator = scoreDenominator;
+        this.displayPercentage = displayPercentage;
+        this.rankPosition = rankPosition;
+    }
+
     protected AssessmentRoleResult() {}
 }

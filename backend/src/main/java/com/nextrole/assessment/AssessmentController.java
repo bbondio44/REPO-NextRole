@@ -15,12 +15,14 @@ public class AssessmentController {
     private final AssessmentCatalogService catalog;
     private final AssessmentAttemptService attempts;
     private final AssessmentAnswerService answers;
+    private final AssessmentCompletionService completion;
 
     public AssessmentController(AssessmentCatalogService catalog, AssessmentAttemptService attempts,
-                                AssessmentAnswerService answers) {
+                                AssessmentAnswerService answers, AssessmentCompletionService completion) {
         this.catalog = catalog;
         this.attempts = attempts;
         this.answers = answers;
+        this.completion = completion;
     }
 
     @GetMapping("/api/v2/assessment-catalog/current")
@@ -50,5 +52,10 @@ public class AssessmentController {
     public AnswerSavedDto saveAnswer(@PathVariable UUID attemptId, @PathVariable String competencyCode,
                                      @Valid @RequestBody SaveAnswerRequest request) {
         return answers.save(CurrentUser.id(), attemptId, competencyCode, request.level());
+    }
+
+    @PostMapping("/api/v2/assessment-attempts/{attemptId}/complete")
+    public AttemptDto complete(@PathVariable UUID attemptId) {
+        return completion.complete(CurrentUser.id(), attemptId);
     }
 }

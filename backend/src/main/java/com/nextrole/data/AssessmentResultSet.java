@@ -21,5 +21,11 @@ public class AssessmentResultSet {
     @Column(name = "calculated_at", nullable = false)
     public Instant calculatedAt;
 
+    public AssessmentResultSet(UUID attemptId, String algorithmVersion, Instant calculatedAt) {
+        this.attemptId = attemptId;
+        this.algorithmVersion = algorithmVersion;
+        this.calculatedAt = calculatedAt;
+    }
+
     protected AssessmentResultSet() {}
 }

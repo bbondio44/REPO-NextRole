@@ -190,6 +190,14 @@ export async function saveAssessmentAnswer(
   return response.json() as Promise<AssessmentSavedAnswer>
 }
 
+export async function completeAssessmentAttempt(attemptId: string): Promise<AssessmentAttempt> {
+  const response = await authenticatedFetch(
+    `/api/v2/assessment-attempts/${encodeURIComponent(attemptId)}/complete`,
+    { method: 'POST' },
+  )
+  return response.json() as Promise<AssessmentAttempt>
+}
+
 // ---------- Perfil académico ----------
 
 export async function getProfile(): Promise<AcademicProfile | null> {

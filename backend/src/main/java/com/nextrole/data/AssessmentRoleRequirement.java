@@ -20,5 +20,12 @@ public class AssessmentRoleRequirement {
     @Column(name = "expected_level")
     public Short expectedLevel;
 
+    public AssessmentRoleRequirement(AssessmentRoleRequirementId id, AssessmentRequirementImportance importance,
+                                    Short expectedLevel) {
+        this.id = id;
+        this.importance = importance;
+        this.expectedLevel = expectedLevel;
+    }
+
     protected AssessmentRoleRequirement() {}
 }

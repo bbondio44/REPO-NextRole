@@ -1,89 +1,65 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 
 import { AppShell } from '@/components/layout/AppShell'
-import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
-import { Mascot } from '@/components/ui/Mascot'
-import { ProgressBar } from '@/components/ui/ProgressBar'
-import { getSkillCatalog, getSkillLevels } from '@/services/api'
+import { getAssessmentAttempt } from '@/services/api'
+import { KNOWLEDGE_LEVEL_LABEL } from '@/types/domain'
 
 export function SkillSummaryPage() {
-  const { data: catalog } = useQuery({ queryKey: ['skill-catalog'], queryFn: getSkillCatalog })
-  const { data: levels } = useQuery({ queryKey: ['skill-levels'], queryFn: getSkillLevels })
+  const [searchParams] = useSearchParams()
+  const attemptId = searchParams.get('attemptId')
+  const { data: attempt, isLoading, isError } = useQuery({
+    queryKey: ['assessment-attempt', attemptId],
+    queryFn: () => getAssessmentAttempt(attemptId!),
+    enabled: Boolean(attemptId),
+  })
 
-  if (!catalog || !levels) return null
-
-  const totalSkills = catalog.skills.length
-  const evaluatedSkills = catalog.skills.filter((s) => levels[s.id] !== undefined)
-  const generalPct = evaluatedSkills.length
-    ? Math.round((evaluatedSkills.reduce((acc, s) => acc + (levels[s.id] ?? 0), 0) / (evaluatedSkills.length * 4)) * 100)
-    : 0
-
-  const byCategory = catalog.categories
-    .map((cat) => {
-      const skillsInCat = catalog.skills.filter((s) => s.categoryId === cat.id)
-      const evaluated = skillsInCat.filter((s) => levels[s.id] !== undefined)
-      const pct = evaluated.length
-        ? Math.round((evaluated.reduce((acc, s) => acc + (levels[s.id] ?? 0), 0) / (evaluated.length * 4)) * 100)
-        : null
-      return { category: cat, pct, evaluatedCount: evaluated.length, total: skillsInCat.length }
-    })
-    .filter((c) => c.total > 0)
-
-  const allEvaluated = evaluatedSkills.length >= totalSkills
+  if (!attemptId) {
+    return (
+      <AppShell title="Habilidades" subtitle="Resumen de habilidades" showBack>
+        <p role="alert">Abrí el resumen desde una evaluación finalizada.</p>
+      </AppShell>
+    )
+  }
+  if (isLoading) return <AppShell title="Habilidades" subtitle="Resumen de habilidades" showBack><p role="status">Cargando tu evaluación…</p></AppShell>
+  if (isError || !attempt || attempt.status !== 'COMPLETED') {
+    return <AppShell title="Habilidades" subtitle="Resumen de habilidades" showBack><p role="alert">No pudimos cargar una evaluación finalizada.</p></AppShell>
+  }
 
   return (
-    <AppShell title="Habilidades" subtitle="Resumen de habilidades" showBack>
-      {allEvaluated ? (
-        <Badge tone="success">Etapa 3 completada</Badge>
-      ) : (
-        <Badge tone="warning">{evaluatedSkills.length} de {totalSkills} evaluadas</Badge>
-      )}
-
-      <Card className="mt-3 flex flex-col items-center gap-2 text-center">
-        <Mascot className="h-20 w-20" pose="thumbsUp" />
-        <p className="text-xs font-bold uppercase tracking-wide text-primary-600">¡Diagnóstico completado!</p>
-        <h1 className="text-lg font-extrabold text-neutral-950">Resumen de habilidades</h1>
-        <p className="text-sm text-neutral-500">
-          Evaluaste {evaluatedSkills.length} de {totalSkills} competencias clave para tu perfil.
+    <AppShell title="Habilidades" subtitle="Resumen de competencias" showBack>
+      <Card>
+        <h1 className="text-lg font-extrabold text-neutral-950">Tus niveles declarados</h1>
+        <p className="mt-2 text-sm text-neutral-600">
+          Esta autoevaluación refleja los niveles que declaraste. No es una certificación y se muestra separada del matching por rol.
+        </p>
+        <p className="mt-2 text-xs text-neutral-400">
+          Cuestionario {attempt.questionnaireVersion} · Matriz {attempt.matrixVersion}
         </p>
       </Card>
 
-      <div className="mt-4 flex items-center justify-between">
-        <h2 className="text-sm font-bold text-neutral-800">Habilidades por área</h2>
-        <span className="text-xs font-semibold text-primary-600">General {generalPct}%</span>
+      <div className="mt-4 space-y-3">
+        {attempt.questions.map((question) => {
+          const level = attempt.answers[question.competencyCode]
+          const option = question.options.find((item) => item.level === level)
+          return (
+            <Card key={question.competencyCode}>
+              <p className="text-xs font-semibold text-primary-700">Competencia {question.position}</p>
+              <h2 className="mt-1 text-sm font-bold text-neutral-950">{question.title}</h2>
+              <p className="mt-2 text-sm font-semibold text-neutral-800">
+                {level === undefined ? 'Sin respuesta' : `Nivel ${level}: ${KNOWLEDGE_LEVEL_LABEL[level]}`}
+              </p>
+              {option && <p className="mt-1 text-sm text-neutral-600">{option.description}</p>}
+            </Card>
+          )
+        })}
       </div>
 
-      <div className="mt-2 space-y-3">
-        {byCategory.map(({ category, pct, evaluatedCount, total }) => (
-          <Card key={category.id}>
-            <div className="flex items-center justify-between text-sm">
-              <span className="font-semibold text-neutral-800">{category.name}</span>
-              <span className="text-xs text-neutral-400">
-                {pct === null ? 'Sin evaluar' : `${pct}%`}
-              </span>
-            </div>
-            <div className="mt-2">
-              <ProgressBar
-                value={pct ?? 0}
-                colorClassName={pct === null ? 'bg-neutral-200' : 'bg-primary-500'}
-              />
-            </div>
-            <p className="mt-1 text-xs text-neutral-400">
-              {evaluatedCount} de {total} competencias evaluadas
-            </p>
-          </Card>
-        ))}
-      </div>
-
-      <Link to="/roles" className="mt-6 block">
-        <Button fullWidth disabled={evaluatedSkills.length === 0}>
-          Ver roles sugeridos →
-        </Button>
+      <Link to={`/roles?attemptId=${encodeURIComponent(attempt.attemptId)}`} className="mt-6 block">
+        <Button fullWidth>Ver matching para los seis roles →</Button>
       </Link>
-      <p className="mt-2 text-center text-xs text-neutral-400">🔒 Tus resultados están guardados en tu perfil</p>
     </AppShell>
   )
 }

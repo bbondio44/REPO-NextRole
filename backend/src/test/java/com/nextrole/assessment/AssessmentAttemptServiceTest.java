@@ -78,7 +78,7 @@ class AssessmentAttemptServiceTest {
         var service = answerService();
         AssessmentAttempt attempt = draft(ATTEMPT_ID, USER_ID, QUESTIONNAIRE_ID, MATRIX_ID);
         AssessmentAnswerId answerId = new AssessmentAnswerId(ATTEMPT_ID, "programming-fundamentals");
-        when(attempts.findByIdAndUserId(ATTEMPT_ID, USER_ID)).thenReturn(Optional.of(attempt));
+        when(attempts.findByIdAndUserIdForUpdate(ATTEMPT_ID, USER_ID)).thenReturn(Optional.of(attempt));
         when(catalog.containsQuestion(QUESTIONNAIRE_ID, "programming-fundamentals")).thenReturn(true);
         when(answerRepository.findById(answerId)).thenReturn(Optional.empty());
         when(answerRepository.save(any(AssessmentAnswer.class))).thenAnswer(invocation -> invocation.getArgument(0));
@@ -102,7 +102,7 @@ class AssessmentAttemptServiceTest {
         AssessmentAttempt attempt = draft(ATTEMPT_ID, USER_ID, QUESTIONNAIRE_ID, MATRIX_ID);
         AssessmentAnswerId answerId = new AssessmentAnswerId(ATTEMPT_ID, "algorithms");
         AssessmentAnswer existing = savedAnswer(answerId, (short) 1);
-        when(attempts.findByIdAndUserId(ATTEMPT_ID, USER_ID)).thenReturn(Optional.of(attempt));
+        when(attempts.findByIdAndUserIdForUpdate(ATTEMPT_ID, USER_ID)).thenReturn(Optional.of(attempt));
         when(catalog.containsQuestion(QUESTIONNAIRE_ID, "algorithms")).thenReturn(true);
         when(answerRepository.findById(answerId)).thenReturn(Optional.of(existing));
         when(answerRepository.save(any(AssessmentAnswer.class))).thenAnswer(invocation -> invocation.getArgument(0));

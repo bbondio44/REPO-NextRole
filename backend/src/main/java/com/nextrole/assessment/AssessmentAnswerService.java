@@ -32,7 +32,7 @@ public class AssessmentAnswerService {
             throw ApiProblem.invalid("El nivel debe estar entre 0 y 4");
         }
 
-        AssessmentAttempt attempt = attempts.findByIdAndUserId(attemptId, userId)
+        AssessmentAttempt attempt = attempts.findByIdAndUserIdForUpdate(attemptId, userId)
                 .orElseThrow(() -> ApiProblem.notFound("Intento"));
         if (attempt.status != AssessmentAttemptStatus.DRAFT) {
             throw ApiProblem.conflict("El intento no admite cambios");

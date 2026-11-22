@@ -10,16 +10,16 @@ import java.time.Instant;
 import java.util.*;
 @RestControllerAdvice
 public class GlobalErrorHandler {
-    public record ErrorBody(String code, String message, Map<String,String> details, String requestId, Instant timestamp) {}
-    private ResponseEntity<ErrorBody> error(HttpStatus status,String code,String msg,Map<String,String> details,HttpServletRequest req) {
+    public record ErrorBody(String code, String message, Map<String,Object> details, String requestId, Instant timestamp) {}
+    private ResponseEntity<ErrorBody> error(HttpStatus status,String code,String msg,Map<String,Object> details,HttpServletRequest req) {
         String requestId=Optional.ofNullable(req.getHeader("X-Request-ID")).filter(s->s.matches("[A-Za-z0-9_-]{1,80}")).orElse(UUID.randomUUID().toString());
         return ResponseEntity.status(status).body(new ErrorBody(code,msg,details,requestId,Instant.now()));
     }
     @ExceptionHandler(ApiProblem.class)
-    public ResponseEntity<ErrorBody> known(ApiProblem ex,HttpServletRequest req){ return error(ex.status(),ex.code(),ex.getMessage(),Map.of(),req); }
+    public ResponseEntity<ErrorBody> known(ApiProblem ex,HttpServletRequest req){ return error(ex.status(),ex.code(),ex.getMessage(),ex.details(),req); }
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorBody> validation(MethodArgumentNotValidException ex,HttpServletRequest req){
-        Map<String,String> details=new LinkedHashMap<>();
+        Map<String,Object> details=new LinkedHashMap<>();
         for (var issue: ex.getBindingResult().getFieldErrors()) details.putIfAbsent(issue.getField(),issue.getDefaultMessage());
         return error(HttpStatus.BAD_REQUEST,"VALIDATION_ERROR","Revisá los datos ingresados",details,req);
     }

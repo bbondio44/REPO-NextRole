@@ -1,20 +1,24 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 import { AppShell } from '@/components/layout/AppShell'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { LevelPicker } from '@/components/ui/LevelPicker'
 import { ProgressBar } from '@/components/ui/ProgressBar'
-import { getOrStartAssessment, saveAssessmentAnswer } from '@/services/api'
+import { completeAssessmentAttempt, getOrStartAssessment, saveAssessmentAnswer } from '@/services/api'
 import type { AssessmentAttempt, KnowledgeLevel } from '@/types/domain'
 
 const ATTEMPT_QUERY_KEY = ['assessment-attempt']
 
 export function SkillAssessmentPage() {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [savingCompetency, setSavingCompetency] = useState<string | null>(null)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const [completionError, setCompletionError] = useState<string | null>(null)
+  const [isCompleting, setIsCompleting] = useState(false)
   const { data: attempt, isLoading, isError, error } = useQuery({
     queryKey: ATTEMPT_QUERY_KEY,
     queryFn: getOrStartAssessment,
@@ -38,6 +42,21 @@ export function SkillAssessmentPage() {
       setSaveError('No pudimos guardar tu respuesta. Revisá tu conexión e intentá de nuevo.')
     } finally {
       setSavingCompetency(null)
+    }
+  }
+
+  async function handleComplete() {
+    if (!attempt || attempt.status !== 'DRAFT' || attempt.answeredCount !== attempt.totalQuestions) return
+    setIsCompleting(true)
+    setCompletionError(null)
+    try {
+      const completed = await completeAssessmentAttempt(attempt.attemptId)
+      queryClient.setQueryData(['assessment-attempt', completed.attemptId], completed)
+      navigate(`/habilidades/resumen?attemptId=${encodeURIComponent(completed.attemptId)}`)
+    } catch (cause) {
+      setCompletionError(cause instanceof Error ? cause.message : 'No pudimos finalizar tu evaluación. Intentá de nuevo.')
+    } finally {
+      setIsCompleting(false)
     }
   }
 
@@ -68,6 +87,7 @@ export function SkillAssessmentPage() {
       </p>
 
       {saveError && <p className="mt-3 text-sm text-red-600" role="alert">{saveError}</p>}
+      {completionError && <p className="mt-3 text-sm text-red-600" role="alert">{completionError}</p>}
 
       <div className="mt-4 space-y-3">
         {attempt.questions.map((question) => (
@@ -88,8 +108,12 @@ export function SkillAssessmentPage() {
       </div>
 
       <div className="mt-6">
-        <Button fullWidth disabled={attempt.status !== 'COMPLETED'}>
-          Ver resultados cuando finalices las 31 preguntas
+        <Button
+          fullWidth
+          disabled={attempt.status !== 'DRAFT' || attempt.answeredCount !== attempt.totalQuestions || isCompleting}
+          onClick={handleComplete}
+        >
+          {isCompleting ? 'Finalizando…' : 'Finalizar evaluación y ver resultados'}
         </Button>
       </div>
     </AppShell>

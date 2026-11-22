@@ -40,6 +40,15 @@ export interface AssessmentRoleResult {
   rankPosition: number
 }
 
+export const ASSESSMENT_ROLE_NAME: Record<string, string> = {
+  'backend-dev-jr': 'Backend',
+  'frontend-dev-jr': 'Frontend',
+  'fullstack-dev-jr': 'Full Stack',
+  'qa-jr': 'QA',
+  'data-analyst-jr': 'Data Analyst',
+  'cloud-jr': 'Cloud',
+}
+
 export interface AssessmentSavedAnswer {
   competencyCode: string
   level: KnowledgeLevel
