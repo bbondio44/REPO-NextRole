@@ -43,7 +43,7 @@ Las nuevas funcionalidades de V2 se desarrollan tomando `develop-v2` como refere
 
 Para facilitar la colaboración y mantener un desarrollo consistente, NextRole V2 establece procedimientos compartidos para el uso de Git y el desarrollo de funcionalidades mediante inteligencia artificial.
 
-- [Cómo trabajar con Git y GitHub](docs/GUIA_GIT_NEXTROLE.md)
+- [Cómo trabajar con Git y GitHub para subir cambios](docs/GUIA_GIT_NEXTROLE.md)
 - [Guía para usar GitHub Spec Kit con una IA](docs/GUIA_SDD_NEXTROLE.md)
 
 ---
