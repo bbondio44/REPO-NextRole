@@ -1,102 +1,29 @@
-# NextRole — Frontend
+# Guía de GitHub Spec Kit y Codex CLI — NextRole V2
 
-Primera versión funcional del frontend de **NextRole** ("Potencia tu futuro IT"),
-construida a partir del Workspace del proyecto (branding, arquitectura y modelo
-de datos) y de los wireframes de Figma (`wireframe_AF1.png` a `AF5.png` en la
-carpeta de la tesis).
+Esta guía explica cómo utilizar **GitHub Spec Kit junto con Codex CLI** para organizar el desarrollo de NextRole V2.
 
-## Cómo correrlo
+Su objetivo es facilitar el **trabajo en equipo y el desarrollo consistente de funcionalidades**, permitiendo que todos los integrantes compartan requisitos, decisiones técnicas y criterios de aceptación. Así se reducen las contradicciones, el trabajo duplicado y los problemas al integrar cambios realizados por diferentes desarrolladores.
 
-```bash
-npm install
-npm run dev       # http://localhost:5173
-```
+## 1. ¿Qué es GitHub Spec Kit?
 
-Otros comandos: `npm run build` (compila y tipa), `npm run lint`, `npm run preview`.
+**GitHub Spec Kit** es una herramienta que permite aplicar el enfoque de **desarrollo guiado por especificaciones (SDD)** con asistentes de inteligencia artificial como Codex.
 
-## Qué hace hoy
+En lugar de pedirle directamente a la IA que programe una funcionalidad, Spec Kit organiza el desarrollo en etapas documentadas:
 
-Todavía **no hay backend**. El flujo completo funciona de punta a punta con
-datos simulados en el cliente:
+1. **Constitución:** establece las reglas generales que deben respetarse en el proyecto.
+2. **Especificación (`spec.md`):** define qué debe hacer la funcionalidad y cuáles son sus requisitos.
+3. **Aclaraciones:** resuelve dudas y decisiones pendientes.
+4. **Plan (`plan.md`):** establece cómo se implementará técnicamente.
+5. **Tareas (`tasks.md`):** divide el trabajo en pasos concretos y verificables.
+6. **Implementación:** Codex desarrolla la funcionalidad siguiendo los documentos aprobados.
+7. **Verificación:** se comprueba que el resultado coincida con lo especificado.
 
-1. Registro / Login (simulados, guardan la "cuenta" en `localStorage`).
-2. Onboarding de perfil académico.
-3. Autoevaluación de habilidades (catálogo de 15 competencias en 9 categorías).
-4. Resumen de habilidades por área.
-5. Roles IT sugeridos, ordenados por afinidad (catálogo de 8 roles del doc).
-6. Detalle de un rol + requisitos.
-7. Diagnóstico de brechas de competencias.
-8. Formación recomendada para cerrar esas brechas.
-9. Perfil de cuenta / cerrar sesión.
+**Spec Kit organiza y documenta el proceso; Codex ayuda a ejecutarlo.** El equipo sigue siendo responsable de revisar y aprobar las decisiones.
 
-## Dónde está "la lógica de negocio" (y por qué importa)
+### Ejemplo en NextRole
 
-Toda la lógica que en producción vivirá en el backend (Spring Boot, según el
-doc) está aislada en `src/services/`:
+Para desarrollar el sistema de autoevaluación y recomendación de roles IT, primero se definieron las competencias evaluables, los niveles de conocimiento, las reglas de afinidad y los criterios de aceptación.
 
-- `mockData.ts` — catálogo de competencias, roles, requisitos por rol y
-  recursos de formación (semilla de datos, hoy en memoria).
-- `storage.ts` — simula la persistencia (hoy `localStorage`, en producción la
-  base PostgreSQL vía API REST).
-- `api.ts` — las funciones que consume la UI (`registerAccount`, `login`,
-  `getRoleMatching`, `getSkillGap`, `getRecommendedResources`, etc.). Implementan
-  las mismas reglas que describe la Guía de Desarrollo (afinidad ponderada,
-  brecha = máximo(0, requerido − actual), niveles "no evaluados" distintos de
-  "nivel 0", etc.)
+Estas decisiones quedaron documentadas en `specs/001-autoevaluacion-matching/`, permitiendo implementar, probar y mejorar la funcionalidad sin redefinir sus reglas en cada sesión.
 
-**Para conectar el backend real**: solo hay que reescribir el cuerpo de las
-funciones de `api.ts` para que hagan `fetch`/`axios` contra los endpoints REST,
-manteniendo las mismas firmas. Ninguna pantalla debería necesitar cambios,
-porque todas usan TanStack Query sobre esas funciones.
-
-## Estructura
-
-Sigue la organización propuesta en el documento "Guía de Desarrollo NextRole"
-(sección 7.2):
-
-```
-src/
-  app/            # providers, router, guards de sesión
-  components/ui/  # Button, TextField, Card, Badge, LevelPicker, etc.
-  components/layout/
-  features/       # auth, profile, home, assessment, roles, skill-gap, learning
-  services/       # mockData, storage, api (futura capa de integración)
-  types/          # tipos de dominio (Skill, Role, SkillGapItem, etc.)
-```
-
-## Ramas del repositorio
-
-El repositorio de NextRole utiliza distintas ramas para conservar las versiones del proyecto y organizar su evolución.
-
-| Rama | Descripción |
-|---|---|
-| `main` | Rama principal. Contiene NextRole V1 consolidada, incluyendo frontend, backend y documentación. |
-| `develop-v2` | Rama de desarrollo de NextRole V2. Se utiliza para incorporar mejoras y nuevas funcionalidades sin afectar la versión estable. |
-| `develop` | Rama de desarrollo utilizada durante la construcción inicial de V1. Se conserva como referencia histórica. |
-| `Frontend-beta` | Rama utilizada para desarrollar y probar las primeras versiones del frontend. |
-| `feature/backend-mvp-core` | Rama utilizada para implementar el backend inicial de NextRole con Spring Boot. |
-| `integration/nextrole-v2` | Rama utilizada para consolidar el frontend actualizado, el backend y la documentación antes de integrarlos en `main` mediante la Pull Request #4. |
-
-### Versiones del proyecto
-
-- **V1 (`main`):** versión consolidada del proyecto, con frontend React, backend Spring Boot, PostgreSQL y documentación.
-- **V2 (`develop-v2`):** evolución del proyecto, enfocada en mejorar la autoevaluación de competencias, la recomendación de roles IT, el motor de matching y el diagnóstico de brechas.
-
-La V2 se desarrollará de manera independiente, utilizando GitHub Spec Kit y Codex para organizar las especificaciones, la planificación y la implementación.
-
-### Flujo de trabajo
-
-Las nuevas funcionalidades de V2 se desarrollarán en ramas específicas creadas a partir de `develop-v2`. Una vez implementadas y validadas, se integrarán mediante Pull Requests.
-
-Cuando V2 alcance una versión estable, sus cambios podrán integrarse en `main`, conservando el historial de versiones anteriores.
-
-
-
-## Pendiente / simplificaciones conocidas
-
-- Branding: se usa un logo y una mascota placeholder en SVG (los assets reales
-  del personaje 3D viven en Figma / el Workspace, no como archivos sueltos).
-- El modelo de afinidad usa solo la dimensión de competencias (50% intereses +
-  20% evidencia de GitHub del doc todavía no están implementados en esta capa).
-- No hay persistencia real ni autenticación con JWT: es pura simulación en
-  `localStorage` para poder demostrar el flujo sin backend.
+De esta manera, distintos integrantes pueden continuar el desarrollo utilizando una misma referencia, evitando implementaciones inconsistentes.
