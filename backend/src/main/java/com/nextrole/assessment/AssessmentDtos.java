@@ -30,6 +30,9 @@ public final class AssessmentDtos {
                              int answeredCount, int totalQuestions, Map<String, Integer> answers,
                              List<QuestionDto> questions, List<RoleResultDto> results) {}
 
+    public record HistoryItemDto(UUID attemptId, Instant completedAt, String questionnaireVersion,
+                                 String matrixVersion, List<RoleResultDto> results) {}
+
     public record AnswerSavedDto(String competencyCode, int level, int answeredCount, int totalQuestions) {}
 
     public record SaveAnswerRequest(@NotNull @Min(0) @Max(4) Integer level) {}

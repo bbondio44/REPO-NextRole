@@ -40,6 +40,14 @@ export interface AssessmentRoleResult {
   rankPosition: number
 }
 
+export interface AssessmentHistoryItem {
+  attemptId: string
+  completedAt: string
+  questionnaireVersion: string
+  matrixVersion: string
+  results: AssessmentRoleResult[]
+}
+
 export const ASSESSMENT_ROLE_NAME: Record<string, string> = {
   'backend-dev-jr': 'Backend',
   'frontend-dev-jr': 'Frontend',

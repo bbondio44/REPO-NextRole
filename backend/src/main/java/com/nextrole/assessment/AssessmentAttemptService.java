@@ -2,6 +2,7 @@ package com.nextrole.assessment;
 
 import com.nextrole.assessment.AssessmentDtos.AttemptDto;
 import com.nextrole.assessment.AssessmentDtos.RoleResultDto;
+import com.nextrole.assessment.AssessmentDtos.HistoryItemDto;
 import com.nextrole.common.ApiProblem;
 import com.nextrole.data.*;
 import org.springframework.stereotype.Service;
@@ -54,9 +55,50 @@ public class AssessmentAttemptService {
         return new StartResult(attempts.save(attempt), true);
     }
 
+    @Transactional
+    public StartResult reevaluate(UUID userId) {
+        users.findByIdForUpdate(userId).orElseThrow(() -> ApiProblem.notFound("Usuario"));
+        var currentDraft = attempts.findFirstByUserIdAndStatus(userId, AssessmentAttemptStatus.DRAFT);
+        if (currentDraft.isPresent()) return new StartResult(currentDraft.get(), false);
+
+        AssessmentQuestionnaireVersion questionnaire = questionnaireVersions.findFirstByCurrentTrue()
+                .orElseThrow(() -> ApiProblem.notFound("Cuestionario vigente"));
+        AssessmentMatrixVersion matrix = matrixVersions.findFirstByCurrentTrue()
+                .orElseThrow(() -> ApiProblem.notFound("Matriz vigente"));
+        AssessmentAttempt source = attempts.findFirstByUserIdAndStatusOrderByCompletedAtDesc(
+                userId, AssessmentAttemptStatus.COMPLETED).orElse(null);
+        AssessmentAttempt target = new AssessmentAttempt(UUID.randomUUID(), userId, AssessmentAttemptStatus.DRAFT,
+                questionnaire.id, matrix.id, Instant.now());
+        target.sourceAttemptId = source == null ? null : source.id;
+        target = attempts.save(target);
+        if (source != null) answers.copyAnswers(source, target);
+        return new StartResult(target, true);
+    }
+
+    @Transactional
+    public void discard(UUID userId, UUID attemptId) {
+        AssessmentAttempt attempt = attempts.findByIdAndUserIdForUpdate(attemptId, userId)
+                .orElseThrow(() -> ApiProblem.notFound("Intento"));
+        if (attempt.status != AssessmentAttemptStatus.DRAFT) {
+            throw ApiProblem.conflict("El intento no admite descarte");
+        }
+        attempt.status = AssessmentAttemptStatus.DISCARDED;
+        attempt.discardedAt = Instant.now();
+        attempts.save(attempt);
+    }
+
     @Transactional(readOnly = true)
     public AssessmentAttempt current(UUID userId) {
         return attempts.findFirstByUserIdAndStatus(userId, AssessmentAttemptStatus.DRAFT).orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public List<HistoryItemDto> history(UUID userId) {
+        return attempts.findAllByUserIdAndStatusOrderByCompletedAtDesc(userId, AssessmentAttemptStatus.COMPLETED)
+                .stream().map(this::toDto)
+                .map(attempt -> new HistoryItemDto(attempt.attemptId(), attempt.completedAt(),
+                        attempt.questionnaireVersion(), attempt.matrixVersion(), attempt.results()))
+                .toList();
     }
 
     @Transactional(readOnly = true)

@@ -74,6 +74,49 @@ class AssessmentAttemptServiceTest {
     }
 
     @Test
+    void reevaluationUsesCurrentVersionsAndCopiesLatestCompletedSource() {
+        var service = service();
+        AssessmentAttempt source = new AssessmentAttempt(UUID.randomUUID(), USER_ID, AssessmentAttemptStatus.COMPLETED,
+                QUESTIONNAIRE_ID, MATRIX_ID, Instant.now());
+        source.completedAt = Instant.now();
+        when(users.findByIdForUpdate(USER_ID)).thenReturn(Optional.of(user()));
+        when(attempts.findFirstByUserIdAndStatus(USER_ID, AssessmentAttemptStatus.DRAFT)).thenReturn(Optional.empty());
+        when(attempts.findFirstByUserIdAndStatusOrderByCompletedAtDesc(USER_ID, AssessmentAttemptStatus.COMPLETED))
+                .thenReturn(Optional.of(source));
+        when(questionnaireVersions.findFirstByCurrentTrue()).thenReturn(Optional.of(questionnaireVersion(QUESTIONNAIRE_ID, "Q1")));
+        when(matrixVersions.findFirstByCurrentTrue()).thenReturn(Optional.of(matrixVersion(MATRIX_ID, "M1")));
+        when(attempts.save(any(AssessmentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        var result = service.reevaluate(USER_ID);
+
+        assertTrue(result.created());
+        assertEquals(AssessmentAttemptStatus.DRAFT, result.attempt().status);
+        assertEquals(source.id, result.attempt().sourceAttemptId);
+        assertEquals(QUESTIONNAIRE_ID, result.attempt().questionnaireVersionId);
+        assertEquals(MATRIX_ID, result.attempt().matrixVersionId);
+        verify(answerService).copyAnswers(source, result.attempt());
+    }
+
+    @Test
+    void reevaluationRecoversDraftAndDiscardRetainsItAsDiscarded() {
+        var service = service();
+        AssessmentAttempt existing = draft(ATTEMPT_ID, USER_ID, QUESTIONNAIRE_ID, MATRIX_ID);
+        when(users.findByIdForUpdate(USER_ID)).thenReturn(Optional.of(user()));
+        when(attempts.findFirstByUserIdAndStatus(USER_ID, AssessmentAttemptStatus.DRAFT)).thenReturn(Optional.of(existing));
+
+        var recovered = service.reevaluate(USER_ID);
+        assertFalse(recovered.created());
+        assertSame(existing, recovered.attempt());
+        verify(attempts, never()).save(any());
+
+        when(attempts.findByIdAndUserIdForUpdate(ATTEMPT_ID, USER_ID)).thenReturn(Optional.of(existing));
+        service.discard(USER_ID, ATTEMPT_ID);
+        assertEquals(AssessmentAttemptStatus.DISCARDED, existing.status);
+        assertNotNull(existing.discardedAt);
+        verify(attempts).save(existing);
+    }
+
+    @Test
     void answerLevelZeroIsStoredAndRemainsDistinctFromAnAbsentAnswer() {
         var service = answerService();
         AssessmentAttempt attempt = draft(ATTEMPT_ID, USER_ID, QUESTIONNAIRE_ID, MATRIX_ID);

@@ -8,6 +8,7 @@ import {
 import { type Account, storage } from '@/services/storage'
 import type {
   AssessmentAttempt,
+  AssessmentHistoryItem,
   AssessmentCatalog,
   AssessmentSavedAnswer,
   AcademicProfile,
@@ -161,9 +162,23 @@ export async function getCurrentAssessmentAttempt(): Promise<AssessmentAttempt |
   return response.json() as Promise<AssessmentAttempt>
 }
 
+export async function getAssessmentHistory(): Promise<AssessmentHistoryItem[]> {
+  const response = await authenticatedFetch('/api/v2/assessment-history')
+  return response.json() as Promise<AssessmentHistoryItem[]>
+}
+
 export async function createAssessmentAttempt(): Promise<AssessmentAttempt> {
   const response = await authenticatedFetch('/api/v2/assessment-attempts', { method: 'POST' })
   return response.json() as Promise<AssessmentAttempt>
+}
+
+export async function createAssessmentReevaluation(): Promise<AssessmentAttempt> {
+  const response = await authenticatedFetch('/api/v2/assessment-attempts/reevaluations', { method: 'POST' })
+  return response.json() as Promise<AssessmentAttempt>
+}
+
+export async function discardAssessmentAttempt(attemptId: string): Promise<void> {
+  await authenticatedFetch(`/api/v2/assessment-attempts/${encodeURIComponent(attemptId)}/discard`, { method: 'POST' })
 }
 
 export async function getOrStartAssessment(): Promise<AssessmentAttempt> {

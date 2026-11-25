@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import java.util.List;
 
 @RestController
 public class AssessmentController {
@@ -37,10 +38,28 @@ public class AssessmentController {
                 .body(attempts.toDto(result.attempt()));
     }
 
+    @PostMapping("/api/v2/assessment-attempts/reevaluations")
+    public ResponseEntity<AttemptDto> reevaluate() {
+        var result = attempts.reevaluate(CurrentUser.id());
+        return ResponseEntity.status(result.created() ? HttpStatus.CREATED : HttpStatus.OK)
+                .body(attempts.toDto(result.attempt()));
+    }
+
+    @PostMapping("/api/v2/assessment-attempts/{attemptId}/discard")
+    public ResponseEntity<Void> discard(@PathVariable UUID attemptId) {
+        attempts.discard(CurrentUser.id(), attemptId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/api/v2/assessment-attempts/current")
     public ResponseEntity<AttemptDto> currentAttempt() {
         AssessmentAttempt current = attempts.current(CurrentUser.id());
         return current == null ? ResponseEntity.noContent().build() : ResponseEntity.ok(attempts.toDto(current));
+    }
+
+    @GetMapping("/api/v2/assessment-history")
+    public List<HistoryItemDto> history() {
+        return attempts.history(CurrentUser.id());
     }
 
     @GetMapping("/api/v2/assessment-attempts/{attemptId}")

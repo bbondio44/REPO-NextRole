@@ -73,6 +73,12 @@ class AssessmentCompletionIntegrationTest {
         assertEquals(1, resultSets.count());
         assertEquals(6, roleResults.count());
 
+        ResponseEntity<List> history = rest.exchange(url("/api/v2/assessment-history"), HttpMethod.GET,
+                new HttpEntity<>(user), List.class);
+        assertEquals(HttpStatus.OK, history.getStatusCode());
+        assertEquals(firstId, ((Map<?, ?>) history.getBody().get(0)).get("attemptId"));
+        assertEquals(6, ((List<?>) ((Map<?, ?>) history.getBody().get(0)).get("results")).size());
+
         Map<String, Object> second = start(user);
         String secondId = second.get("attemptId").toString();
         save(user, secondId, questions.get(0), 4);
@@ -81,6 +87,11 @@ class AssessmentCompletionIntegrationTest {
         assertEquals(originalResults, originalAfterEdit.get("results"));
         assertEquals("DRAFT", detail(user, secondId).get("status"));
         assertEquals(1, resultSets.count());
+
+        List<?> historyWithDraft = rest.exchange(url("/api/v2/assessment-history"), HttpMethod.GET,
+                new HttpEntity<>(user), List.class).getBody();
+        assertEquals(1, historyWithDraft.size());
+        assertEquals(firstId, ((Map<?, ?>) historyWithDraft.get(0)).get("attemptId"));
     }
 
     private Map<String, Object> start(HttpHeaders user) {

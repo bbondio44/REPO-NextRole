@@ -5,6 +5,9 @@ import { RequireAuth, RequireProfile } from '@/app/RequireAuth'
 import { LoginPage } from '@/features/auth/LoginPage'
 import { RegisterPage } from '@/features/auth/RegisterPage'
 import { SkillAssessmentPage } from '@/features/assessment/SkillAssessmentPage'
+import { AssessmentCompletePage } from '@/features/assessment/AssessmentCompletePage'
+import { AssessmentHistoryPage } from '@/features/assessment/AssessmentHistoryPage'
+import { AssessmentAttemptDetailPage } from '@/features/assessment/AssessmentAttemptDetailPage'
 import { SkillsIndexPage } from '@/features/assessment/SkillsIndexPage'
 import { SkillSummaryPage } from '@/features/assessment/SkillSummaryPage'
 import { HomePage } from '@/features/home/HomePage'
@@ -43,6 +46,9 @@ export function AppRouter() {
 
       <Route path="/habilidades" element={<Protected><SkillsIndexPage /></Protected>} />
       <Route path="/habilidades/evaluacion" element={<Protected><SkillAssessmentPage /></Protected>} />
+      <Route path="/habilidades/completada" element={<Protected><AssessmentCompletePage /></Protected>} />
+      <Route path="/habilidades/historial" element={<Protected><AssessmentHistoryPage /></Protected>} />
+      <Route path="/habilidades/historial/:attemptId" element={<Protected><AssessmentAttemptDetailPage /></Protected>} />
       <Route path="/habilidades/resumen" element={<Protected><SkillSummaryPage /></Protected>} />
 
       <Route path="/roles" element={<Protected><RolesSuggestedPage /></Protected>} />
