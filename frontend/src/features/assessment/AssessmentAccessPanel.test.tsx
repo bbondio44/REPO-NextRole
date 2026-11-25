@@ -50,12 +50,13 @@ describe('AssessmentAccessPanel', () => {
     expect(createAssessmentAttempt).not.toHaveBeenCalled()
   })
 
-  it('shows the latest completed results while a separate draft is in progress', async () => {
+  it('keeps completed evaluations accessible through history while a separate draft is in progress', async () => {
     vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(draft)
     vi.mocked(getAssessmentHistory).mockResolvedValue([completed])
     renderPanel()
 
-    expect(await screen.findByRole('link', { name: 'Ver mis resultados anteriores' })).toHaveAttribute('href', '/roles?attemptId=completed-1')
+    expect(await screen.findByRole('link', { name: 'Ver historial de evaluaciones' })).toHaveAttribute('href', '/habilidades/historial')
+    expect(screen.queryByRole('link', { name: /Ver mis resultados/ })).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Continuar evaluación' })).toBeInTheDocument()
     expect(createAssessmentAttempt).not.toHaveBeenCalled()
   })
@@ -106,7 +107,6 @@ describe('AssessmentAccessPanel', () => {
     vi.mocked(getAssessmentHistory).mockResolvedValue([completed])
     renderPanel()
 
-    expect(await screen.findByRole('link', { name: 'Ver mis resultados' })).toHaveAttribute('href', '/roles?attemptId=completed-1')
     expect(createAssessmentAttempt).not.toHaveBeenCalled()
     expect(await screen.findByRole('button', { name: 'Comenzar nueva evaluación' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ver historial de evaluaciones' })).toHaveAttribute('href', '/habilidades/historial')

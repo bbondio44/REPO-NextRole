@@ -111,14 +111,6 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
         </div>
       )}
 
-      {latestCompleted && (
-        <Link to={`/roles?attemptId=${encodeURIComponent(latestCompleted.attemptId)}`} className="block">
-          <Button fullWidth variant={draft ? 'secondary' : 'primary'}>
-            {draft ? 'Ver mis resultados anteriores' : 'Ver mis resultados'}
-          </Button>
-        </Link>
-      )}
-
       {!draft && (
         <Button fullWidth disabled={starting} onClick={startAssessment}>
           {starting ? 'Preparando evaluación…' : latestCompleted ? 'Comenzar nueva evaluación' : 'Comenzar evaluación'}

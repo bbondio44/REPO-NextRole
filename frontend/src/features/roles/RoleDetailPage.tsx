@@ -31,7 +31,7 @@ export function RoleDetailPage() {
     queryFn: () => getAssessmentAttempt(attemptId!),
     enabled: Boolean(attemptId),
   })
-  const { data: gap } = useQuery({ queryKey: ['skill-gap', roleId], queryFn: () => getSkillGap(roleId!), enabled: !!roleId && !!role })
+  const { data: gap } = useQuery({ queryKey: ['skill-gap', roleId], queryFn: () => getSkillGap(roleId!), enabled: !!roleId && !!role && !attemptId })
 
   if (!roleId) return null
   if (attemptId && isAssessmentLoading) {
@@ -77,6 +77,7 @@ export function RoleDetailPage() {
             {affinity !== null && <ProgressBar value={affinity} />}
           </div>
           {persistedScore && <p className="mt-2 text-xs text-neutral-500">Puesto {persistedScore.rankPosition} · Autoevaluación declarada; no es una certificación.</p>}
+          {assessment && <p className="mt-2 text-xs text-neutral-500">Evaluación del {new Intl.DateTimeFormat('es-AR', { dateStyle: 'medium' }).format(new Date(assessment.completedAt ?? assessment.createdAt))} · Cuestionario {assessment.questionnaireVersion} · Matriz {assessment.matrixVersion}</p>}
         </Card>
 
         {role ? <>
@@ -90,20 +91,22 @@ export function RoleDetailPage() {
             ))}
           </ul>
 
-          <div className="mt-5 flex items-center justify-between">
-            <h2 className="text-sm font-bold text-neutral-800">Requisitos y habilidades requeridas</h2>
-            <span className="text-xs text-neutral-400">{gap?.length ?? 0} requeridas</span>
-          </div>
-          <div className="mt-2 space-y-2">
-            {gap?.map((item) => (
-              <Card key={item.skill.id} className="flex items-center justify-between py-2.5">
-                <p className="text-sm font-medium text-neutral-800">{item.skill.name}</p>
-                <Badge tone={item.status === 'cubierta' ? 'success' : item.status === 'no_evaluada' ? 'neutral' : 'warning'}>
-                  {STATUS_LABEL[item.status]}
-                </Badge>
-              </Card>
-            ))}
-          </div>
+          {!attemptId && <>
+            <div className="mt-5 flex items-center justify-between">
+              <h2 className="text-sm font-bold text-neutral-800">Requisitos y habilidades requeridas</h2>
+              <span className="text-xs text-neutral-400">{gap?.length ?? 0} requeridas</span>
+            </div>
+            <div className="mt-2 space-y-2">
+              {gap?.map((item) => (
+                <Card key={item.skill.id} className="flex items-center justify-between py-2.5">
+                  <p className="text-sm font-medium text-neutral-800">{item.skill.name}</p>
+                  <Badge tone={item.status === 'cubierta' ? 'success' : item.status === 'no_evaluada' ? 'neutral' : 'warning'}>
+                    {STATUS_LABEL[item.status]}
+                  </Badge>
+                </Card>
+              ))}
+            </div>
+          </>}
 
         {affinity !== null && <Card className="mt-5 flex items-center gap-3 bg-primary-50">
           <Mascot className="h-10 w-10 shrink-0" pose="thinking" />
@@ -117,9 +120,9 @@ export function RoleDetailPage() {
           </div>
         </Card>}
 
-        <Button fullWidth className="mt-5" onClick={handleContinue}>
+        {!attemptId && <Button fullWidth className="mt-5" onClick={handleContinue}>
           Ver diferencias con mi perfil →
-        </Button>
+        </Button>}
         </> : <p className="mt-4 text-sm text-neutral-500">El detalle de responsabilidades y requisitos no está disponible para este rol en el catálogo existente.</p>}
       </main>
     </div>

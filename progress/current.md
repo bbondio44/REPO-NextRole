@@ -146,3 +146,11 @@
 - Spec Kit: T026 ahora apunta a las pruebas del panel de acceso donde reside el descarte. T033 y T034 quedaron completadas con el resultado global reportado; las comprobaciones individuales del quickstart no quedan certificadas en este registro. No hubo cambios en `MatchingEngineV2`, ponderaciones ni catálogo de 31 competencias.
 - Próxima etapa: implementar el módulo de explicabilidad mediante IA. Después de esa etapa se planificará por separado una mejora amplia de experiencia de usuario, identidad visual y presentación de información para posicionar NextRole como plataforma de desarrollo profesional. Ninguna de esas etapas se inició.
 - Pendiente: no se ejecutaron de nuevo escenarios manuales individuales del quickstart; no se agregan afirmaciones sobre sus resultados específicos.
+
+## Unificación del historial y resultados V2
+
+- Updated: 2026-11-25.
+- Se eliminó el enlace separado a resultados anteriores de la tarjeta de autoevaluación y se retiraron del historial las acciones de continuar/iniciar una evaluación. El historial queda dedicado a evaluaciones completas y sus enlaces “Ver detalle”.
+- Se extrajo el ranking visual de Roles a un componente compartido y se reutilizó en el detalle histórico. El detalle muestra la fecha y las versiones del intento seleccionado; las respuestas originales quedan bajo “Ver respuestas de esta evaluación”. Los enlaces de exploración conservan el mismo `attemptId`; el detalle histórico de rol no consulta matching ni brechas de la evaluación actual.
+- Validación: `npm.cmd --prefix frontend test` pasó (9 archivos, 39 pruebas); `npm.cmd --prefix frontend run build` pasó; `npm.cmd --prefix frontend run lint` pasó con la advertencia preexistente `SessionContext.tsx:45`; `git diff --check` pasó. No se hizo inspección manual de navegador en esta sesión.
+- No se modificaron matching, competencias, ponderaciones, persistencia ni base de datos. No se realizaron commits ni push.
