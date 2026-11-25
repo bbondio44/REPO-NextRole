@@ -9,13 +9,16 @@ interface AppShellProps {
   subtitle?: string
   showBack?: boolean
   right?: ReactNode
+  compactBottomNavSpacing?: boolean
 }
 
-export function AppShell({ children, title, subtitle, showBack, right }: AppShellProps) {
+export function AppShell({ children, title, subtitle, showBack, right, compactBottomNavSpacing = false }: AppShellProps) {
   return (
     <div className="min-h-dvh bg-slate-50">
       <TopBar title={title} subtitle={subtitle} showBack={showBack} right={right} />
-      <main className="mx-auto max-w-md px-4 pb-24 pt-4">{children}</main>
+      <main className={`mx-auto max-w-md px-4 ${compactBottomNavSpacing ? 'pb-[calc(4.5rem_+_env(safe-area-inset-bottom))]' : 'pb-24'} pt-4`}>
+        {children}
+      </main>
       <BottomNav />
     </div>
   )
