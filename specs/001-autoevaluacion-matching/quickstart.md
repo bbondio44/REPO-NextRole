@@ -13,7 +13,7 @@ Validation guide for implementation. Commands below are not run as part of Plan.
 
 1. Run backend unit, API contract and integration suite: `mvn -f backend/pom.xml test`. Expected: matching domain tests pass, V2 routes/DTOs/auth/error responses conform to `contracts/assessment-api.md`, migration V5 applies on a clean PostgreSQL test database, and lifecycle tests cover drafts, authorization, completion, exact ordering and history. Seed validation must compare all 31 competency titles/questions, all 155 option descriptions and all 186 role-matrix cells (importance/relevance/expected level) with `docs/V2/autoevaluacion-matriz-vigente.md`, not just record counts.
 2. Run frontend checks: `npm --prefix frontend run build` and `npm --prefix frontend run lint`.
-3. Add the proposed frontend test command (`npm --prefix frontend test`) when Vitest/Testing Library is wired in implementation. Expected: five-level selector, explicit zero, pending state, autosave/recovery, persisted result order, completed-only history, a competency diagnosis sourced from declared V2 levels and separated from role matching, and result copy identifying the scores as self-assessed rather than a certification.
+3. Run frontend tests: `npm --prefix frontend test`. Expected: five-level selector, explicit zero, pending state, autosave/recovery, persisted result order, completed-only history, a competency diagnosis sourced from declared V2 levels and separated from role matching, and result copy identifying the scores as self-assessed rather than a certification.
 
 ## End-to-end scenarios
 

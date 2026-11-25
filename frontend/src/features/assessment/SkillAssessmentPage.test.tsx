@@ -4,13 +4,11 @@ import { MemoryRouter } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { SkillAssessmentPage } from '@/features/assessment/SkillAssessmentPage'
-import { completeAssessmentAttempt, createAssessmentReevaluation, discardAssessmentAttempt, getCurrentAssessmentAttempt, saveAssessmentAnswer } from '@/services/api'
+import { completeAssessmentAttempt, getCurrentAssessmentAttempt, saveAssessmentAnswer } from '@/services/api'
 import type { AssessmentAttempt, AssessmentQuestion, AssessmentSavedAnswer } from '@/types/domain'
 
 vi.mock('@/services/api', () => ({
   completeAssessmentAttempt: vi.fn(),
-  createAssessmentReevaluation: vi.fn(),
-  discardAssessmentAttempt: vi.fn(),
   getCurrentAssessmentAttempt: vi.fn(),
   saveAssessmentAnswer: vi.fn(),
 }))
@@ -323,18 +321,10 @@ describe('SkillAssessmentPage V2', () => {
     await waitFor(() => expect(completeAssessmentAttempt).toHaveBeenCalledTimes(2))
   })
 
-  it('requires explicit confirmation before discarding a draft and starts a separate reevaluation', async () => {
-    vi.mocked(createAssessmentReevaluation).mockResolvedValue({
-      ...attempt({ 'competency-1': 1 }), attemptId: 'attempt-2',
-    })
+  it('does not expose the discard action on the question screen', async () => {
     renderPage()
 
-    fireEvent.click(await screen.findByRole('button', { name: 'Descartar borrador y empezar otra' }))
-    expect(screen.getByText(/Se conservará esta evaluación como descartada/)).toBeInTheDocument()
-    expect(discardAssessmentAttempt).not.toHaveBeenCalled()
-
-    fireEvent.click(screen.getByRole('button', { name: 'Confirmar y empezar otra' }))
-    await waitFor(() => expect(discardAssessmentAttempt).toHaveBeenCalledWith('attempt-1'))
-    await waitFor(() => expect(createAssessmentReevaluation).toHaveBeenCalledTimes(1))
+    await screen.findByRole('heading', { name: 'Competencia 1' })
+    expect(screen.queryByRole('button', { name: /Descartar borrador/ })).not.toBeInTheDocument()
   })
 })

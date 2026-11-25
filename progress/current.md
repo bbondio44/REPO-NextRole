@@ -136,3 +136,13 @@
 - Push: the five functional commits were pushed to `origin/develop-v2`; a subsequent fetch confirmed `HEAD` and `origin/develop-v2` both at `e1a888d74ebd32d9889c27237b7ad96bbb84ae08` (0 ahead, 0 behind). `git diff --check` is clean after removing the extra Compose blank lines.
 - Preserved outside the commits: the local `docker-compose.yml` host-binding change to `0.0.0.0`, `package-lock.local-backup.json`, and `tatus`.
 - Remaining: authenticated manual browser walkthrough and desktop/mobile visual review were not run. Keep T033 and dependent T034 unchecked until those scenarios are performed.
+
+## Cierre de validación manual y ajuste de descarte
+
+- Updated: 2026-11-25.
+- UI: se quitó el botón permanente de descarte de `SkillAssessmentPage`. La acción secundaria `Descartar borrador` aparece solo desde Habilidades si hay un borrador, solicita confirmación y conserva el comportamiento de descarte US3 y creación de reevaluación. Se agregaron pruebas para la ausencia en preguntas, la ocultación por defecto (Inicio) y la confirmación desde Habilidades. Navegación de preguntas, autoguardado, persistencia y reglas de reevaluación no cambiaron.
+- Validación técnica: Docker Desktop 28.5.1 disponible; `mvn -f backend/pom.xml test` pasó (29 pruebas, 0 fallos/errores/omitidas), con Testcontainers/PostgreSQL 16 y migraciones V1–V5. `npm.cmd --prefix frontend test` pasó (7 archivos, 35 pruebas); `npm.cmd --prefix frontend run lint` pasó con la advertencia existente `SessionContext.tsx:45`; `npm.cmd --prefix frontend run build` pasó. Un primer intento de la suite frontend en paralelo con build/lint tuvo un timeout en un test no relacionado; el test aislado y la suite completa secuencial pasaron.
+- Validación manual: el usuario reporta satisfactoria la validación manual de NextRole V2, incluyendo el acceso móvil. No se atribuyen resultados individuales a los nueve escenarios del quickstart, ya que no se detallaron uno por uno.
+- Spec Kit: T026 ahora apunta a las pruebas del panel de acceso donde reside el descarte. T033 y T034 quedaron completadas con el resultado global reportado; las comprobaciones individuales del quickstart no quedan certificadas en este registro. No hubo cambios en `MatchingEngineV2`, ponderaciones ni catálogo de 31 competencias.
+- Próxima etapa: implementar el módulo de explicabilidad mediante IA. Después de esa etapa se planificará por separado una mejora amplia de experiencia de usuario, identidad visual y presentación de información para posicionar NextRole como plataforma de desarrollo profesional. Ninguna de esas etapas se inició.
+- Pendiente: no se ejecutaron de nuevo escenarios manuales individuales del quickstart; no se agregan afirmaciones sobre sus resultados específicos.

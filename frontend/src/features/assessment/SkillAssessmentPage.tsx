@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { LevelPicker } from '@/components/ui/LevelPicker'
 import { AssessmentProgress } from '@/features/assessment/AssessmentProgress'
 import { countSavedAnswers } from '@/features/assessment/assessmentAreas'
-import { completeAssessmentAttempt, createAssessmentReevaluation, discardAssessmentAttempt, getCurrentAssessmentAttempt, saveAssessmentAnswer } from '@/services/api'
+import { completeAssessmentAttempt, getCurrentAssessmentAttempt, saveAssessmentAnswer } from '@/services/api'
 import type { AssessmentAttempt, KnowledgeLevel } from '@/types/domain'
 
 const ATTEMPT_QUERY_KEY = ['assessment-attempt']
@@ -22,8 +22,6 @@ export function SkillAssessmentPage() {
   const [saveError, setSaveError] = useState<string | null>(null)
   const [completionError, setCompletionError] = useState<string | null>(null)
   const [isCompleting, setIsCompleting] = useState(false)
-  const [confirmDiscard, setConfirmDiscard] = useState(false)
-  const [isRestarting, setIsRestarting] = useState(false)
   const initializedAttemptId = useRef<string | null>(null)
   const { data: attempt, isLoading, isError, error } = useQuery({
     queryKey: ATTEMPT_QUERY_KEY,
@@ -106,25 +104,6 @@ export function SkillAssessmentPage() {
     }
   }
 
-  async function handleRestart() {
-    if (!attempt || attempt.status !== 'DRAFT') return
-    setIsRestarting(true)
-    setCompletionError(null)
-    try {
-      await discardAssessmentAttempt(attempt.attemptId)
-      queryClient.setQueryData(ATTEMPT_QUERY_KEY, null)
-      const nextAttempt = await createAssessmentReevaluation()
-      queryClient.setQueryData(ATTEMPT_QUERY_KEY, nextAttempt)
-      initializedAttemptId.current = null
-      await queryClient.invalidateQueries({ queryKey: ['assessment-history'] })
-      setConfirmDiscard(false)
-    } catch (cause) {
-      setCompletionError(cause instanceof Error ? cause.message : 'No pudimos iniciar otra evaluación. Intentá de nuevo.')
-    } finally {
-      setIsRestarting(false)
-    }
-  }
-
   if (isLoading) {
     return <AppShell title="Autoevaluación técnica" showBack><p role="status">Cargando tu evaluación…</p></AppShell>
   }
@@ -195,20 +174,6 @@ export function SkillAssessmentPage() {
             </p>
           )}
           {completionError && <p className="text-sm text-red-600" role="alert">{completionError}</p>}
-
-          {confirmDiscard ? (
-            <div className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 p-3">
-              <p className="text-sm text-neutral-700">Se conservará esta evaluación como descartada. Podés comenzar otra con las respuestas de tu última evaluación completa.</p>
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="secondary" disabled={isRestarting} onClick={() => setConfirmDiscard(false)}>Seguir evaluación</Button>
-                <Button disabled={isRestarting} onClick={handleRestart}>{isRestarting ? 'Preparando…' : 'Confirmar y empezar otra'}</Button>
-              </div>
-            </div>
-          ) : (
-            <Button fullWidth variant="secondary" disabled={isCompleting || isRestarting} onClick={() => setConfirmDiscard(true)}>
-              Descartar borrador y empezar otra
-            </Button>
-          )}
 
           {isLastQuestion && canComplete && (
             <Button

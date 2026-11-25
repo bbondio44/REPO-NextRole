@@ -4,7 +4,7 @@ import { AssessmentAccessPanel } from '@/features/assessment/AssessmentAccessPan
 export function SkillsIndexPage() {
   return (
     <AppShell title="Habilidades" subtitle="Tu autoevaluación técnica">
-      <AssessmentAccessPanel />
+      <AssessmentAccessPanel showDraftDiscardAction />
     </AppShell>
   )
 }

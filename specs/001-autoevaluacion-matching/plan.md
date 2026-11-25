@@ -18,7 +18,7 @@ All architecture, persistence, API and identifier choices in this Plan are techn
 
 **Storage**: PostgreSQL 16; existing Flyway history currently ends at V4.
 
-**Testing**: JUnit 5 / Spring Boot Test / Testcontainers PostgreSQL; frontend has build/lint but no test runner configured. Add frontend component/service tests with a Vite-compatible runner (Vitest and Testing Library proposed).
+**Testing**: JUnit 5 / Spring Boot Test / Testcontainers PostgreSQL; frontend checks use Vitest and Testing Library for component/service tests, plus the configured production build and Oxlint commands.
 
 **Target Platform**: Browser client and authenticated Spring Boot web API.
 

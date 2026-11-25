@@ -91,7 +91,7 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 
 - [X] T024 [P] [US3] Add API contract tests for reevaluation, explicit discard, completed-only history and historical detail in `backend/src/test/java/com/nextrole/assessment/AssessmentHistoryApiContractTest.java`, following `contracts/assessment-api.md`.
 - [X] T025 [P] [US3] Add Testcontainers tests for answer prefill, source-attempt immutability, one active draft, version pinning, discarded-state retention and newest-first completed history in `backend/src/test/java/com/nextrole/assessment/AssessmentHistoryIntegrationTest.java`.
-- [X] T026 [P] [US3] Add UI tests for completed-only history, historical detail, recovered draft and explicit discard flow in `frontend/src/features/assessment/AssessmentHistoryPage.test.tsx` and `frontend/src/features/assessment/SkillAssessmentPage.test.tsx`.
+- [X] T026 [P] [US3] Add UI tests for completed-only history, historical detail, recovered draft and explicit discard flow in `frontend/src/features/assessment/AssessmentHistoryPage.test.tsx` and `frontend/src/features/assessment/AssessmentAccessPanel.test.tsx`; verify the question screen does not expose discard in `frontend/src/features/assessment/SkillAssessmentPage.test.tsx`.
 
 ### Implementation for User Story 3
 
@@ -108,8 +108,8 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 **Purpose**: Verify the integrated V2 flow and report evidence without adding out-of-scope modules.
 
 - [X] T032 Add an authenticated end-to-end API workflow test from catalog through draft, completion, results, reevaluation and history in `backend/src/test/java/com/nextrole/integration/AssessmentWorkflowIntegrationTest.java` using Testcontainers PostgreSQL. Depends on T023, T030 and T031.
-- [ ] T033 Run the applicable backend suite `mvn -f backend/pom.xml test`, frontend tests `npm --prefix frontend test`, build `npm --prefix frontend run build`, lint `npm --prefix frontend run lint`, and the manual browser scenarios in `specs/001-autoevaluacion-matching/quickstart.md`; correct failures within this feature and record checks not runnable (including Docker/Testcontainers availability). The automated suites pass; the authenticated manual browser scenarios are still pending. Depends on T032.
-- [ ] T034 Record actual changed files, test/build/lint outcomes, blockers and next authorized step in `progress/current.md`; do not mark unrun checks as passed or advance to Implement beyond the implementation authorization. Depends on T033.
+- [X] T033 Run the applicable backend suite `mvn -f backend/pom.xml test`, frontend tests `npm --prefix frontend test`, build `npm --prefix frontend run build`, lint `npm --prefix frontend run lint`, and record manual validation of the application as reported by the user, including mobile access. Individual quickstart scenario outcomes are not asserted unless explicitly recorded. Correct failures within this feature and record checks not runnable (including Docker/Testcontainers availability). Depends on T032.
+- [X] T034 Record actual changed files, test/build/lint outcomes, blockers and next authorized step in `progress/current.md`; do not mark unrun checks as passed or advance to Implement beyond the implementation authorization. Depends on T033.
 
 ## Dependencies & Execution Order
 
