@@ -49,3 +49,88 @@
 - Tests first: added T016 matching unit tests, T017 API contract tests and T018 Testcontainers integration coverage before implementation. Updated two existing US1 service-test mocks to use the new lock-aware attempt lookup; production behavior remains the same. Initial full-suite run exposed those stale mocks (2 errors); the corrected rerun passed.
 - Validation: `mvn -f backend/pom.xml test` passed (24 tests; 0 failures/errors), including V1 `ScoringTest` and `ApiIntegrationTest`, plus V2 integration tests against disposable PostgreSQL 16 Testcontainers with Flyway V1–V5. `npm.cmd --prefix frontend test` passed (11 tests across 4 files). `npm.cmd --prefix frontend run build` passed. `npm.cmd --prefix frontend run lint` passed with the existing warning in `src/app/SessionContext.tsx:45` (`react(only-export-components)`). `git diff --check` passed; Git printed line-ending conversion notices only. Manual browser scenarios were not run; the workflow test T032 and closure task T033 are outside this authorization.
 - Next step: T016–T023 are marked complete in `specs/001-autoevaluacion-matching/tasks.md`. Await separate authorization before starting US3 or T032–T034. No commit or push was made; the pre-existing `package-lock.local-backup.json` remains untouched.
+
+## Assessment questionnaire UX refinement
+
+- Updated: 2026-11-22.
+- Work: redesigned only the V2 questionnaire presentation and question navigation. The approved catalog grouping was checked against V5 question positions: Development 1–16, QA 17–21, Data 22–26, Infrastructure/Cloud 27–31. The catalog has no separate thematic field, so the requested position ranges are presentation-only.
+- UI: show one question at a time; compact horizontal named level choices; reveal only the selected catalog description; add previous/next navigation, thematic arrows and per-question status blocks for the current area. Existing V2 services, draft persistence, explicit level 0, completion guard and result navigation are retained. No API, backend, database, matching or US3 changes.
+- Validation: frontend tests passed (14 tests across 4 files); frontend production build passed; lint passed with the existing `SessionContext.tsx` Fast Refresh warning only; `git diff --check` passed. The test suite covers question navigation, group boundaries, selection without auto-advance, stored response state, status blocks and finalization guard. No authenticated browser preview was run, so actual visual inspection at desktop/mobile viewport sizes remains for reviewer validation.
+- Next step: review the UI in the local app at desktop and mobile widths. No commit or push was made. Existing untracked `package-lock.local-backup.json` and `tatus` were preserved.
+
+## Assessment questionnaire UX refinement — iteration 2
+
+- Updated: 2026-11-22.
+- Work: refined the existing V2 questionnaire UI in response to mobile review. Removed numbered question blocks and manual area arrows; the thematic label now follows previous/next navigation automatically.
+- Progress and completion: the slim whole-assessment progress bar counts competency keys present in the persisted answer map, including level 0. It does not count navigation or pending/failed saves, and changing an existing response does not increase the count. Finalization appears only on the last question after all questions are answered; otherwise a short notice directs the user back with Anterior. The existing completion API call/guard is unchanged.
+- Touch layout: level options use three columns on narrow viewports and five from the `sm` breakpoint, with 44px minimum height and 14px text. Only the selected catalog description is shown. Same-question options are disabled while that answer is saving to avoid overlapping writes; failure leaves the saved selection/progress unchanged.
+- Validation: `npm.cmd --prefix frontend test` passed (16 tests across 4 files); `npm.cmd --prefix frontend run build` passed; `npm.cmd --prefix frontend run lint` passed with the existing warning in `SessionContext.tsx:45`; `git diff --check` passed with line-ending notices only. No backend, API, database, matching or US3 files were changed. No browser viewport screenshot was taken; 375×812 and 1440×900 visual review remains pending.
+- Next step: visually review the local questionnaire at mobile and desktop widths. No commit or push was made. Existing untracked `package-lock.local-backup.json` and `tatus` were preserved.
+
+## Assessment responsive spacing adjustment
+
+- Updated: 2026-11-22.
+- Work: adjusted only the assessment response grid and content space reserved above the fixed bottom navigation. The existing level styles and labels remain unchanged; the grid uses two columns below 420px, three from 420px, and five at the existing desktop breakpoint. Assessment navigation stays in normal document flow, with flex spacing positioning it near the bottom when content fits and allowing page scrolling when it does not.
+- Layout: added an opt-in compact bottom-navigation clearance to `AppShell`, used only by the assessment. It reserves the navigation height, a small gap and the device safe-area inset; the assessment's minimum height uses the matching viewport calculation. Other pages keep the existing `pb-24` spacing.
+- Validation: frontend tests passed (16 tests across 4 files), build passed, lint passed with the existing `SessionContext.tsx:45` Fast Refresh warning, and `git diff --check` passed with line-ending conversion notices. No browser automation/preview was available in this session, so direct visual inspection at 375×812 and 1440×900 remains pending.
+- No backend, API, database, matching or ranking changes; no commit or push. Existing uncommitted questionnaire UX changes and unrelated `package-lock.local-backup.json` and `tatus` were preserved.
+
+## Assessment option overflow correction
+
+- Updated: 2026-11-22.
+- Work: removed the viewport `sm:grid-cols-5` rule because the assessment is capped at `max-w-md`; at desktop widths it forced five narrow columns into about 416px of content. The picker now stays at two columns below 420px and three columns above that. Wrapped each label in a shrinkable text span (`min-w-0`, normal wrapping and word breaks), retaining the existing button styles and 44px minimum height.
+- Description: increased the existing gap from 12px to 16px and enabled wrapping for long descriptions without changing the vertical accent or typography.
+- Validation: frontend tests passed (16 tests across 4 files), build passed, lint passed with the existing `SessionContext.tsx:45` Fast Refresh warning, and `git diff --check` passed with line-ending conversion notices. CSS breakpoints and wrapping behavior were checked in source/build output; no interactive browser was available for direct screenshots at 375×812 or 1440×900.
+- No assessment navigation, persistence, completion, backend, API, database, matching or ranking changes. No commit or push; pre-existing uncommitted files were preserved.
+
+## Assessment responsive balance adjustment
+
+- Updated: 2026-11-22.
+- Work: adjusted the five-level grid to two columns below 420px, a six-track layout at 420–639px that centers the final two equal-width options, and five columns from the desktop breakpoint. Labels retain wrapping and the 44px minimum height. Increased the mobile competency heading to 22px, response labels and selected description to 15px; the question remains 16px.
+- Layout: moved the question content block down 8px. Increased the assessment-only bottom navigation clearance from 68px to 72px plus safe-area inset, with a matching minimum-height adjustment; navigation remains in document flow and scrollable content keeps its reserved clearance.
+- Validation: frontend tests passed (16 tests across 4 files), build passed, lint passed with the existing `SessionContext.tsx:45` Fast Refresh warning, and `git diff --check` passed with line-ending conversion notices. Build CSS confirms the 420px and 640px breakpoints and centered second-row placement. No browser automation was available; direct visual inspection at 375×812, 430×932 and 1440×900 remains pending.
+- Functional behavior and all pre-existing uncommitted files were preserved. No backend, API, database, matching or ranking changes; no commit or push.
+
+## Assessment answer-before-advance validation
+
+- Updated: 2026-11-22.
+- Work: disabled Next unless the active competency is present in the persisted answer map and has no pending or failed save. Presence checks treat level 0 as answered. A locally selected level remains visible during a save and after a failure so the user can retry; previous navigation and persisted answers remain available. Finalization also waits for all 31 persisted responses and no in-flight or failed save.
+- Tests: added coverage for an unanswered question, saved levels 0–4, pending/failed saves, retained selection after failure, advancing from a previously answered question, and incomplete finalization.
+- Validation: `npm.cmd --prefix frontend test` passed (21 tests across 4 files); frontend lint passed with the existing `SessionContext.tsx:45` Fast Refresh warning; frontend build passed; `git diff --check` passed with line-ending conversion notices. An initial build caught a test-helper TypeScript typing issue; it was corrected and the final build passed.
+- No backend/API/database changes, no commit or push. Existing local changes and unrelated files were preserved.
+
+## Area-scoped assessment progress
+
+- Updated: 2026-11-22.
+- Work: `AssessmentProgress` now filters questions to the active area's approved position range, counts persisted answers in that range (including level 0), and computes the bar percentage and visible/accessible count against that area's total. The area name and answer map come from the existing question state; navigation and persistence are unchanged.
+- Tests: verify area-specific totals and counts, reset on area change, restoration when returning to a previous area, and 100% when all questions in an area are answered.
+- Validation: frontend tests passed (21 tests across 4 files); frontend lint and build passed. `git diff --check` on the changed assessment files passed. The global check still reports a trailing blank line in the pre-existing modified `docker-compose.yml`, which was left untouched.
+- No backend, matching, API or persistence changes; no commit or push.
+
+## Role results presentation hierarchy
+
+- Updated: 2026-11-22.
+- Work: restyled the first persisted rank as the larger “Mayor coincidencia” card, ranks 2–3 as responsive side-by-side alternatives when space permits, and ranks 4–6 inside the native “Ver otros roles” disclosure. All six detail links retain the same route and the preparation/non-certification clarification remains visible. The top role is selected from persisted `rankPosition` (no fixed role ID and no client sorting by rounded percentage), preserving the assessment API contract.
+- Validation: `npm.cmd --prefix frontend test` passed (22 tests across 4 files); lint passed with the existing `SessionContext.tsx:45` Fast Refresh warning; build passed; scoped `git diff --check` passed with line-ending notices.
+- No backend, matching, API, database or ranking changes. No commit or push; existing unrelated local changes were preserved.
+
+## Assessment completion, reevaluation and history recovery
+
+- Updated: 2026-11-25.
+- Recovery: continued from the existing uncommitted changes after reviewing `git status`, `git diff`, the approved specification/plan/tasks and the frontend/backend contracts. Preserved the existing questionnaire UX, home/skills access panel work, completion screen, history endpoint, results presentation, and unrelated untracked `package-lock.local-backup.json` and `tatus`.
+- UI: the area progress bar has no visible percentage or numeric counter; the “Mayor coincidencia” label is absent from role results. Home and Habilidades now expose resume/new evaluation, previous results and history links. Added completed-only history and historical detail views; detail reads stored scores, pinned versions and answers. Draft discard requires explicit confirmation and creates a separate reevaluation while retaining the discarded attempt.
+- Backend: added authenticated reevaluation and discard routes. Reevaluation recovers one active draft or creates a new version-pinned draft and copies answers from the latest completed attempt by stable competency code. Discard transitions the draft to `DISCARDED` without deleting it. Completed history stays newest first and excludes drafts; the existing attempt detail returns the stored historical results and pinned questionnaire content. No changes to matching calculations or the 31-question catalog.
+- Tests: added API contract, Testcontainers lifecycle, UI and full-workflow coverage. `npm.cmd --prefix frontend test` passed (7 files, 33 tests); `npm.cmd --prefix frontend run lint` passed with the existing `SessionContext.tsx:45` Fast Refresh warning; `npm.cmd --prefix frontend run build` passed. Backend `mvn -f backend/pom.xml -Dtest=AssessmentAttemptServiceTest,MatchingEngineV2Test,ScoringTest,GapPolicyTest test` passed (20 tests), and `mvn -f backend/pom.xml -DskipTests test` compiled all 12 test sources. The final full `mvn -f backend/pom.xml test` ran 28 tests: 20 unit tests passed, while eight Testcontainers-backed classes could not start because Docker is unavailable. Manual quickstart/browser scenarios were not run because the backend test database/runtime was unavailable.
+- `git diff --check` reports the trailing blank line at EOF in the already-modified `docker-compose.yml`; it was preserved. The branch is still one commit behind `origin/develop-v2`. No commit, push, reset, restore, clean, or database mutation was performed.
+- Next: rerun `mvn -f backend/pom.xml test` and the authenticated quickstart scenarios in an environment with Docker available; resolve the pre-existing Compose whitespace only if requested.
+
+## US3 validation and GitHub sync checkpoint
+
+- Updated: 2026-11-25.
+- Docker: `docker version`/`docker info` confirmed Docker Desktop 28.5.1. The sandbox could not access its named pipe, but elevated Testcontainers execution connected successfully. The complete `mvn -f backend/pom.xml test` passed: 29 tests, 0 failures/errors/skips. This includes Flyway V1–V5 on disposable PostgreSQL 16 and tests for answer prefill, source immutability, draft discard, completed-only history, newest-first ordering and the end-to-end lifecycle.
+- Frontend: `npm.cmd --prefix frontend test` passed (7 files, 33 tests); lint passed with the existing `SessionContext.tsx:45` warning; production build passed. These checks were rerun after the final UI error-state adjustment.
+- Manual validation: authenticated browser walkthrough and desktop/mobile visual review have not been run. T033 and dependent T034 remain unchecked; they are not reported as complete.
+- Git: fetched `origin/develop-v2`. Its only pending commit is `7927a90 Agrego pasos para ejecutar v2`, a README-only change with no overlapping local paths. No credentials/private configuration were found among feature changes. `package-lock.local-backup.json` and `tatus` remain untracked and excluded. The tracked `docker-compose.yml` edit changes the host binding to `0.0.0.0`; it is outside this feature and will be preserved locally but excluded from commits. Removed the extra leading/trailing blank lines called out by `git diff --check`.
+- Sync: rebased the five functional commits onto `7927a90 Agrego pasos para ejecutar v2` without conflicts. Post-integration validation passed again: backend `mvn -f backend/pom.xml test` (29 tests, 0 failures/errors/skips), frontend tests (33 tests), lint, and build. Docker Desktop/Testcontainers executed against disposable PostgreSQL 16 databases and applied migrations V1–V5.
+- Manual validation: authenticated browser walkthrough and desktop/mobile visual review remain unrun; T033 and dependent T034 remain unchecked. Automated validation does not change that status.
+- Next: push the five local commits, fetch again, and verify `HEAD` equals `origin/develop-v2`. Preserve the uncommitted Compose host-binding change and local `package-lock.local-backup.json`/`tatus` files outside the commits.
