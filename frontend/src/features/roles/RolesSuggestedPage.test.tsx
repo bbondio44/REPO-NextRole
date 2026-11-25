@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, render, screen } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -24,10 +24,10 @@ const completedAttempt: AssessmentAttempt = {
   answers: {},
   questions: [],
   results: [
-    { roleId: 'qa-jr', scoreNumerator: '55', scoreDenominator: '1', displayPercentage: '55.0', rankPosition: 1 },
-    { roleId: 'backend-dev-jr', scoreNumerator: '95', scoreDenominator: '1', displayPercentage: '95.0', rankPosition: 2 },
-    { roleId: 'frontend-dev-jr', scoreNumerator: '70', scoreDenominator: '1', displayPercentage: '70.0', rankPosition: 3 },
-    { roleId: 'fullstack-dev-jr', scoreNumerator: '60', scoreDenominator: '1', displayPercentage: '60.0', rankPosition: 4 },
+    { roleId: 'backend-dev-jr', scoreNumerator: '95', scoreDenominator: '1', displayPercentage: '95.0', rankPosition: 1 },
+    { roleId: 'frontend-dev-jr', scoreNumerator: '70', scoreDenominator: '1', displayPercentage: '70.0', rankPosition: 2 },
+    { roleId: 'fullstack-dev-jr', scoreNumerator: '60', scoreDenominator: '1', displayPercentage: '60.0', rankPosition: 3 },
+    { roleId: 'qa-jr', scoreNumerator: '55', scoreDenominator: '1', displayPercentage: '55.0', rankPosition: 4 },
     { roleId: 'data-analyst-jr', scoreNumerator: '45', scoreDenominator: '1', displayPercentage: '45.0', rankPosition: 5 },
     { roleId: 'cloud-jr', scoreNumerator: '30', scoreDenominator: '1', displayPercentage: '30.0', rankPosition: 6 },
   ],
@@ -45,17 +45,44 @@ function renderPage() {
 describe('RolesSuggestedPage V2', () => {
   afterEach(() => cleanup())
 
-  it('renders the six persisted results in server rank order without sorting display values', async () => {
+  it('features rank one, shows ranks two and three as alternatives, and keeps ranks four to six expandable', async () => {
     vi.mocked(getAssessmentAttempt).mockResolvedValue(completedAttempt)
     renderPage()
 
-    const roleNames = await screen.findAllByRole('heading', { level: 2 })
-    expect(roleNames.map((heading) => heading.textContent)).toEqual([
-      'QA', 'Backend', 'Frontend', 'Full Stack', 'Data Analyst', 'Cloud',
-    ])
+    expect(await screen.findByRole('heading', { name: 'Backend', level: 2 })).toBeInTheDocument()
+    expect(screen.queryByText('Mayor coincidencia')).not.toBeInTheDocument()
+    expect(screen.getByText('95.0%')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Frontend', level: 3 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Full Stack', level: 3 })).toBeInTheDocument()
+    const secondaryGrid = screen.getByRole('heading', { name: 'Frontend', level: 3 }).parentElement?.parentElement
+    expect(secondaryGrid).toHaveClass('grid-cols-1', 'min-[360px]:grid-cols-2')
+    expect(screen.getByText('Ver otros roles').closest('details')).not.toHaveAttribute('open')
+    fireEvent.click(screen.getByText('Ver otros roles'))
+    expect(screen.getByRole('heading', { name: 'QA', level: 3 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Data Analyst', level: 3 })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Cloud', level: 3 })).toBeInTheDocument()
+    expect(screen.getAllByRole('link').filter((link) => link.getAttribute('href')?.startsWith('/roles/'))).toHaveLength(6)
     expect(screen.getByText('Puesto 1')).toBeInTheDocument()
-    expect(screen.getByText('55.0%')).toBeInTheDocument()
     expect(screen.getByText(/no son una certificación/)).toBeInTheDocument()
+  })
+
+  it('chooses the highlighted role from the persisted rank instead of a fixed role ID', async () => {
+    const alternateTop: AssessmentAttempt = {
+      ...completedAttempt,
+      results: [
+        { ...completedAttempt.results![3], scoreNumerator: '96', displayPercentage: '96.0', rankPosition: 1 },
+        { ...completedAttempt.results![0], rankPosition: 2 },
+        { ...completedAttempt.results![1], rankPosition: 3 },
+        { ...completedAttempt.results![2], rankPosition: 4 },
+        { ...completedAttempt.results![4], rankPosition: 5 },
+        { ...completedAttempt.results![5], rankPosition: 6 },
+      ],
+    }
+    vi.mocked(getAssessmentAttempt).mockResolvedValue(alternateTop)
+    renderPage()
+
+    expect(await screen.findByRole('heading', { name: 'QA', level: 2 })).toBeInTheDocument()
+    expect(screen.getByText('96.0%')).toBeInTheDocument()
   })
 
   it('links role detail to the same persisted assessment attempt', async () => {
