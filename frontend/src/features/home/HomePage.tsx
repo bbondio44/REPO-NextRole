@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { Mascot } from '@/components/ui/Mascot'
 import { ProgressBar } from '@/components/ui/ProgressBar'
+import { AssessmentAccessPanel } from '@/features/assessment/AssessmentAccessPanel'
 import { getSelectedRoleId, getSkillCatalog, getSkillLevels } from '@/services/api'
 
 const TODAY = new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
@@ -70,6 +71,8 @@ export function HomePage() {
         ¡Hola, {account?.firstName || 'Estudiante'}! 👋
       </h1>
       <p className="mt-1 text-sm text-neutral-500">Estás a solo unos pasos de descubrir tu ruta laboral en tecnología.</p>
+
+      <AssessmentAccessPanel />
 
       <Card className="mt-5 flex flex-col items-center gap-3 bg-gradient-to-b from-primary-50 to-white text-center">
         <Mascot className="h-24 w-24" />

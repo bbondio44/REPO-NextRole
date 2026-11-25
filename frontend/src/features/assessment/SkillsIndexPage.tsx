@@ -1,18 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
-import { Navigate } from 'react-router-dom'
-
 import { AppShell } from '@/components/layout/AppShell'
-import { getOrStartAssessment } from '@/services/api'
+import { AssessmentAccessPanel } from '@/features/assessment/AssessmentAccessPanel'
 
 export function SkillsIndexPage() {
-  const { data: attempt, isLoading, isError } = useQuery({
-    queryKey: ['assessment-attempt'],
-    queryFn: getOrStartAssessment,
-  })
-
-  if (isLoading) return null
-  if (isError || !attempt) {
-    return <AppShell title="Autoevaluación técnica"><p role="alert">No pudimos recuperar tu evaluación.</p></AppShell>
-  }
-  return <Navigate to="/habilidades/evaluacion" replace />
+  return (
+    <AppShell title="Habilidades" subtitle="Tu autoevaluación técnica">
+      <AssessmentAccessPanel />
+    </AppShell>
+  )
 }
