@@ -10,12 +10,12 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 
 **Tests**: Included as explicitly requested. Write contract/unit/integration tests before their implementing tasks and verify behavior through existing Maven/JUnit/Testcontainers plus the frontend test setup created in Phase 1.
 
-**Organization**: Tasks follow the three user stories in `spec.md`, after shared setup and persistence foundations.
+**Organization**: Tasks follow the four user stories in `spec.md`, after shared setup and persistence foundations.
 
 ## Format: `[ID] [P?] [Story] Description`
 
 - `[P]` marks work that can run in parallel without editing the same files or depending on unfinished tasks.
-- `[US1]`, `[US2]`, `[US3]` map to the specification's user stories. Setup, foundational, and polish tasks have no story label.
+- `[US1]`–`[US4]` map to the specification's user stories. Setup, foundational, and polish tasks have no story label.
 - Every task names its target file path and any task dependencies.
 
 ## Phase 1: Setup
@@ -111,6 +111,28 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 - [X] T033 Run the applicable backend suite `mvn -f backend/pom.xml test`, frontend tests `npm --prefix frontend test`, build `npm --prefix frontend run build`, lint `npm --prefix frontend run lint`, and record manual validation of the application as reported by the user, including mobile access. Individual quickstart scenario outcomes are not asserted unless explicitly recorded. Correct failures within this feature and record checks not runnable (including Docker/Testcontainers availability). Depends on T032.
 - [X] T034 Record actual changed files, test/build/lint outcomes, blockers and next authorized step in `progress/current.md`; do not mark unrun checks as passed or advance to Implement beyond the implementation authorization. Depends on T033.
 
+## Phase 7: User Story 4 — Visualizar el progreso en un recorrido animado
+
+**Goal**: Show the current assessment progress as a continuous, accessible path animation in the existing assessment card, without changing assessment behavior or the rest of Home.
+
+**Independent Test**: The path percentage and mascot endpoint match 0% with no attempt, the active draft's saved-answer ratio (including saved level 0), and 100% for completed history without an active draft. A fully answered but uncompleted draft does not celebrate. Reduced motion shows the target state directly.
+
+### Tests for User Story 4
+
+- [X] T035 [P] [US4] Add component tests in `frontend/src/features/assessment/AssessmentJourney.test.tsx` for target progress, continuous path endpoint/percentage consistency, confirmed completion versus a fully answered draft, finite entry motion and reduced-motion rendering. Keep the component inputs independent of questionnaire structure.
+- [X] T036 [P] [US4] Extend `frontend/src/features/assessment/AssessmentAccessPanel.test.tsx` for no evaluation (0%), active-draft ratio including an explicit level 0, completed history without a draft (100%), and an active draft taking precedence over older completed results. Verify the existing queries suffice and no extra request is issued.
+
+### Implementation for User Story 4
+
+- [X] T037 [US4] Create `frontend/src/features/assessment/AssessmentJourney.tsx` and local `AssessmentJourney.css` with a single responsive SVG path, completed/pending path strokes, mascot positioned at the animated path endpoint, one percentage, goal flag, supplied walk sprite sheet and celebration/idle poses. Use one adjustable animation progress value, stop at arrival, cap travel at 1.76 seconds and respect `prefers-reduced-motion`. Add no checkpoints, second progress bar, or assessment-structure inputs. Depends on T035.
+- [X] T038 [US4] Integrate `AssessmentJourney` into `frontend/src/features/assessment/AssessmentAccessPanel.tsx` using its existing current-attempt and history query data only: active draft count/total, completed history with no draft, or no evaluation. Preserve existing copy, navigation and actions. Depends on T036 and T037.
+
+### Validation for User Story 4
+
+- [X] T039 [US4] Run frontend tests, build and lint after integration; record failures and warnings. Depends on T038.
+- [ ] T040 [US4] Visually review the journey at mobile and desktop sizes for clipping, path/mascot synchronization, sprite cadence, scale, contrast, accessibility and reduced-motion behavior. Record unavailable checks without marking them passed. Depends on T038.
+- [X] T041 Record changed files, validation outcomes, manual checks actually completed and remaining review in `progress/current.md`. Keep this checkpoint separate from task status. Depends on T039.
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
@@ -128,6 +150,7 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 - **US1 (P1)**: Starts after foundation; delivers question/answer and recoverable draft behavior.
 - **US2 (P1)**: Starts after US1; adds completion, matching and visible role results. US1 alone is an assessment-input increment, not the complete matching release.
 - **US3 (P2)**: Starts after US1 and US2; needs completed source attempts for reevaluation and history.
+- **US4 (P2)**: Uses the existing draft/history contracts from US1/US3. It changes only presentation in the assessment access card; it adds no API, data model, backend or questionnaire dependency.
 
 ### Parallel Opportunities
 
@@ -173,6 +196,7 @@ Task: T026 history/draft UI tests in frontend/src/features/assessment/Assessment
 2. Deliver US1 as a testable questionnaire/draft increment.
 3. Add US2 before calling the assessment-and-matching feature releasable; it supplies the approved six-role matching value.
 4. Add US3 history and reevaluation; finish with the end-to-end and quickstart checks.
+5. Add US4's isolated assessment journey visual after the existing assessment and history behavior is stable; keep Home's other content unchanged.
 
 ## Notes
 

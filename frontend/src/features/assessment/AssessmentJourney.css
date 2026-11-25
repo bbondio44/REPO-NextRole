@@ -1,0 +1,128 @@
+.assessment-journey {
+  display: block;
+  width: 100%;
+}
+
+.assessment-journey__scene {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 5 / 2;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #e9f7fb 0%, #f4fbf8 70%, #eaf6ef 100%);
+  isolation: isolate;
+}
+
+.assessment-journey__landscape {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.assessment-journey__hill--back {
+  fill: #d8eee4;
+}
+
+.assessment-journey__hill--front {
+  fill: #c6e7d5;
+}
+
+.assessment-journey__cloud {
+  fill: #fff;
+  opacity: 0.8;
+}
+
+.assessment-journey__cloud--small {
+  opacity: 0.64;
+}
+
+.assessment-journey__route {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 22;
+}
+
+.assessment-journey__route--pending {
+  stroke: #d7e2de;
+}
+
+.assessment-journey__route--complete {
+  stroke: #238b83;
+}
+
+.assessment-journey__goal line {
+  stroke: #725f48;
+  stroke-linecap: round;
+  stroke-width: 4;
+}
+
+.assessment-journey__goal path {
+  fill: #e7a755;
+  stroke: #fff;
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.assessment-journey__goal circle {
+  fill: #725f48;
+}
+
+.assessment-journey__mascot {
+  position: absolute;
+  z-index: 1;
+  width: clamp(54px, 18.5%, 112px);
+  aspect-ratio: 1;
+  transform: translate(-50%, -93.1%);
+}
+
+.assessment-journey__static-pose,
+.assessment-journey__celebration,
+.assessment-journey__walk-sprite {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.assessment-journey__static-pose,
+.assessment-journey__celebration {
+  object-fit: contain;
+}
+
+.assessment-journey__celebration {
+  transform: scale(0.94);
+  transform-origin: center bottom;
+}
+
+.assessment-journey__walk-sprite {
+  background-image: var(--walk-sprite-url);
+  background-repeat: no-repeat;
+  background-size: 800% 100%;
+  animation-name: assessment-journey-walk;
+  animation-duration: var(--walk-cycle-duration, 880ms);
+  animation-timing-function: steps(7, end);
+  animation-iteration-count: var(--walk-cycle-count, 1);
+  animation-fill-mode: forwards;
+}
+
+.assessment-journey__percentage {
+  margin: 0.15rem 0 0;
+  color: #174b4a;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.25rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+@keyframes assessment-journey-walk {
+  from { background-position: 0 0; }
+  to { background-position: 100% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .assessment-journey__walk-sprite {
+    animation: none;
+  }
+}

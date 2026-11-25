@@ -35,7 +35,18 @@ function renderPanel(showDraftDiscardAction = false) {
   )
 }
 
-const draft = { attemptId: 'draft-1', status: 'DRAFT' } as AssessmentAttempt
+const draft = {
+  attemptId: 'draft-1',
+  status: 'DRAFT',
+  createdAt: '2026-01-01T00:00:00Z',
+  completedAt: null,
+  questionnaireVersion: 'v1',
+  matrixVersion: 'v1',
+  answeredCount: 1,
+  totalQuestions: 4,
+  answers: { 'programming-fundamentals': 0 },
+  questions: [],
+} as AssessmentAttempt
 const completed = { attemptId: 'completed-1' } as AssessmentHistoryItem
 
 describe('AssessmentAccessPanel', () => {
@@ -48,6 +59,61 @@ describe('AssessmentAccessPanel', () => {
 
     expect(await screen.findByRole('link', { name: 'Continuar evaluación' })).toHaveAttribute('href', '/habilidades/evaluacion')
     expect(createAssessmentAttempt).not.toHaveBeenCalled()
+  })
+
+  it('uses the active attempt saved-answer ratio, including an explicit zero, without extra data requests', async () => {
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(draft)
+    vi.mocked(getAssessmentHistory).mockResolvedValue([])
+    renderPanel()
+
+    const progress = await screen.findByRole('progressbar', { name: 'Progreso de autoevaluación' })
+    expect(progress).toHaveAttribute('aria-valuenow', '25')
+    expect(screen.getByText('25%')).toBeInTheDocument()
+    expect(getCurrentAssessmentAttempt).toHaveBeenCalledTimes(1)
+    expect(getAssessmentHistory).toHaveBeenCalledTimes(1)
+    expect(screen.getByTestId('assessment-journey-mascot')).toHaveAttribute('data-pose', 'idle')
+  })
+
+  it('uses 0% when there is neither an active draft nor completed history', async () => {
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(null)
+    vi.mocked(getAssessmentHistory).mockResolvedValue([])
+    renderPanel()
+
+    const progress = await screen.findByRole('progressbar', { name: 'Progreso de autoevaluación' })
+    expect(progress).toHaveAttribute('aria-valuenow', '0')
+    expect(screen.getByText('0%')).toBeInTheDocument()
+    expect(getCurrentAssessmentAttempt).toHaveBeenCalledTimes(1)
+    expect(getAssessmentHistory).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows 100% and celebration only for completed history without an active draft', async () => {
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(null)
+    vi.mocked(getAssessmentHistory).mockResolvedValue([completed])
+    renderPanel()
+
+    const progress = await screen.findByRole('progressbar', { name: 'Progreso de autoevaluación' })
+    expect(progress).toHaveAttribute('aria-valuenow', '100')
+    expect(screen.getByTestId('assessment-journey-mascot')).toHaveAttribute('data-pose', 'celebration')
+  })
+
+  it('keeps a completed but unfinalized draft at 100% without celebrating', async () => {
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue({ ...draft, answeredCount: 4, totalQuestions: 4 })
+    vi.mocked(getAssessmentHistory).mockResolvedValue([])
+    renderPanel()
+
+    const progress = await screen.findByRole('progressbar', { name: 'Progreso de autoevaluación' })
+    expect(progress).toHaveAttribute('aria-valuenow', '100')
+    expect(screen.getByTestId('assessment-journey-mascot')).toHaveAttribute('data-pose', 'idle')
+  })
+
+  it('represents the active draft instead of previous completed results', async () => {
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(draft)
+    vi.mocked(getAssessmentHistory).mockResolvedValue([completed])
+    renderPanel()
+
+    const progress = await screen.findByRole('progressbar', { name: 'Progreso de autoevaluación' })
+    expect(progress).toHaveAttribute('aria-valuenow', '25')
+    expect(screen.getByTestId('assessment-journey-mascot')).toHaveAttribute('data-pose', 'idle')
   })
 
   it('keeps completed evaluations accessible through history while a separate draft is in progress', async () => {

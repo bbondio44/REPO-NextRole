@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { AssessmentJourney } from '@/features/assessment/AssessmentJourney'
 import { createAssessmentAttempt, createAssessmentReevaluation, discardAssessmentAttempt, getAssessmentHistory, getCurrentAssessmentAttempt } from '@/services/api'
 import type { AssessmentAttempt } from '@/types/domain'
 
@@ -23,6 +24,15 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
 
   const draft = current.data
   const latestCompleted = history.data?.[0]
+  const hasDraft = draft?.status === 'DRAFT'
+  const journeyProgress = hasDraft
+    ? draft.totalQuestions > 0
+      ? draft.answeredCount / draft.totalQuestions
+      : 0
+    : latestCompleted
+      ? 1
+      : 0
+  const journeyCompleted = !hasDraft && Boolean(latestCompleted)
 
   async function startAssessment() {
     setStarting(true)
@@ -74,6 +84,8 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
               : 'Completá la autoevaluación para descubrir roles compatibles con tu perfil.'}
         </p>
       </div>
+
+      <AssessmentJourney progress={journeyProgress} completed={journeyCompleted} />
 
       {draft && (
         <Link to="/habilidades/evaluacion" className="block">

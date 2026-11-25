@@ -43,6 +43,19 @@ Como estudiante, quiero crear intentos nuevos y conservar resultados anteriores 
 5. **Given** una evaluación incompleta, **When** se guarda, **Then** no reemplaza el perfil vigente ni aparece en el historial de completas.
 6. **Given** un resultado histórico, **When** se conserva, **Then** queda asociado a las versiones de cuestionario y matriz.
 
+### User Story 4 — Visualizar el progreso en un recorrido animado (Priority: P2)
+
+Como estudiante que retoma o completa su autoevaluación, quiero ver el progreso como un recorrido continuo para reconocer visualmente cuánto avancé.
+
+**Acceptance Scenarios**:
+1. **Given** que no hay evaluación previa ni borrador activo, **When** se muestra Inicio, **Then** el recorrido indica 0% y la mascota permanece al inicio.
+2. **Given** un borrador activo, **When** se muestra Inicio, **Then** el progreso corresponde a las respuestas guardadas divididas por el total del mismo intento; el nivel 0 cuenta como respuesta guardada.
+3. **Given** una evaluación completada y ningún borrador activo, **When** se muestra Inicio, **Then** el recorrido indica 100% y la mascota celebra.
+4. **Given** que un borrador tiene todas sus respuestas guardadas pero no fue finalizado, **When** se muestra Inicio, **Then** el recorrido puede indicar 100%, pero la mascota permanece en reposo y no celebra.
+5. **Given** evaluaciones anteriores y un borrador activo, **When** se muestra Inicio, **Then** el recorrido representa solo el progreso del borrador.
+6. **Given** que está activada la preferencia de movimiento reducido, **When** se muestra el recorrido, **Then** la mascota aparece directamente en la posición correspondiente sin desplazamiento animado.
+7. **Given** cualquier estado, **When** se muestra el recorrido, **Then** hay un solo camino continuo sin hitos y su tramo coloreado termina junto a la mascota en el porcentaje general correspondiente.
+
 ### Edge Cases
 
 - Nivel 0 es válido; una pregunta vacía impide calcular.
@@ -76,7 +89,7 @@ Como estudiante, quiero crear intentos nuevos y conservar resultados anteriores 
 - **FR-020**: Un incompleto MUST NOT reemplazar el perfil técnico vigente.
 - **FR-021**: Resultados MUST presentarse como autoevaluación declarada, no certificación.
 - **FR-022**: Matching y Skill Gap MUST usar reglas deterministas; la IA posterior puede explicar, pero MUST NOT alterar porcentajes, brechas ni prioridades calculadas por Java.
-- **FR-023**: Skill Gap y explicabilidad con IA se especificarán después. Se conserva el diagnóstico existente como visualización de los niveles declarados en la autoevaluación V2, separado del matching por rol; no se incorporan métricas diagnósticas nuevas ni un rediseño visual. Landing page, ruta de aprendizaje y módulo Learning están fuera de esta feature.
+- **FR-023**: Skill Gap y explicabilidad con IA se especificarán después. Se conserva el diagnóstico existente como visualización de los niveles declarados en la autoevaluación V2, separado del matching por rol; no se incorporan métricas diagnósticas nuevas ni un rediseño general de Inicio, salvo el recorrido animado acotado a la tarjeta de autoevaluación. Landing page, ruta de aprendizaje y módulo Learning están fuera de esta feature.
 - **FR-024**: Decisiones V2 y catálogo/matriz vigentes prevalecen sobre PDF históricos y referencias V1.
 - **FR-025**: No se definen entidades JPA, tablas SQL, endpoints ni migraciones; corresponden al Plan.
 - **FR-026**: El versionado del cuestionario y de la matriz MUST ser independiente. Cambios en preguntas, opciones o competencias generan nueva versión de cuestionario; cambios en requisitos de roles generan nueva versión de matriz.
@@ -87,6 +100,12 @@ Como estudiante, quiero crear intentos nuevos y conservar resultados anteriores 
 - **FR-031**: Cada uno de los seis roles MUST tener un identificador estable, independiente de su etiqueta visible.
 - **FR-032**: El nivel esperado de cada competencia relevante MUST poder ser 1, 2, 3 o 4. La matriz V2 actualmente aprobada MUST conservar exactamente sus 186 asignaciones, que utilizan niveles esperados de 1 a 3; una competencia no relevante MUST seguir excluida del cálculo.
 - **FR-033**: El diagnóstico de competencias MUST mostrar los niveles declarados 0–4 del cuestionario V2, separado de los porcentajes y el ranking de matching. MUST NOT sustituirlo por matching ni derivar métricas nuevas; la fuente de datos debe ser la evaluación V2 vigente.
+- **FR-034**: El recorrido visual MUST representar el progreso como un único camino continuo, sin checkpoints, divisiones o hitos asociados a roles, áreas, porcentajes intermedios, orden de preguntas o cantidad fija de competencias. El tramo coloreado MUST terminar en la posición de la mascota y ambos MUST corresponder al mismo progreso.
+- **FR-035**: El porcentaje del recorrido MUST derivarse exclusivamente de la cantidad de respuestas guardadas y el total de preguntas de la evaluación correspondiente. Una respuesta explícita de nivel 0 MUST contar como guardada. Sin evaluación ni borrador, el progreso MUST ser 0%; con un borrador activo MUST usar los conteos de ese intento; con una evaluación completada y sin borrador activo MUST ser 100%.
+- **FR-036**: La confirmación de finalización MUST depender del estado `COMPLETED`, no de que el borrador tenga todas sus respuestas guardadas. Si hay un borrador activo, su progreso MUST prevalecer visualmente sobre resultados completados anteriores.
+- **FR-037**: El recorrido MUST mostrar un único porcentaje general y no incorporar otra barra de progreso. El camino y sus tramos completado y pendiente MUST mantener contraste y una descripción accesible del progreso.
+- **FR-038**: El componente del recorrido MUST poder reutilizarse sin depender de preguntas, competencias, áreas o roles; recibirá el progreso objetivo y el estado de finalización. MUST respetar `prefers-reduced-motion`, mostrando directamente el estado objetivo cuando esté activado.
+- **FR-039**: La animación de entrada MUST ser finita, ajustar el desplazamiento al ciclo de caminata, detenerse al alcanzar la posición objetivo y mantener una duración máxima configurable que no exceda 1.76 segundos. Los controles visuales deben permanecer dentro de la tarjeta actual y responder a anchos móviles y de escritorio sin desbordamiento.
 
 ## Decisiones aprobadas
 
@@ -98,7 +117,10 @@ Como estudiante, quiero crear intentos nuevos y conservar resultados anteriores 
 6. El historial inicial muestra solo evaluaciones completas de la más reciente a la más antigua, con fecha, resultados y detalle. No mezcla borradores ni incluye comparaciones gráficas.
 7. El porcentaje visible se redondea a un decimal con HALF_UP; redondear no interviene en cálculo, orden o empate exacto.
 8. Los niveles esperados admitidos para competencias relevantes son 1–4. La matriz V2 vigente conserva sus valores aprobados actuales, todos 1–3; esta decisión no altera la fórmula ni incluye competencias no relevantes.
-9. Se conservan por separado el diagnóstico de competencias (niveles declarados en V2) y el matching (porcentajes calculados para seis roles). No se hace un rediseño visual en esta feature.
+9. Se conservan por separado el diagnóstico de competencias (niveles declarados en V2) y el matching (porcentajes calculados para seis roles). No se hace un rediseño general de Inicio en esta feature; se aprueba únicamente integrar el recorrido animado de progreso en la tarjeta de autoevaluación existente.
+10. El progreso del recorrido se calcula para el intento activo. Si no existe borrador activo y sí una evaluación completa, se representa el 100% confirmado por el sistema; los resultados anteriores no desplazan el progreso de un borrador nuevo.
+11. El recorrido es una visualización continua sin puntos de control. El mismo progreso controla su tramo coloreado, la posición de la mascota y el único porcentaje visible.
+12. La celebración depende del estado confirmado `COMPLETED`, incluso si un borrador activo tiene todas sus respuestas guardadas.
 
 También siguen aprobadas la fórmula, los pesos, la exclusión de no relevantes, el tope del aporte, el requisito de 31 respuestas, la exclusión de intereses/objetivos/proyectos/completitud como factores y la matriz vigente.
 
@@ -125,7 +147,12 @@ No quedan cuestiones funcionales abiertas que bloqueen la implementación de est
 - **SC-007**: Intereses, objetivos y proyectos no afectan porcentajes.
 - **SC-008**: Competencias 2, 3, 15, 16 y 30 conservan cambios aprobados y las demás preguntas no se alteran.
 - **SC-009**: Learning queda fuera del alcance.
-- **SC-014**: El diagnóstico presenta los niveles declarados de la autoevaluación V2 y permanece diferenciado de los porcentajes y el ranking de matching; no se agregan métricas diagnósticas nuevas ni rediseño visual.
+- **SC-014**: El diagnóstico presenta los niveles declarados de la autoevaluación V2 y permanece diferenciado de los porcentajes y el ranking de matching; no se agregan métricas diagnósticas nuevas. El único ajuste visual de esta ampliación es el recorrido animado de US4.
+- **SC-015**: En los estados sin evaluación, borrador activo y evaluación completada sin borrador, el porcentaje coincide respectivamente con 0%, respuestas guardadas/total del intento y 100%; nivel 0 cuenta como guardado.
+- **SC-016**: Durante el desplazamiento, el extremo coloreado del camino y la ubicación de la mascota corresponden al mismo valor de progreso. No hay checkpoints, hitos ni una segunda barra.
+- **SC-017**: Un borrador con todas las respuestas guardadas no muestra celebración; una evaluación confirmada como completa y sin borrador sí la muestra.
+- **SC-018**: El movimiento normal termina en un máximo de 1.76 segundos y no se repite al quedar en reposo; con movimiento reducido, el estado objetivo aparece sin desplazamiento animado.
+- **SC-019**: El camino, la mascota, la meta y el porcentaje permanecen visibles y legibles en móvil y escritorio, sin recorte ni desbordamiento horizontal.
 
 ## Assumptions
 

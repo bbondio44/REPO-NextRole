@@ -48,9 +48,11 @@ No Constitution violations require complexity justification.
 
 | Classification | Current components | Plan |
 |---|---|---|
-| Reuse | `AppShell`, `Card`, `Button`, `Badge`, `ProgressBar`, React Router, TanStack Query; Spring Security/JWT, `CurrentUser`, Bean Validation, JPA/Flyway conventions, `ApiProblem` envelope | Keep layout, navigation/query tooling and authenticated user derivation. Reuse common error response conventions. |
-| Modify | `SkillAssessmentPage`, `SkillsIndexPage`, `SkillSummaryPage`, `RolesSuggestedPage`, `LevelPicker`, `frontend/src/services/api.ts`, `frontend/src/types/domain.ts`; V2 completion path in `MatchingService`/controller; integration tests | Show catalog text levels 0–4, save/recover server draft, gate completion on 31 answers, preserve the competency diagnosis using V2 declared levels, and show separate V2 role-matching results/history with persisted ranks. Replace V1 scoring only for V2; do not break other V1 routes. Connect service calls to authenticated API. No visual redesign is part of this change. |
+| Reuse | `AppShell`, `Card`, `Button`, `Badge`, React Router, TanStack Query; Spring Security/JWT, `CurrentUser`, Bean Validation, JPA/Flyway conventions, `ApiProblem` envelope | Keep layout, navigation/query tooling and authenticated user derivation. Reuse common error response conventions. The journey does not reuse the separate `ProgressBar` visual. |
+| Modify | `SkillAssessmentPage`, `SkillsIndexPage`, `SkillSummaryPage`, `RolesSuggestedPage`, `LevelPicker`, `frontend/src/services/api.ts`, `frontend/src/types/domain.ts`; V2 completion path in `MatchingService`/controller; integration tests | Show catalog text levels 0–4, save/recover server draft, gate completion on 31 answers, preserve the competency diagnosis using V2 declared levels, and show separate V2 role-matching results/history with persisted ranks. Replace V1 scoring only for V2; do not break other V1 routes. Connect service calls to authenticated API. The approved addition below is limited to the visual journey in the existing assessment card; it does not authorize a general Home redesign. |
 | Add | Backend `assessment` module, V2 role catalog, V2 matching engine, versioned entities/repositories, V2 controller/DTOs, `AssessmentHistoryPage` and attempt detail UI, migration V5, API/unit/integration/frontend tests | Own the attempt lifecycle, snapshots, completion transaction, version context and completed-only history. Keep V2 role records out of the shared V1 role catalog to avoid changing existing V1 responses. |
+| Modify (approved journey addition) | `frontend/src/features/assessment/AssessmentAccessPanel.tsx` and its UI tests | Pass the existing draft/history state to the journey without changing the panel's current actions or issuing additional requests. A draft uses its saved answer count and total; completed history without a draft means 100%; no evaluation means 0%. |
+| Add (approved journey addition) | `frontend/src/features/assessment/AssessmentJourney.tsx`, local journey styles, `AssessmentJourney.test.tsx` | Reusable visual-only component driven by target progress and completion state. One SVG path represents both completed and pending progress; the mascot position is computed along that same path. No questionnaire, competency, area, role or fixed-count dependency; no API, backend, data model or migration change. |
 
 The existing `integration/frontend-api-adapter.ts` is a reference, not a drop-in: it is outside the active client path, targets `/api/v1`, and models legacy affinity results. `storage.ts` must stop being authoritative for V2 answers, but existing local data is not cleared.
 
@@ -64,6 +66,9 @@ The existing `integration/frontend-api-adapter.ts` is a reference, not a drop-in
 - Calculate exact rational scores in Java and persist numerator/denominator. Compare scores by cross multiplication. Assign randomized positions only within exact tie groups once at completion and persist rank positions. Format presentation with `BigDecimal` scale 1 and `HALF_UP`; never use the formatted value for ranking.
 - Enforce one active draft per user with a PostgreSQL partial unique index and transactional recovery when concurrent starts race. Discard is a state transition, not a delete.
 - Treat new assessment data as V2 data. Do not migrate V1 answers. Keep current V1 tables and rows untouched.
+- For the approved Home journey, derive state from the two queries already used by `AssessmentAccessPanel`: active draft and completed history. Add no query or endpoint. A draft's `answeredCount / totalQuestions` is the target; no draft plus history is 100%; neither is 0%.
+- Keep `AssessmentJourney` independent of assessment structure: its inputs are a normalized target progress and a confirmed-completion flag. Animate one shared progress value so path coloring, mascot position and the displayed percentage stay synchronized. Keep the sprite frame cadence and maximum travel duration in named, easily adjustable animation settings. Use a finite animation capped at 1.76 seconds; use the supplied eight-frame sprite sheet and stop on arrival. Reduced-motion users see the target state directly.
+- Render one continuous curved SVG path with no checkpoints, divisions or intermediate milestones. The path itself is the only visual progress indicator; the flag marks the final goal. Preserve the existing assessment card actions and all other Home content.
 
 ## Project Structure
 
@@ -99,6 +104,8 @@ frontend/src/
 ├── types/               # Add V2 assessment/catalog/result contracts
 └── components/ui/       # Reuse and adapt LevelPicker, progress, cards and buttons
 ```
+
+The approved animated journey is confined to `frontend/src/features/assessment/AssessmentJourney.tsx` and its local styles, mounted by `AssessmentAccessPanel`. It does not require additions to API contracts, `data-model.md`, migrations, backend modules or questionnaire structure.
 
 **Structure Decision**: Extend the existing frontend/backend layout. A dedicated backend `assessment` module owns versioned questions, attempts, answers and history; the matching domain service computes scores during completion. Existing authentication, CurrentUser, security configuration, UI shell and general UI primitives are reused. Detailed entities, invariants and endpoints are in [data-model.md](data-model.md) and [contracts/assessment-api.md](contracts/assessment-api.md).
 
