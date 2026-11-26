@@ -1,101 +1,161 @@
 import { useQuery } from '@tanstack/react-query'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 import { useSession } from '@/app/SessionContext'
 import { AppShell } from '@/components/layout/AppShell'
-import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { ConfirmDiscardDialog } from '@/components/ui/ConfirmDiscardDialog'
 import { Mascot } from '@/components/ui/Mascot'
-import { ProgressBar } from '@/components/ui/ProgressBar'
-import { AssessmentAccessPanel } from '@/features/assessment/AssessmentAccessPanel'
-import { getSelectedRoleId, getSkillCatalog, getSkillLevels } from '@/services/api'
+import { AssessmentJourney } from '@/features/assessment/AssessmentJourney'
+import { useDiscardAssessmentAttempt } from '@/features/assessment/useDiscardAssessmentAttempt'
+import { getAssessmentHistory, getCurrentAssessmentAttempt } from '@/services/api'
+import { ASSESSMENT_ROLE_NAME } from '@/types/domain'
 
-const TODAY = new Date().toLocaleDateString('es-AR', { day: 'numeric', month: 'short' })
+function formatCompletionDate(value: string) {
+  return new Date(value).toLocaleDateString('es-AR', { day: 'numeric', month: 'short', year: 'numeric' })
+}
 
 export function HomePage() {
   const { account } = useSession()
+  const [confirmDiscard, setConfirmDiscard] = useState(false)
+  const current = useQuery({ queryKey: ['assessment-attempt'], queryFn: getCurrentAssessmentAttempt })
+  const history = useQuery({ queryKey: ['assessment-history'], queryFn: getAssessmentHistory })
+  const { discard, isDiscarding, discardError, clearDiscardError } = useDiscardAssessmentAttempt()
 
-  const { data: catalog } = useQuery({ queryKey: ['skill-catalog'], queryFn: getSkillCatalog })
-  const { data: levels } = useQuery({ queryKey: ['skill-levels'], queryFn: getSkillLevels })
-  const { data: selectedRoleId } = useQuery({ queryKey: ['selected-role'], queryFn: getSelectedRoleId })
+  if (current.isLoading || history.isLoading) {
+    return (
+      <AppShell title="Inicio">
+        <HomeGreeting name={account?.firstName} />
+        <p role="status" className="mt-6 text-sm text-neutral-500">Consultando tus evaluaciones…</p>
+      </AppShell>
+    )
+  }
 
-  const totalSkills = catalog?.skills.length ?? 0
-  const evaluatedSkills = Object.keys(levels ?? {}).length
-  const assessmentDone = totalSkills > 0 && evaluatedSkills >= totalSkills
-  const roleSelected = Boolean(selectedRoleId)
+  if (current.isError || history.isError) {
+    return (
+      <AppShell title="Inicio">
+        <HomeGreeting name={account?.firstName} />
+        <p role="alert" className="mt-6 text-sm text-red-700">No pudimos consultar el estado de tus evaluaciones.</p>
+      </AppShell>
+    )
+  }
 
-  const steps = [
-    { label: 'Completar perfil', done: true },
-    { label: 'Autoevaluación de habilidades', done: assessmentDone },
-    { label: 'Selección de rol objetivo', done: roleSelected },
-    { label: 'Diagnóstico de brechas', done: roleSelected },
-    { label: 'Formación recomendada', done: false },
-  ]
-  const currentStepIndex = steps.findIndex((s) => !s.done)
-  const stepNumber = currentStepIndex === -1 ? steps.length : currentStepIndex + 1
-  const overallPct = Math.round(((stepNumber - 1) / steps.length) * 100)
+  const draft = current.data?.status === 'DRAFT' ? current.data : null
+  const latestCompleted = history.data?.[0]
+  const topResult = latestCompleted?.results.find((result) => result.rankPosition === 1)
+  const progress = draft && draft.totalQuestions > 0 ? draft.answeredCount / draft.totalQuestions : 0
+  const motivation = progress <= 0
+    ? latestCompleted
+      ? ['¡Un nuevo comienzo!', 'Volvé a evaluar tus habilidades y descubrí cuánto avanzaste.']
+      : ['¡Empezá a descubrir tu potencial!', 'Conocé tus habilidades y descubrí qué roles se adaptan a vos.']
+    : progress < 0.4
+      ? ['¡Cada paso cuenta!', 'Seguí descubriendo tus habilidades.']
+      : progress < 0.75
+        ? ['¡Vas por buen camino!', 'Seguí evaluando tus habilidades para descubrir tu perfil profesional.']
+        : progress < 1
+          ? ['¡Ya casi llegás!', 'Te falta poco para conocer tus resultados.']
+          : ['¡Llegaste a la meta!', 'Finalizá tu autoevaluación para conocer tus resultados.']
 
-  let suggestion: { title: string; description: string; to: string; cta: string }
-  if (!assessmentDone) {
-    suggestion = {
-      title: '¡Listo para tu próximo paso!',
-      description: 'Completá tu autoevaluación guiada y descubrí las mejores opciones para tu perfil profesional.',
-      to: '/habilidades',
-      cta: 'Continuar con mi autoevaluación →',
-    }
-  } else if (!roleSelected) {
-    suggestion = {
-      title: 'Tu diagnóstico está listo',
-      description: 'Ya evaluamos tus competencias. Mirá los roles IT con mayor afinidad a tu perfil.',
-      to: '/roles',
-      cta: 'Ver roles sugeridos →',
-    }
-  } else {
-    suggestion = {
-      title: 'Seguí preparándote',
-      description: 'Revisá tus brechas de competencias y la formación recomendada para tu rol elegido.',
-      to: `/roles/${selectedRoleId}/brechas`,
-      cta: 'Ver mi diagnóstico de brechas →',
+  async function discardDraft() {
+    if (!draft) return
+    try {
+      await discard(draft.attemptId)
+      setConfirmDiscard(false)
+    } catch {
+      // The shared hook retains the backend error and keeps the cached draft intact.
     }
   }
 
   return (
-    <AppShell title="Inicio" subtitle={account?.firstName ? `Hola, ${account.firstName}` : undefined}>
-      <div className="flex items-center justify-between">
-        <Badge tone="primary">En progreso</Badge>
-        <span className="text-xs text-neutral-400">{TODAY}</span>
-      </div>
+    <AppShell title="Inicio">
+      <HomeGreeting name={account?.firstName} />
 
-      <h1 className="mt-3 text-xl font-extrabold text-neutral-950">
-        ¡Hola, {account?.firstName || 'Estudiante'}! 👋
-      </h1>
-      <p className="mt-1 text-sm text-neutral-500">Estás a solo unos pasos de descubrir tu ruta laboral en tecnología.</p>
+      {draft ? (
+        <Card style={{ backgroundColor: '#006B9E' }} className="home-draft-card relative mt-6 space-y-4 overflow-hidden border-0 p-5 text-white shadow-md">
+          <h2 className="pr-16 text-lg font-extrabold text-white">Tu autoevaluación</h2>
+          <div className="space-y-1 text-white">
+            <h3 className="text-base font-bold text-white">{motivation[0]}</h3>
+            <p className="max-w-md text-sm leading-relaxed text-white/90">{motivation[1]}</p>
+          </div>
+          <AssessmentJourney progress={progress} completed={false} />
+          <Link to="/habilidades/evaluacion" className="block">
+            <Button fullWidth className="!bg-white !text-[#006B9E] hover:!bg-sky-50 disabled:!bg-white disabled:!text-[#006B9E]">Continuar evaluación</Button>
+          </Link>
+          <button
+            type="button"
+            className="text-left text-xs font-medium text-white/75 underline-offset-2 hover:text-white hover:underline disabled:opacity-50"
+            disabled={isDiscarding}
+            onClick={() => { clearDiscardError(); setConfirmDiscard(true) }}
+          >
+            Descartar borrador
+          </button>
+        </Card>
+      ) : (
+        <Card className="mt-6 flex flex-col items-center gap-3 border-sky-100 bg-gradient-to-br from-sky-50 to-white py-6 text-center">
+          <Mascot className="h-24 w-24" pose="wave" />
+          <h2 className="text-lg font-extrabold text-[#12304A]">
+            {latestCompleted ? '¡Seguí creciendo!' : '¡Descubrí tu potencial!'}
+          </h2>
+          <p className="max-w-sm text-sm leading-relaxed text-neutral-600">
+            {latestCompleted
+              ? 'Actualizá tus habilidades y descubrí cómo evoluciona tu preparación para los roles de IT.'
+              : 'Conocé tus habilidades y descubrí las oportunidades profesionales que mejor se adaptan a tu perfil.'}
+          </p>
+        </Card>
+      )}
 
-      <AssessmentAccessPanel />
-
-      <Card className="mt-5 flex flex-col items-center gap-3 bg-gradient-to-b from-primary-50 to-white text-center">
-        <Mascot className="h-24 w-24" />
-        <Badge tone="success">Paso sugerido</Badge>
-        <h2 className="text-base font-bold text-neutral-950">{suggestion.title}</h2>
-        <p className="text-sm text-neutral-500">{suggestion.description}</p>
-      </Card>
-
-      <Card className="mt-4 space-y-2">
-        <div className="flex items-center justify-between text-sm">
-          <span className="font-semibold text-neutral-800">Ruta de orientación</span>
-          <span className="text-xs text-neutral-400">Paso {stepNumber} de {steps.length}</span>
-        </div>
-        <ProgressBar value={overallPct} />
-        <div className="flex items-center justify-between text-xs text-neutral-400">
-          <span>Siguiente: {steps[currentStepIndex === -1 ? steps.length - 1 : currentStepIndex].label}</span>
-          <span>{overallPct}% completado</span>
-        </div>
-      </Card>
-
-      <Link to={suggestion.to} className="mt-5 block">
-        <Button fullWidth>{suggestion.cta}</Button>
-      </Link>
+      {latestCompleted && (
+        <Card className="mt-5 space-y-4">
+          <div className="flex items-start gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sky-100 text-primary-700" aria-hidden="true">
+              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="1.8">
+                <path d="M4 19V5m0 14h16M8 15v-4m4 4V7m4 8V9" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </span>
+            <div className="min-w-0 flex-1">
+              <h2 className="text-base font-bold text-neutral-950">Tu última evaluación</h2>
+              <p className="mt-1 text-xs text-neutral-500">Realizada el {formatCompletionDate(latestCompleted.completedAt)}</p>
+            </div>
+          </div>
+          {topResult ? (
+            <div className="flex items-end justify-between gap-3 rounded-xl bg-slate-50 px-4 py-3">
+              <div>
+                <p className="text-xs font-medium text-neutral-500">Rol con mayor preparación técnica</p>
+                <p className="mt-1 font-bold text-[#12304A]">{ASSESSMENT_ROLE_NAME[topResult.roleId] ?? topResult.roleId}</p>
+              </div>
+              <p className="shrink-0 text-xl font-extrabold tabular-nums text-primary-700">{topResult.displayPercentage}%</p>
+            </div>
+          ) : (
+            <p className="text-sm text-neutral-600">No hay resultados disponibles para esta evaluación.</p>
+          )}
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Link to={`/roles?attemptId=${encodeURIComponent(latestCompleted.attemptId)}`} className="block">
+              <Button fullWidth>Ver resultados</Button>
+            </Link>
+            <Link to="/habilidades/historial" className="block">
+              <Button variant="secondary" fullWidth>Ver historial de evaluaciones</Button>
+            </Link>
+          </div>
+        </Card>
+      )}
+      <ConfirmDiscardDialog
+        open={confirmDiscard}
+        pending={isDiscarding}
+        error={discardError}
+        onCancel={() => setConfirmDiscard(false)}
+        onConfirm={discardDraft}
+      />
     </AppShell>
+  )
+}
+
+function HomeGreeting({ name }: { name?: string }) {
+  return (
+    <div className="pt-2">
+      <h1 className="text-xl font-extrabold text-neutral-950">¡Hola, {name || 'Estudiante'}! 👋</h1>
+      <p className="mt-1 text-sm text-neutral-500">Tu próximo paso profesional empieza acá.</p>
+    </div>
   )
 }

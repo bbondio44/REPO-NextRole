@@ -71,7 +71,6 @@ public class AssessmentAttemptService {
                 questionnaire.id, matrix.id, Instant.now());
         target.sourceAttemptId = source == null ? null : source.id;
         target = attempts.save(target);
-        if (source != null) answers.copyAnswers(source, target);
         return new StartResult(target, true);
     }
 

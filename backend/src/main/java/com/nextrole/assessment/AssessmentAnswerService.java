@@ -65,16 +65,4 @@ public class AssessmentAnswerService {
         return result;
     }
 
-    @Transactional
-    public void copyAnswers(AssessmentAttempt source, AssessmentAttempt target) {
-        Instant copiedAt = Instant.now();
-        answers.findByIdAttemptIdOrderByIdCompetencyCode(source.id).stream()
-                .filter(answer -> catalog.containsQuestion(target.questionnaireVersionId, answer.id.competencyCode))
-                .map(answer -> new AssessmentAnswer(
-                        new AssessmentAnswerId(target.id, answer.id.competencyCode),
-                        target.questionnaireVersionId,
-                        answer.level,
-                        copiedAt))
-                .forEach(answers::save);
-    }
 }

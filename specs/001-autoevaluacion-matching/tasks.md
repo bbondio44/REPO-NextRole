@@ -10,12 +10,12 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 
 **Tests**: Included as explicitly requested. Write contract/unit/integration tests before their implementing tasks and verify behavior through existing Maven/JUnit/Testcontainers plus the frontend test setup created in Phase 1.
 
-**Organization**: Tasks follow the four user stories in `spec.md`, after shared setup and persistence foundations.
+**Organization**: Tasks follow the seven user stories in `spec.md`, after shared setup and persistence foundations. The US6 shared discard behavior precedes US5 Home integration because the Home draft card reuses it.
 
 ## Format: `[ID] [P?] [Story] Description`
 
 - `[P]` marks work that can run in parallel without editing the same files or depending on unfinished tasks.
-- `[US1]`–`[US4]` map to the specification's user stories. Setup, foundational, and polish tasks have no story label.
+- `[US1]`–`[US7]` map to the specification's user stories. Setup, foundational, and polish tasks have no story label.
 - Every task names its target file path and any task dependencies.
 
 ## Phase 1: Setup
@@ -83,19 +83,19 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 
 ## Phase 5: User Story 3 — Reevaluarse y conservar historial (Priority: P2)
 
-**Goal**: Start a new version-pinned reevaluation from the latest completed answers, explicitly discard drafts, and browse immutable completed attempts newest first with detail.
+**Goal**: Start a new empty version-pinned reevaluation while retaining source provenance, explicitly discard drafts, and browse immutable completed attempts newest first with detail.
 
-**Independent Test**: A user can inspect history containing only completed attempts in descending completion time, open a versioned detail, start a new draft prefilled from the latest complete without changing it, and explicitly discard a draft before creating another.
+**Independent Test**: A user can inspect completed-only newest-first history, open a versioned detail, start an unanswered reevaluation linked to but independent from the latest complete, recover that draft with its own answers, and explicitly discard it without changing earlier data.
 
 ### Tests for User Story 3
 
 - [X] T024 [P] [US3] Add API contract tests for reevaluation, explicit discard, completed-only history and historical detail in `backend/src/test/java/com/nextrole/assessment/AssessmentHistoryApiContractTest.java`, following `contracts/assessment-api.md`.
-- [X] T025 [P] [US3] Add Testcontainers tests for answer prefill, source-attempt immutability, one active draft, version pinning, discarded-state retention and newest-first completed history in `backend/src/test/java/com/nextrole/assessment/AssessmentHistoryIntegrationTest.java`.
+- [ ] T025 [P] [US3] Update Testcontainers coverage in `backend/src/test/java/com/nextrole/assessment/AssessmentHistoryIntegrationTest.java`: a new reevaluation has zero answers while retaining `source_attempt_id`, the source answers/results remain unchanged, saved draft answers recover, only one draft exists, versions remain pinned, discard is retained, and completed history stays newest-first.
 - [X] T026 [P] [US3] Add UI tests for completed-only history, historical detail, recovered draft and explicit discard flow in `frontend/src/features/assessment/AssessmentHistoryPage.test.tsx` and `frontend/src/features/assessment/AssessmentAccessPanel.test.tsx`; verify the question screen does not expose discard in `frontend/src/features/assessment/SkillAssessmentPage.test.tsx`.
 
 ### Implementation for User Story 3
 
-- [X] T027 [US3] Implement reevaluation creation in `backend/src/main/java/com/nextrole/assessment/AssessmentAttemptService.java`; return an existing draft if present, otherwise pin current versions and copy the latest completed answers by stable competency code when available. Keep the source immutable using `data-model.md` (`assessment_attempts.source_attempt_id/questionnaire_version_id/matrix_version_id` and `assessment_answers.attempt_id/competency_code/level`). Depends on T010, T011 and T020.
+- [ ] T027 [US3] Implement reevaluation creation in `backend/src/main/java/com/nextrole/assessment/AssessmentAttemptService.java`; return an existing draft with its own saved answers if present, otherwise pin current versions and retain only the latest completed source reference. Do not copy `assessment_answers`. Keep the source immutable using `data-model.md` (`assessment_attempts.source_attempt_id/questionnaire_version_id/matrix_version_id` and `assessment_answers.attempt_id/competency_code/level`). Depends on T010, T011 and T020.
 - [X] T028 [US3] Implement explicit draft discard as a `DISCARDED` state transition in `backend/src/main/java/com/nextrole/assessment/AssessmentAttemptService.java` and expose `POST .../{attemptId}/discard` through `backend/src/main/java/com/nextrole/assessment/AssessmentController.java`; do not delete rows. Resolve state/date rules from `data-model.md` (`assessment_attempts.status/discarded_at/user_id`). Depends on T010.
 - [X] T029 [US3] Implement owned completed-history/detail queries in `backend/src/main/java/com/nextrole/assessment/AssessmentAttemptService.java` and `backend/src/main/java/com/nextrole/assessment/AssessmentController.java`; return completion date, six stored results and pinned questionnaire/matrix content, exclude drafts, sort by `completed_at DESC`. Use `data-model.md` (`assessment_attempts.status/completed_at/questionnaire_version_id/matrix_version_id` and `assessment_result_sets.attempt_id/calculated_at`). Depends on T020 and T028 to avoid overlapping controller edits.
 - [X] T030 [US3] Add completed-history and historical-attempt detail views/routes in `frontend/src/features/assessment/AssessmentHistoryPage.tsx`, `frontend/src/features/assessment/AssessmentAttemptDetailPage.tsx` and `frontend/src/app/router.tsx`; display stored scores and versions without recalculation. Depends on T029.
@@ -107,7 +107,6 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 
 **Purpose**: Verify the integrated V2 flow and report evidence without adding out-of-scope modules.
 
-- [X] T032 Add an authenticated end-to-end API workflow test from catalog through draft, completion, results, reevaluation and history in `backend/src/test/java/com/nextrole/integration/AssessmentWorkflowIntegrationTest.java` using Testcontainers PostgreSQL. Depends on T023, T030 and T031.
 - [X] T033 Run the applicable backend suite `mvn -f backend/pom.xml test`, frontend tests `npm --prefix frontend test`, build `npm --prefix frontend run build`, lint `npm --prefix frontend run lint`, and record manual validation of the application as reported by the user, including mobile access. Individual quickstart scenario outcomes are not asserted unless explicitly recorded. Correct failures within this feature and record checks not runnable (including Docker/Testcontainers availability). Depends on T032.
 - [X] T034 Record actual changed files, test/build/lint outcomes, blockers and next authorized step in `progress/current.md`; do not mark unrun checks as passed or advance to Implement beyond the implementation authorization. Depends on T033.
 
@@ -115,23 +114,125 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 
 **Goal**: Show the current assessment progress as a continuous, accessible path animation in the existing assessment card, without changing assessment behavior or the rest of Home.
 
-**Independent Test**: The path percentage and mascot endpoint match 0% with no attempt, the active draft's saved-answer ratio (including saved level 0), and 100% for completed history without an active draft. A fully answered but uncompleted draft does not celebrate. Reduced motion shows the target state directly.
+**Independent Test**: Only an active draft renders the path. Its accessible progress and mascot endpoint match the saved-answer ratio (including saved level 0), with or without older history. No draft—whether there are no attempts or completed history—renders no journey. A fully answered but uncompleted draft does not celebrate. Reduced motion shows the target state directly.
 
 ### Tests for User Story 4
 
 - [X] T035 [P] [US4] Add component tests in `frontend/src/features/assessment/AssessmentJourney.test.tsx` for target progress, continuous path endpoint/percentage consistency, confirmed completion versus a fully answered draft, finite entry motion and reduced-motion rendering. Keep the component inputs independent of questionnaire structure.
-- [X] T036 [P] [US4] Extend `frontend/src/features/assessment/AssessmentAccessPanel.test.tsx` for no evaluation (0%), active-draft ratio including an explicit level 0, completed history without a draft (100%), and an active draft taking precedence over older completed results. Verify the existing queries suffice and no extra request is issued.
+- [X] T036 [P] [US4] Update `frontend/src/features/assessment/AssessmentAccessPanel.test.tsx` so only a current draft renders the journey and its saved-answer ratio (including explicit level 0); no draft with either empty or completed history renders no journey. Verify existing queries suffice and no extra request is issued.
 
 ### Implementation for User Story 4
 
-- [X] T037 [US4] Create `frontend/src/features/assessment/AssessmentJourney.tsx` and local `AssessmentJourney.css` with a single responsive SVG path, completed/pending path strokes, mascot positioned at the animated path endpoint, one percentage, goal flag, supplied walk sprite sheet and celebration/idle poses. Use one adjustable animation progress value, stop at arrival, cap travel at 1.76 seconds and respect `prefers-reduced-motion`. Add no checkpoints, second progress bar, or assessment-structure inputs. Depends on T035.
-- [X] T038 [US4] Integrate `AssessmentJourney` into `frontend/src/features/assessment/AssessmentAccessPanel.tsx` using its existing current-attempt and history query data only: active draft count/total, completed history with no draft, or no evaluation. Preserve existing copy, navigation and actions. Depends on T036 and T037.
+- [X] T037 [US4] Update `frontend/src/features/assessment/AssessmentJourney.tsx` and `AssessmentJourney.css` so no numeric percentage is visible while its progressbar role, `aria-valuenow` and `aria-valuetext` remain accurate; preserve synchronized path/mascot progress, supplied animation assets and reduced motion. Depends on T035.
+- [X] T038 [US4] In `frontend/src/features/assessment/AssessmentAccessPanel.tsx`, mount `AssessmentJourney` only for the current `DRAFT`; never derive or show a journey from completed history or an empty state. Keep existing query keys and pass the active draft's saved ratio. Habilidades's static no-draft content is handled by US8. Depends on T036 and T037.
 
 ### Validation for User Story 4
 
 - [X] T039 [US4] Run frontend tests, build and lint after integration; record failures and warnings. Depends on T038.
 - [ ] T040 [US4] Visually review the journey at mobile and desktop sizes for clipping, path/mascot synchronization, sprite cadence, scale, contrast, accessibility and reduced-motion behavior. Record unavailable checks without marking them passed. Depends on T038.
 - [X] T041 Record changed files, validation outcomes, manual checks actually completed and remaining review in `progress/current.md`. Keep this checkpoint separate from task status. Depends on T039.
+
+## Phase 8: User Story 6 — Descartar el borrador sin iniciar otra evaluación
+
+**Goal**: Make discard behavior identical on Home and Habilidades: confirm, discard only the active draft, preserve completed history, create no replacement attempt, and keep the user on the originating screen.
+
+**Independent Test**: On Habilidades, cancel leaves the draft unchanged; confirmed backend success clears the current-draft state without calling either create endpoint; backend failure leaves the draft and prior history visible with an error. Home uses the same mutation and remains on `/` after success.
+
+### Tests for User Story 6
+
+- [X] T042 [US6] Update `frontend/src/features/assessment/AssessmentAccessPanel.test.tsx` and `frontend/src/features/home/HomePage.test.tsx` for the shared dialog's exact title/copy, Cancelar/Descartar actions, cancel/success/failure, keyboard dismissal, disabled duplicate submission, preserved history, no automatic create call, and origin-screen retention.
+
+### Implementation for User Story 6
+
+- [X] T043 [US6] Add reusable `frontend/src/components/ui/ConfirmDiscardDialog.tsx` and integrate it in `HomePage.tsx` and `AssessmentAccessPanel.tsx` with `useDiscardAssessmentAttempt.ts`. Keep the existing mutation/cache semantics; render errors in the modal, disable duplicate submits, and set the current-attempt query to null only after API success. Depends on T042.
+
+## Phase 9: User Story 5 — Consultar Inicio según el estado de la autoevaluación
+
+**Goal**: Replace the obsolete orientation UI with responsive Home content derived from the active draft and persisted completed history, while preserving current navigation and the Habilidades entry point for starting an assessment.
+
+**Independent Test**: Verify the four combinations of draft/history, a full but unfinalized draft, loading/error behavior, last-result details and links, and a successful completion refresh. Home shows the journey only for an active draft, and no evaluation is created automatically.
+
+### Tests for User Story 5
+
+- [X] T044 [P] [US5] Update `frontend/src/features/home/HomePage.test.tsx` for draft/history states, an unfinalized full draft, loading/error states, one greeting, persisted latest date/rank/percentage, approved deterministic progress messages, visible-copy absence of a numeric journey percentage, result/history links, discard states and post-completion refresh. Reuse existing query keys.
+
+### Implementation for User Story 5
+
+- [X] T045 [US5] Fix the draft card visual styles in `frontend/src/features/home/HomePage.tsx`; make the blue background and white Continue button explicit against shared Card/Button styles. Show legible title, journey, message/description and secondary discard action. Choose deterministic copy from raw progress and history without showing a numeric percentage. Integrate the shared dialog from T043 and preserve persisted latest results/routes. Depends on T043 and T044.
+
+## Phase 10: User Story 7 — Consultar Skill Gap sin indicadores de orientación obsoletos
+
+**Goal**: Remove only the old orientation stage label and six-segment strip from Skill Gap while preserving the diagnostic and every independent progress flow.
+
+**Independent Test**: Skill Gap still renders its title, competency gaps, per-competency progress bars, role context and training link, but does not render «PASO 5 DE 6» or the six-segment strip. Registration, profile onboarding and assessment progress remain unchanged.
+
+### Tests for User Story 7
+
+- [X] T046 [P] [US7] Add `frontend/src/features/skill-gap/SkillGapPage.test.tsx` to assert the obsolete label and six-segment strip are absent while the diagnostic title, gap content, competency progress bars and training navigation remain. Cover only the existing page behavior; do not introduce a redesign.
+
+### Implementation for User Story 7
+
+- [X] T047 [US7] Remove only the orientation label and six-segment markup from `frontend/src/features/skill-gap/SkillGapPage.tsx`. Preserve `ProgressBar`, status badges, gap calculation, data requests, `AppShell`, routes and all diagnostic content. Depends on T046.
+
+## Phase 11: Home Validation and Checkpoint
+
+**Purpose**: Validate the approved Home/discard behavior, record limitations precisely, and keep the animation's separate manual-review status accurate.
+
+- [X] T048 Update and review `specs/001-autoevaluacion-matching/quickstart.md` Home/discard/Skill Gap scenarios against the implementation; include reevaluation without prefill, Home/Habilidades no-journey states, modal outcomes, Roles latest/historical results and Formation empty states. Depends on T045 and T047.
+- [ ] T049 Review updated Home, Habilidades, Roles and Formation in a browser at mobile and desktop sizes, including modal, spacing, touch targets and bottom navigation. Record which states are actually checked. Keep T040's journey-specific visual review separate. Depends on T045.
+- [X] T050 Run `npm --prefix frontend test`, `npm --prefix frontend run build`, `npm --prefix frontend run lint`, and `git diff --check`; resolve in-scope failures and record warnings. No backend suite is needed unless implementation unexpectedly changes backend contracts or code. Depends on T045-T048; T049 remains a separate manual review.
+- [X] T051 Update `progress/current.md` with actual changed files and validation outcomes; report automated checks separately from visual review. Leave T040 unchecked until its full journey visual criteria are personally verified. Depends on T050.
+
+## Phase 12: User Story 3 — Crear reevaluaciones independientes
+
+**Goal**: Preserve source provenance without answer prefill, recover only an existing draft's answers, and leave completed attempts immutable.
+
+**Independent Test**: Starting reevaluation after completion returns an empty answer map and zero answered count; the source retains all saved answers/results. Saving one answer and fetching the same draft returns only that saved answer; another create request recovers it, and the one-draft constraint remains.
+
+- [X] T052 [US3] Update unit and API contract assertions in `backend/src/test/java/com/nextrole/assessment/AssessmentAttemptServiceTest.java` and `AssessmentHistoryApiContractTest.java` for empty reevaluations, source immutability, saved draft recovery, one active draft and pinned versions.
+- [X] T053 [US3] Remove `copyAnswers` use from `AssessmentAttemptService.reevaluate` and its now-unused implementation from `AssessmentAnswerService`; preserve `source_attempt_id` provenance and existing schema/data. Depends on T025 and T052.
+- [X] T032 Update the authenticated end-to-end Testcontainers workflow in `backend/src/test/java/com/nextrole/integration/AssessmentWorkflowIntegrationTest.java` to prove a reevaluation is empty, recovers only its own saved answers, and does not replace completed source results. Depends on T023, T030, T031 and T053.
+
+## Phase 13: User Story 8 — Ajustar el recorrido y los estados de Habilidades
+
+**Goal**: Show no visible numeric journey percentage and render the journey only while a draft is active; show a static mascot access card otherwise.
+
+**Independent Test**: Habilidades with no history shows the first-assessment copy/action; with history and no draft shows reevaluation and history; with a draft shows that draft's path only. After discard, the path disappears even when completed history remains. Screen readers can still read the saved-answer percentage.
+
+- [X] T054 [P] [US8] Update `frontend/src/features/assessment/AssessmentJourney.test.tsx` to assert the visible percentage node is absent while the accessible progress value remains correct, including reduced motion and full draft behavior.
+- [X] T055 [US8] Update `frontend/src/features/assessment/AssessmentAccessPanel.test.tsx` for first-user, recurrent-user, active-draft, and discarded-draft-with-history states. Confirm no journey/flag/number when no draft and no extra data requests.
+- [X] T056 [US8] Update `frontend/src/features/assessment/AssessmentAccessPanel.tsx` to show a static branded mascot with the approved Habilidades title/copy/start/history actions when no draft exists. Preserve explicit start/re-evaluation and saved-draft recovery; never show old completed progress as a journey. Journey mount policy is handled by T038 and percentage visibility by T037. Depends on T054 and T055.
+
+## Phase 14: User Story 9 — Orientar Roles y Formación sin rol permanente
+
+**Goal**: Present real latest persisted rankings or useful empty states from existing assessment state, while preserving historical `attemptId` navigation and per-role Learning V1.
+
+**Independent Test**: Direct Roles with history shows `history[0]` persisted ranks, with or without another draft; historical `attemptId` still loads its requested attempt. With no history, Roles and Formation show the approved empty actions. Formation with completed history invites role exploration; per-role resources remain unchanged.
+
+- [X] T057 [P] [US9] Add/update `frontend/src/features/roles/RolesSuggestedPage.test.tsx` for direct latest results from history, active-draft coexistence, empty state with/without draft, loading/errors, and unchanged historical `attemptId` detail behavior.
+- [X] T058 [P] [US9] Add `frontend/src/features/learning/LearningIndexPage.test.tsx` for empty without history, continuation CTA for an uncompleted draft, role-exploration invitation with history, loading/error handling and no permanent-role redirect.
+- [X] T059 [US9] Implement a reusable styled `frontend/src/components/ui/EmptyStateCard.tsx` and update `RolesSuggestedPage.tsx` to use the newest persisted results for direct `/roles`, preserve `attemptId` fetches, and show the approved no-results states without fake ranks. Depends on T057.
+- [X] T060 [US9] Update only `frontend/src/features/learning/LearningIndexPage.tsx` to use existing assessment current/history queries and the reusable empty state. Remove selected-role dependency only from this index route; leave `LearningPage.tsx`, its per-role APIs/resources and role-specific navigation unchanged. Depends on T058 and T059.
+
+## Phase 15: Verification and review handoff
+
+**Purpose**: Revalidate backend/frontend behavior and leave the app available without claiming manual checks the user has not performed.
+
+- [X] T061 Run `mvn -f backend/pom.xml test`, `npm --prefix frontend test`, `npm --prefix frontend run build`, `npm --prefix frontend run lint`, and `git diff --check`; record exact results and any environment blockers. Do not change matching or competency data. Depends on T032, T053, T056, T059 and T060.
+- [X] T062 Review `specs/001-autoevaluacion-matching/quickstart.md` against implementation, record the user-reported checks separately from unperformed scenarios, and keep T040 and T049 unchecked until their respective visual reviews occur. Depends on T061.
+- [X] T063 Update `progress/current.md` with files, test outcomes, service availability and pending manual checks. Keep docker-compose/local files intact and do not commit or push. Depends on T062.
+
+## Phase 16: Preserve evaluation context in Roles and Formación
+
+**Goal**: Keep completed results and explicit historical navigation isolated from an active draft, and restore current exploration only after the draft is discarded.
+
+**Independent Test**: With a completed attempt and a new draft, direct Roles keeps the stored latest ranking and context note but hides exploration links; Formación shows the approved assessment-pending state with no prior role CTA. After the draft query becomes null, Roles exploration and Formación's Roles invitation return. An explicit historical `attemptId` continues to render its requested attempt.
+
+- [X] T064 [P] [US9] Update `frontend/src/features/roles/RolesSuggestedPage.test.tsx` for the latest persisted ranking with a draft, context note, hidden exploration links, and exploration reenabled after the existing current-attempt cache is cleared.
+- [X] T065 [P] [US9] Update `frontend/src/features/learning/LearningIndexPage.test.tsx` for active-draft precedence despite completed history, approved copy/continue action with no Roles link, and return to role exploration after discard; retain no-history, loading, error and history-without-draft coverage.
+- [X] T066 [US9] Add an optional exploration-action visibility prop to `AssessmentResultsRanking` and hide its links only for the unscoped latest ranking while a draft is active. Preserve historical `attemptId` detail and default exploration behavior.
+- [X] T067 [US9] Update `RolesSuggestedPage.tsx` and `LearningIndexPage.tsx` to apply draft precedence using the existing current/history query keys; keep persisted ranking values and historical navigation unchanged. No backend changes.
+- [X] T068 Review the US9 acceptance criteria and `specs/001-autoevaluacion-matching/quickstart.md` for draft/history coexistence, discard state transition, and explicit historical `attemptId`; record tests and pending manual review in `progress/current.md`.
 
 ## Dependencies & Execution Order
 
@@ -149,8 +250,13 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 
 - **US1 (P1)**: Starts after foundation; delivers question/answer and recoverable draft behavior.
 - **US2 (P1)**: Starts after US1; adds completion, matching and visible role results. US1 alone is an assessment-input increment, not the complete matching release.
-- **US3 (P2)**: Starts after US1 and US2; needs completed source attempts for reevaluation and history.
+- **US3 (P2)**: Starts after US1 and US2; reevaluations keep a link to the completed source but create an empty answer map.
 - **US4 (P2)**: Uses the existing draft/history contracts from US1/US3. It changes only presentation in the assessment access card; it adds no API, data model, backend or questionnaire dependency.
+- **US6 (P1)**: Reuses the existing discard endpoint from US3, runs before US5, and creates no replacement attempt.
+- **US5 (P1)**: Uses existing current-attempt/history data from US1/US3 and the shared discard action from US6; it adds no API, backend, database or matching dependency.
+- **US7 (P2)**: Removes only two obsolete Skill Gap orientation indicators and has no dependency on the Home layout, API, backend or database. Its tests ensure the existing diagnosis remains intact.
+- **US8 (P1)**: Depends on US3 active-draft/history contracts and US6 shared discard; the journey displays only for the active draft.
+- **US9 (P1)**: Reuses existing current-attempt, history, attempt-detail and role-resource contracts; direct Roles preserves `attemptId`, while `/formacion` entry states no longer depend on a persistent selected role.
 
 ### Parallel Opportunities
 
@@ -196,11 +302,16 @@ Task: T026 history/draft UI tests in frontend/src/features/assessment/Assessment
 2. Deliver US1 as a testable questionnaire/draft increment.
 3. Add US2 before calling the assessment-and-matching feature releasable; it supplies the approved six-role matching value.
 4. Add US3 history and reevaluation; finish with the end-to-end and quickstart checks.
-5. Add US4's isolated assessment journey visual after the existing assessment and history behavior is stable; keep Home's other content unchanged.
+5. Add US4's isolated assessment journey visual after the existing assessment and history behavior is stable.
+6. Implement US6's consistent discard-only behavior, then US5's assessment-aware Home composition.
+7. Implement US7's narrowly scoped Skill Gap indicator removal, preserving all diagnostic content and per-competency progress.
+8. Complete the US3 empty-reevaluation correction while preserving source lineage and immutable history.
+9. Implement the US6 shared modal, US8 draft-only Habilidades journey and US9 direct Roles/Formation states.
+10. Run automated checks, keep T040/T049 as user visual reviews, and leave the current app ready for iteration.
 
 ## Notes
 
 - `[P]` means no shared-file edits or dependency on unfinished work; `[USn]` traces tasks to `spec.md` user stories.
 - Every implementing task that enforces data constraints cites `data-model.md` and the canonical table/field names.
-- No task includes Skill Gap, Learning, V1 answer conversion, destructive data operations, commits, or changes to existing migrations V1–V4.
+- No task includes Skill Gap V2, Learning V2 or per-role Learning recommendation changes; the narrowly approved Skill Gap marker removal and `/formacion` empty state are included. No V1 answer conversion, destructive data operations, commits or changes to existing migrations V1–V4 are included.
 - Spec Kit Tasks ends here; this file does not authorize or execute Implement.

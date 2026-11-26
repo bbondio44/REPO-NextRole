@@ -60,7 +60,8 @@ describe('AssessmentJourney', () => {
     const path = screen.getByTestId('assessment-journey-progress-path')
 
     expect(progress).toHaveAttribute('aria-valuenow', '42')
-    expect(screen.getByText('42%')).toBeInTheDocument()
+    expect(screen.queryByText('42%')).not.toBeInTheDocument()
+    expect(progress).toHaveAttribute('aria-valuetext', '42% completado')
     expect(mascot).toHaveAttribute('data-progress', '0.42')
     expect(path).toHaveAttribute('data-progress', '0.42')
     expect(screen.getAllByTestId(/assessment-journey-(?:track|progress)-path/)).toHaveLength(2)

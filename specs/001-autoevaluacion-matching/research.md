@@ -54,4 +54,4 @@
 
 ## Unresolved future evolution (not a baseline implementation blocker)
 
-If a future questionnaire version changes the competency set, the policy for preloading answers into newly added/removed competency codes is not specified beyond carrying matching codes forward where identity is stable. The initial V2 release and its reevaluations use the same 31 stable codes, so this does not block this plan. Before publishing a changed competency set, contributors must settle any mapping behavior not determined by stable codes and the approved reevaluation requirement.
+Approved reevaluation policy (2026-11-25): every new attempt starts unanswered; source answers are never copied, even when competency codes are unchanged. `source_attempt_id` remains useful provenance linking a reevaluation to the completed attempt from which the user chose to reevaluate, without affecting state or scoring. If a future questionnaire changes the competency set, this provenance link remains valid and requires no answer-mapping rule. The active draft remains recoverable with its own saved answers.

@@ -44,11 +44,14 @@ class AssessmentHistoryApiContractTest {
         assertEquals(HttpStatus.CREATED, first.getStatusCode());
         String attemptId = first.getBody().get("attemptId").toString();
         assertNull(first.getBody().get("sourceAttemptId"));
+        assertTrue(((Map<String, Object>) first.getBody().get("answers")).isEmpty());
+        assertEquals(0, ((Number) first.getBody().get("answeredCount")).intValue());
 
         ResponseEntity<Map> recovered = rest.exchange(url("/api/v2/assessment-attempts/reevaluations"), HttpMethod.POST,
                 new HttpEntity<>(user), Map.class);
         assertEquals(HttpStatus.OK, recovered.getStatusCode());
         assertEquals(attemptId, recovered.getBody().get("attemptId"));
+        assertTrue(((Map<String, Object>) recovered.getBody().get("answers")).isEmpty());
 
         ResponseEntity<Void> discarded = rest.exchange(url("/api/v2/assessment-attempts/" + attemptId + "/discard"),
                 HttpMethod.POST, new HttpEntity<>(user), Void.class);

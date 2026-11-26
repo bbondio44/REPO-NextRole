@@ -24,9 +24,9 @@ function renderPanel(showDraftDiscardAction = false) {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   return render(
     <QueryClientProvider client={client}>
-      <MemoryRouter initialEntries={['/']}>
+      <MemoryRouter initialEntries={['/habilidades']}>
         <Routes>
-          <Route path="/" element={<><AssessmentAccessPanel showDraftDiscardAction={showDraftDiscardAction} /><Location /></>} />
+          <Route path="/habilidades" element={<><AssessmentAccessPanel showDraftDiscardAction={showDraftDiscardAction} /><Location /></>} />
           <Route path="/habilidades/evaluacion" element={<Location />} />
           <Route path="/habilidades/historial" element={<Location />} />
         </Routes>
@@ -68,32 +68,32 @@ describe('AssessmentAccessPanel', () => {
 
     const progress = await screen.findByRole('progressbar', { name: 'Progreso de autoevaluación' })
     expect(progress).toHaveAttribute('aria-valuenow', '25')
-    expect(screen.getByText('25%')).toBeInTheDocument()
+    expect(screen.queryByText('25%')).not.toBeInTheDocument()
     expect(getCurrentAssessmentAttempt).toHaveBeenCalledTimes(1)
     expect(getAssessmentHistory).toHaveBeenCalledTimes(1)
     expect(screen.getByTestId('assessment-journey-mascot')).toHaveAttribute('data-pose', 'idle')
   })
 
-  it('uses 0% when there is neither an active draft nor completed history', async () => {
+  it('shows the first-evaluation mascot without a journey when no draft or history exists', async () => {
     vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(null)
     vi.mocked(getAssessmentHistory).mockResolvedValue([])
     renderPanel()
 
-    const progress = await screen.findByRole('progressbar', { name: 'Progreso de autoevaluación' })
-    expect(progress).toHaveAttribute('aria-valuenow', '0')
-    expect(screen.getByText('0%')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Descubrí tus habilidades' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Comenzar evaluación' })).toBeInTheDocument()
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
     expect(getCurrentAssessmentAttempt).toHaveBeenCalledTimes(1)
     expect(getAssessmentHistory).toHaveBeenCalledTimes(1)
   })
 
-  it('shows 100% and celebration only for completed history without an active draft', async () => {
+  it('shows the recurring static mascot and history link without a journey after completion', async () => {
     vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(null)
     vi.mocked(getAssessmentHistory).mockResolvedValue([completed])
     renderPanel()
 
-    const progress = await screen.findByRole('progressbar', { name: 'Progreso de autoevaluación' })
-    expect(progress).toHaveAttribute('aria-valuenow', '100')
-    expect(screen.getByTestId('assessment-journey-mascot')).toHaveAttribute('data-pose', 'celebration')
+    expect(await screen.findByRole('heading', { name: 'Seguí evolucionando' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ver historial de evaluaciones' })).toHaveAttribute('href', '/habilidades/historial')
+    expect(screen.queryByRole('progressbar')).not.toBeInTheDocument()
   })
 
   it('keeps a completed but unfinalized draft at 100% without celebrating', async () => {
@@ -127,7 +127,7 @@ describe('AssessmentAccessPanel', () => {
     expect(createAssessmentAttempt).not.toHaveBeenCalled()
   })
 
-  it('hides draft discard by default, including on the home access panel', async () => {
+  it('hides draft discard when the panel action is not enabled', async () => {
     vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(draft)
     vi.mocked(getAssessmentHistory).mockResolvedValue([])
     renderPanel()
@@ -136,25 +136,79 @@ describe('AssessmentAccessPanel', () => {
     expect(screen.queryByRole('button', { name: 'Descartar borrador' })).not.toBeInTheDocument()
   })
 
-  it('requires confirmation to discard from Habilidades and then starts a reevaluation', async () => {
+  it('discards from Habilidades only after confirmation and leaves starting a new evaluation explicit', async () => {
     vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(draft)
     vi.mocked(getAssessmentHistory).mockResolvedValue([completed])
     vi.mocked(discardAssessmentAttempt).mockResolvedValue(undefined)
-    vi.mocked(createAssessmentReevaluation).mockResolvedValue({ ...draft, attemptId: 'draft-2' })
     renderPanel(true)
 
     fireEvent.click(await screen.findByRole('button', { name: 'Descartar borrador' }))
-    expect(screen.getByText(/Se conservará como descartada/)).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: '¿Descartar autoevaluación?' })).toBeInTheDocument()
+    expect(screen.getByText('¿Estás seguro? Se perderá el progreso de este borrador.')).toBeInTheDocument()
     expect(discardAssessmentAttempt).not.toHaveBeenCalled()
 
     fireEvent.click(screen.getByRole('button', { name: 'Cancelar' }))
-    expect(screen.queryByText(/Se conservará como descartada/)).not.toBeInTheDocument()
-    fireEvent.click(screen.getByRole('button', { name: 'Descartar borrador' }))
-    fireEvent.click(screen.getByRole('button', { name: 'Confirmar y empezar otra' }))
+    expect(screen.queryByText(/Se perderá el progreso guardado de este borrador/)).not.toBeInTheDocument()
+    expect(await screen.findByRole('link', { name: 'Continuar evaluación' })).toBeInTheDocument()
+    expect(discardAssessmentAttempt).not.toHaveBeenCalled()
 
-    await waitFor(() => expect(discardAssessmentAttempt).toHaveBeenCalledWith('draft-1'))
-    await waitFor(() => expect(createAssessmentReevaluation).toHaveBeenCalledTimes(1))
-    expect(await screen.findByText('/habilidades/evaluacion')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Descartar borrador' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Descartar$/ }))
+
+    await waitFor(() => expect(discardAssessmentAttempt).toHaveBeenCalledWith('draft-1', expect.anything()))
+    expect(createAssessmentReevaluation).not.toHaveBeenCalled()
+    expect(createAssessmentAttempt).not.toHaveBeenCalled()
+    expect(await screen.findByRole('button', { name: 'Comenzar nueva evaluación' })).toBeInTheDocument()
+    expect(await screen.findByText('/habilidades')).toBeInTheDocument()
+  })
+
+  it('allows keyboard dismissal of the accessible discard dialog without changing the draft', async () => {
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(draft)
+    vi.mocked(getAssessmentHistory).mockResolvedValue([])
+    renderPanel(true)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Descartar borrador' }))
+    expect(screen.getByRole('dialog', { name: '¿Descartar autoevaluación?' })).toBeInTheDocument()
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('progressbar', { name: 'Progreso de autoevaluación' })).toBeInTheDocument()
+    expect(discardAssessmentAttempt).not.toHaveBeenCalled()
+  })
+
+  it('keeps the draft visible and reports a backend error when discard fails', async () => {
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(draft)
+    vi.mocked(getAssessmentHistory).mockResolvedValue([completed])
+    vi.mocked(discardAssessmentAttempt).mockRejectedValue(new Error('No se pudo descartar'))
+    renderPanel(true)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Descartar borrador' }))
+    fireEvent.click(screen.getByRole('button', { name: /^Descartar$/ }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('No se pudo descartar')
+    expect(screen.getByRole('link', { name: 'Continuar evaluación' })).toBeInTheDocument()
+    expect(screen.getByRole('dialog', { name: '¿Descartar autoevaluación?' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /^Descartar$/ })).toBeInTheDocument()
+    expect(createAssessmentAttempt).not.toHaveBeenCalled()
+    expect(createAssessmentReevaluation).not.toHaveBeenCalled()
+  })
+
+  it('does not submit a second discard while the first request is pending', async () => {
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(draft)
+    vi.mocked(getAssessmentHistory).mockResolvedValue([])
+    let resolveDiscard: (() => void) | undefined
+    vi.mocked(discardAssessmentAttempt).mockReturnValue(new Promise<void>((resolve) => { resolveDiscard = resolve }))
+    renderPanel(true)
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Descartar borrador' }))
+    const confirmButton = screen.getByRole('button', { name: /^Descartar$/ })
+    expect(confirmButton).not.toBeDisabled()
+    fireEvent.click(confirmButton)
+    await waitFor(() => expect(discardAssessmentAttempt).toHaveBeenCalledTimes(1))
+    fireEvent.click(confirmButton)
+    expect(discardAssessmentAttempt).toHaveBeenCalledTimes(1)
+    resolveDiscard?.()
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
   })
 
   it('starts the first assessment only after explicit user action', async () => {
@@ -178,7 +232,7 @@ describe('AssessmentAccessPanel', () => {
     expect(screen.getByRole('link', { name: 'Ver historial de evaluaciones' })).toHaveAttribute('href', '/habilidades/historial')
   })
 
-  it('creates a prefilled reevaluation only after explicit action', async () => {
+  it('creates a new empty reevaluation only after explicit action', async () => {
     vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(null)
     vi.mocked(getAssessmentHistory).mockResolvedValue([completed])
     vi.mocked(createAssessmentReevaluation).mockResolvedValue(draft)

@@ -4,9 +4,12 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
+import { ConfirmDiscardDialog } from '@/components/ui/ConfirmDiscardDialog'
+import { Mascot } from '@/components/ui/Mascot'
 import { AssessmentJourney } from '@/features/assessment/AssessmentJourney'
-import { createAssessmentAttempt, createAssessmentReevaluation, discardAssessmentAttempt, getAssessmentHistory, getCurrentAssessmentAttempt } from '@/services/api'
+import { createAssessmentAttempt, createAssessmentReevaluation, getAssessmentHistory, getCurrentAssessmentAttempt } from '@/services/api'
 import type { AssessmentAttempt } from '@/types/domain'
+import { useDiscardAssessmentAttempt } from '@/features/assessment/useDiscardAssessmentAttempt'
 
 interface AssessmentAccessPanelProps {
   showDraftDiscardAction?: boolean
@@ -18,21 +21,14 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
   const [starting, setStarting] = useState(false)
   const [startError, setStartError] = useState<string | null>(null)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
-  const [discarding, setDiscarding] = useState(false)
+  const { discard, isDiscarding, discardError, clearDiscardError } = useDiscardAssessmentAttempt()
   const current = useQuery({ queryKey: ['assessment-attempt'], queryFn: getCurrentAssessmentAttempt })
   const history = useQuery({ queryKey: ['assessment-history'], queryFn: getAssessmentHistory })
 
   const draft = current.data
   const latestCompleted = history.data?.[0]
   const hasDraft = draft?.status === 'DRAFT'
-  const journeyProgress = hasDraft
-    ? draft.totalQuestions > 0
-      ? draft.answeredCount / draft.totalQuestions
-      : 0
-    : latestCompleted
-      ? 1
-      : 0
-  const journeyCompleted = !hasDraft && Boolean(latestCompleted)
+  const journeyProgress = hasDraft && draft.totalQuestions > 0 ? draft.answeredCount / draft.totalQuestions : 0
 
   async function startAssessment() {
     setStarting(true)
@@ -50,22 +46,14 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
     }
   }
 
-  async function discardAndRestart() {
+  async function discardDraft() {
     if (!draft || draft.status !== 'DRAFT') return
-    setDiscarding(true)
     setStartError(null)
     try {
-      await discardAssessmentAttempt(draft.attemptId)
-      queryClient.setQueryData<AssessmentAttempt | null>(['assessment-attempt'], null)
-      const nextAttempt = await createAssessmentReevaluation()
-      queryClient.setQueryData<AssessmentAttempt | null>(['assessment-attempt'], nextAttempt)
-      await queryClient.invalidateQueries({ queryKey: ['assessment-history'] })
-      navigate('/habilidades/evaluacion')
-    } catch (error) {
-      setStartError(error instanceof Error ? error.message : 'No pudimos iniciar otra evaluación.')
-    } finally {
-      setDiscarding(false)
+      await discard(draft.attemptId)
       setConfirmDiscard(false)
+    } catch {
+      // The shared dialog presents the error and keeps the draft visible.
     }
   }
 
@@ -74,18 +62,27 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
 
   return (
     <Card className="mt-4 space-y-3">
-      <div>
-        <h2 className="text-base font-bold text-neutral-950">Autoevaluación de habilidades</h2>
-        <p className="mt-1 text-sm text-neutral-600">
-          {draft
-            ? 'Tenés una evaluación en curso. Tus respuestas guardadas siguen disponibles.'
-            : latestCompleted
-              ? 'Tu evaluación está completada. Podés consultar sus resultados.'
-              : 'Completá la autoevaluación para descubrir roles compatibles con tu perfil.'}
-        </p>
-      </div>
-
-      <AssessmentJourney progress={journeyProgress} completed={journeyCompleted} />
+      {hasDraft ? (
+        <>
+          <div>
+            <h2 className="text-base font-bold text-neutral-950">Autoevaluación de habilidades</h2>
+            <p className="mt-1 text-sm text-neutral-600">Tenés una evaluación en curso. Tus respuestas guardadas siguen disponibles.</p>
+          </div>
+          <AssessmentJourney progress={journeyProgress} completed={false} />
+        </>
+      ) : (
+        <div className="flex flex-col items-center gap-3 py-3 text-center">
+          <Mascot className="h-24 w-24" pose="wave" />
+          <h2 className="text-lg font-extrabold text-[#12304A]">
+            {latestCompleted ? 'Seguí evolucionando' : 'Descubrí tus habilidades'}
+          </h2>
+          <p className="max-w-sm text-sm leading-relaxed text-neutral-600">
+            {latestCompleted
+              ? 'Volvé a evaluar tus habilidades y descubrí cuánto avanzaste.'
+              : 'Completá tu primera autoevaluación para conocer tus habilidades y los roles que se adaptan a vos.'}
+          </p>
+        </div>
+      )}
 
       {draft && (
         <Link to="/habilidades/evaluacion" className="block">
@@ -97,30 +94,11 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
         <button
           type="button"
           className="text-xs font-medium text-neutral-500 underline-offset-2 hover:text-neutral-700 hover:underline disabled:opacity-50"
-          disabled={discarding}
-          onClick={() => setConfirmDiscard(true)}
+          disabled={isDiscarding}
+          onClick={() => { clearDiscardError(); setStartError(null); setConfirmDiscard(true) }}
         >
           Descartar borrador
         </button>
-      )}
-
-      {showDraftDiscardAction && draft && confirmDiscard && (
-        <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3" aria-label="Confirmar descarte de evaluación">
-          <p className="text-sm text-neutral-700">Se conservará como descartada. La nueva evaluación usará las respuestas de tu última evaluación completa.</p>
-          <div className="flex items-center justify-between gap-3">
-            <button
-              type="button"
-              className="text-sm text-neutral-600 hover:text-neutral-900 disabled:opacity-50"
-              disabled={discarding}
-              onClick={() => setConfirmDiscard(false)}
-            >
-              Cancelar
-            </button>
-            <Button variant="secondary" disabled={discarding} onClick={discardAndRestart}>
-              {discarding ? 'Preparando…' : 'Confirmar y empezar otra'}
-            </Button>
-          </div>
-        </div>
       )}
 
       {!draft && (
@@ -134,6 +112,13 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
         </Link>
       )}
       {startError && <p role="alert" className="text-sm text-red-600">{startError}</p>}
+      <ConfirmDiscardDialog
+        open={confirmDiscard && Boolean(hasDraft)}
+        pending={isDiscarding}
+        error={discardError}
+        onCancel={() => setConfirmDiscard(false)}
+        onConfirm={discardDraft}
+      />
     </Card>
   )
 }

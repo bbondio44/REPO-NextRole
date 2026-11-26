@@ -238,7 +238,6 @@ export function AssessmentJourney({ progress, completed }: AssessmentJourneyProp
           )}
         </div>
       </div>
-      <p className="assessment-journey__percentage" aria-hidden="true">{percentage}%</p>
     </section>
   )
 }

@@ -14,9 +14,10 @@ function scoreTone(score: number): 'success' | 'primary' | 'warning' {
 interface AssessmentResultsRankingProps {
   attemptId: string
   results: AssessmentRoleResult[]
+  showExploreActions?: boolean
 }
 
-export function AssessmentResultsRanking({ attemptId, results }: AssessmentResultsRankingProps) {
+export function AssessmentResultsRanking({ attemptId, results, showExploreActions = true }: AssessmentResultsRankingProps) {
   const topResult = results.find((result) => result.rankPosition === 1) ?? results[0]
   const secondaryResults = results.filter((result) => result.rankPosition === 2 || result.rankPosition === 3)
   const otherResults = results.filter((result) => result.rankPosition >= 4)
@@ -36,9 +37,11 @@ export function AssessmentResultsRanking({ attemptId, results }: AssessmentResul
           </div>
           <div className="flex flex-wrap items-end justify-between gap-3">
             <p className="text-4xl font-extrabold leading-none text-primary-700">{topResult.displayPercentage}%</p>
-            <Link to={`/roles/${encodeURIComponent(topResult.roleId)}?attemptId=${encodeURIComponent(attemptId)}`}>
-              <Button variant="secondary">Explorar rol →</Button>
-            </Link>
+            {showExploreActions && (
+              <Link to={`/roles/${encodeURIComponent(topResult.roleId)}?attemptId=${encodeURIComponent(attemptId)}`}>
+                <Button variant="secondary">Explorar rol →</Button>
+              </Link>
+            )}
           </div>
         </Card>
       )}
@@ -52,9 +55,11 @@ export function AssessmentResultsRanking({ attemptId, results }: AssessmentResul
             </h3>
             <p className="mt-3 text-2xl font-extrabold leading-none text-neutral-950">{result.displayPercentage}%</p>
             <p className="mt-1 text-xs text-neutral-500">Preparación técnica</p>
-            <Link className="mt-3 block" to={`/roles/${encodeURIComponent(result.roleId)}?attemptId=${encodeURIComponent(attemptId)}`}>
-              <Button fullWidth variant="secondary" className="px-2 py-2 text-xs">Explorar rol →</Button>
-            </Link>
+            {showExploreActions && (
+              <Link className="mt-3 block" to={`/roles/${encodeURIComponent(result.roleId)}?attemptId=${encodeURIComponent(attemptId)}`}>
+                <Button fullWidth variant="secondary" className="px-2 py-2 text-xs">Explorar rol →</Button>
+              </Link>
+            )}
           </Card>
         ))}
       </div>
@@ -73,9 +78,11 @@ export function AssessmentResultsRanking({ attemptId, results }: AssessmentResul
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   <Badge tone={scoreTone(Number(result.displayPercentage))}>{result.displayPercentage}%</Badge>
-                  <Link to={`/roles/${encodeURIComponent(result.roleId)}?attemptId=${encodeURIComponent(attemptId)}`}>
-                    <Button variant="secondary" className="px-3 py-2 text-xs">Explorar rol →</Button>
-                  </Link>
+                  {showExploreActions && (
+                    <Link to={`/roles/${encodeURIComponent(result.roleId)}?attemptId=${encodeURIComponent(attemptId)}`}>
+                      <Button variant="secondary" className="px-3 py-2 text-xs">Explorar rol →</Button>
+                    </Link>
+                  )}
                 </div>
               </Card>
             ))}

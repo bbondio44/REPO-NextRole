@@ -55,7 +55,8 @@ class AssessmentWorkflowIntegrationTest {
         Map<String, Object> reevaluation = post(user, "/api/v2/assessment-attempts/reevaluations");
         String reevaluationId = reevaluation.get("attemptId").toString();
         assertNotEquals(initialId, reevaluationId);
-        assertEquals(31, ((Map<String, Object>) reevaluation.get("answers")).size());
+        assertTrue(((Map<String, Object>) reevaluation.get("answers")).isEmpty());
+        assertEquals(0, ((Number) reevaluation.get("answeredCount")).intValue());
         save(user, reevaluationId, questions.get(0), 4);
         assertEquals(initialResults, get(user, "/api/v2/assessment-attempts/" + initialId).get("results"));
         assertEquals("2", ((Map<?, ?>) get(user, "/api/v2/assessment-attempts/" + initialId)
@@ -63,7 +64,9 @@ class AssessmentWorkflowIntegrationTest {
 
         Map<String, Object> currentAgain = post(user, "/api/v2/assessment-attempts/reevaluations");
         assertEquals(reevaluationId, currentAgain.get("attemptId"));
-        assertEquals(31, ((Map<?, ?>) currentAgain.get("answers")).size());
+        assertEquals(1, ((Map<?, ?>) currentAgain.get("answers")).size());
+        assertEquals(1, ((Number) currentAgain.get("answeredCount")).intValue());
+        for (int i = 1; i < questions.size(); i++) save(user, reevaluationId, questions.get(i), 2);
         post(user, "/api/v2/assessment-attempts/" + reevaluationId + "/complete");
 
         List<Map<String, Object>> history = (List<Map<String, Object>>) rest.exchange(url("/api/v2/assessment-history"),

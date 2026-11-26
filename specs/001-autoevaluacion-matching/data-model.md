@@ -41,7 +41,7 @@ RoleMatrixVersion 1 ── 186 RoleRequirement (6 roles × 31 competencies)
 - Check `level BETWEEN 0 AND 4`; check importance values. Enforce `(NOT_RELEVANT AND expected_level IS NULL) OR (relevant AND expected_level BETWEEN 1 AND 4)`.
 - Unique partial index permits at most one active draft per user. Start is transactional and handles a uniqueness race by returning the already-created draft.
 - Completion locks the owned draft, validates exactly 31 answers, reads its pinned immutable versions, calculates six results, persists tie order, and marks the attempt complete in one transaction. An incomplete attempt creates no results and remains editable.
-- A reevaluation creates a fresh draft pinned to current versions, copies the latest completed attempt's answers by stable competency code, and never edits the source. For the initial identical 31-code version, all answers copy directly.
+- A reevaluation creates a fresh unanswered draft pinned to current versions and never edits the source. It may set `assessment_attempts.source_attempt_id` to the latest completed attempt as provenance; this FK does not copy or expose source answers in the new draft. Recovering an existing draft returns only that draft's saved answers. No schema change is required for this behavior.
 - History selects only completed attempts and orders by `completed_at DESC`; detail reads persisted scores and pinned catalog/matrix versions. Drafts are fetched through the current-attempt workflow.
 - Do not add triggers or service paths that delete/convert V1 answer data. A future destructive operation requires specific authorization.
 

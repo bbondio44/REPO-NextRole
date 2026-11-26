@@ -1,15 +1,16 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { RolesSuggestedPage } from '@/features/roles/RolesSuggestedPage'
-import { getAssessmentAttempt } from '@/services/api'
-import type { AssessmentAttempt } from '@/types/domain'
+import { getAssessmentAttempt, getAssessmentHistory, getCurrentAssessmentAttempt } from '@/services/api'
+import type { AssessmentAttempt, AssessmentHistoryItem } from '@/types/domain'
 
 vi.mock('@/services/api', () => ({
   getAssessmentAttempt: vi.fn(),
-  getSelectedRoleId: vi.fn().mockResolvedValue(null),
+  getAssessmentHistory: vi.fn(),
+  getCurrentAssessmentAttempt: vi.fn(),
 }))
 
 const completedAttempt: AssessmentAttempt = {
@@ -33,13 +34,14 @@ const completedAttempt: AssessmentAttempt = {
   ],
 }
 
-function renderPage() {
+function renderPage(path = '/roles?attemptId=attempt-77') {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
-  return render(
+  const rendered = render(
     <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/roles?attemptId=attempt-77']}><RolesSuggestedPage /></MemoryRouter>
+      <MemoryRouter initialEntries={[path]}><RolesSuggestedPage /></MemoryRouter>
     </QueryClientProvider>,
   )
+  return { ...rendered, queryClient }
 }
 
 describe('RolesSuggestedPage V2', () => {
@@ -92,5 +94,73 @@ describe('RolesSuggestedPage V2', () => {
     await screen.findByRole('heading', { name: 'QA' })
     const qaLink = screen.getAllByRole('link').find((link) => link.getAttribute('href') === '/roles/qa-jr?attemptId=attempt-77')
     expect(qaLink).toBeInTheDocument()
+  })
+
+  it('shows the persisted latest rank on direct Roles entry, even while another draft exists', async () => {
+    vi.mocked(getAssessmentHistory).mockResolvedValue([{
+      attemptId: 'latest-1',
+      completedAt: '2026-11-25T10:00:00Z',
+      questionnaireVersion: 'Q1',
+      matrixVersion: 'M1',
+      results: completedAttempt.results!,
+    } as AssessmentHistoryItem])
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue({ ...completedAttempt, attemptId: 'draft-1', status: 'DRAFT', results: undefined })
+    const { queryClient } = renderPage('/roles')
+
+    expect(await screen.findByRole('heading', { name: 'Resultados de tu última evaluación' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Backend', level: 2 })).toBeInTheDocument()
+    expect(screen.getByText('Estos resultados corresponden a tu última evaluación completada.')).toBeInTheDocument()
+    expect(screen.getByText('95.0%')).toBeInTheDocument()
+    expect(screen.queryAllByRole('link', { name: /Explorar rol/ })).toHaveLength(0)
+    expect(getAssessmentAttempt).not.toHaveBeenCalled()
+
+    act(() => queryClient.setQueryData(['assessment-attempt'], null))
+    await waitFor(() => expect(screen.queryByText('Estos resultados corresponden a tu última evaluación completada.')).not.toBeInTheDocument())
+    expect(screen.getAllByRole('link', { name: /Explorar rol/ })).toHaveLength(6)
+  })
+
+  it('shows the approved empty state when no completed evaluation exists', async () => {
+    vi.mocked(getAssessmentHistory).mockResolvedValue([])
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(null)
+    renderPage('/roles')
+
+    expect(await screen.findByRole('heading', { name: 'Descubrí tu próximo rol' })).toBeInTheDocument()
+    expect(screen.getByText('Completá tu autoevaluación para conocer qué perfiles profesionales se adaptan mejor a tus habilidades.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Ir a Habilidades' })).toHaveAttribute('href', '/habilidades')
+  })
+
+  it('offers continuation rather than an empty-new-user message when a draft exists', async () => {
+    vi.mocked(getAssessmentHistory).mockResolvedValue([])
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue({ attemptId: 'draft-1', status: 'DRAFT' } as AssessmentAttempt)
+    renderPage('/roles')
+
+    expect(await screen.findByRole('heading', { name: 'Tu próximo rol está a un paso' })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Continuar evaluación' })).toHaveAttribute('href', '/habilidades/evaluacion')
+    expect(screen.queryByText(/Puesto 1/)).not.toBeInTheDocument()
+  })
+
+  it('does not show empty state while direct-entry history is loading or failed', async () => {
+    vi.mocked(getAssessmentHistory).mockReturnValue(new Promise(() => {}))
+    vi.mocked(getCurrentAssessmentAttempt).mockReturnValue(new Promise(() => {}))
+    const { unmount } = renderPage('/roles')
+    expect(await screen.findByRole('status')).toHaveTextContent('Cargando tus resultados…')
+    expect(screen.queryByRole('heading', { name: 'Descubrí tu próximo rol' })).not.toBeInTheDocument()
+    unmount()
+
+    vi.mocked(getAssessmentHistory).mockRejectedValue(new Error('offline'))
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(null)
+    renderPage('/roles')
+    expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos consultar tus evaluaciones.')
+    expect(screen.queryByRole('heading', { name: 'Descubrí tu próximo rol' })).not.toBeInTheDocument()
+  })
+
+  it('does not replace an explicitly requested historical attempt with the latest one', async () => {
+    vi.mocked(getAssessmentAttempt).mockResolvedValue(completedAttempt)
+    vi.mocked(getAssessmentHistory).mockResolvedValue([{ attemptId: 'latest-1' } as AssessmentHistoryItem])
+    renderPage('/roles?attemptId=attempt-77')
+
+    expect(await screen.findByRole('heading', { name: 'Backend', level: 2 })).toBeInTheDocument()
+    expect(getAssessmentAttempt).toHaveBeenCalledWith('attempt-77')
+    expect(getAssessmentHistory).not.toHaveBeenCalled()
   })
 })

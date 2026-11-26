@@ -41,7 +41,7 @@ class AssessmentHistoryIntegrationTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void reevaluationCopiesAnswersWithoutChangingSourceAndHistoryContainsOnlyCompletedAttemptsNewestFirst() {
+    void reevaluationStartsEmptyRecoversItsOwnAnswersAndKeepsSourceAndHistoryUnchanged() {
         HttpHeaders user = register("history-flow-" + UUID.randomUUID() + "@example.test");
         List<Map<String, Object>> questions = catalog(user);
         String originalId = createReevaluation(user).get("attemptId").toString();
@@ -53,12 +53,18 @@ class AssessmentHistoryIntegrationTest {
         String draftId = reevaluation.get("attemptId").toString();
         assertNotEquals(originalId, draftId);
         assertEquals(originalId, attempts.findById(UUID.fromString(draftId)).orElseThrow().sourceAttemptId.toString());
-        assertEquals(31, answers.countByIdAttemptId(UUID.fromString(draftId)));
-        assertEquals(sourceBefore.get("answers"), reevaluation.get("answers"));
+        assertEquals(0, answers.countByIdAttemptId(UUID.fromString(draftId)));
+        assertTrue(((Map<String, Object>) reevaluation.get("answers")).isEmpty());
+        assertEquals(0, ((Number) reevaluation.get("answeredCount")).intValue());
         assertEquals(draftId, rest.exchange(url("/api/v2/assessment-attempts/current"), HttpMethod.GET,
                 new HttpEntity<>(user), Map.class).getBody().get("attemptId"));
 
         save(user, draftId, questions.get(0), 4);
+        Map<String, Object> recovered = rest.exchange(url("/api/v2/assessment-attempts/reevaluations"), HttpMethod.POST,
+                new HttpEntity<>(user), Map.class).getBody();
+        assertEquals(draftId, recovered.get("attemptId"));
+        assertEquals(1, ((Map<String, Object>) recovered.get("answers")).size());
+        assertEquals(1, ((Number) recovered.get("answeredCount")).intValue());
         assertEquals(sourceBefore.get("answers"), detail(user, originalId).get("answers"));
         assertEquals(sourceBefore.get("results"), detail(user, originalId).get("results"));
         List<?> historyWithDraft = history(user);
@@ -70,7 +76,9 @@ class AssessmentHistoryIntegrationTest {
         Map<String, Object> next = createReevaluation(user);
         String finalId = next.get("attemptId").toString();
         assertEquals(originalId, attempts.findById(UUID.fromString(finalId)).orElseThrow().sourceAttemptId.toString());
-        assertEquals(31, answers.countByIdAttemptId(UUID.fromString(finalId)));
+        assertEquals(0, answers.countByIdAttemptId(UUID.fromString(finalId)));
+        assertTrue(((Map<String, Object>) next.get("answers")).isEmpty());
+        for (int i = 0; i < questions.size(); i++) save(user, finalId, questions.get(i), (i + 1) % 5);
         complete(user, finalId);
 
         List<Map<String, Object>> historyAfterRestart = (List<Map<String, Object>>) history(user);

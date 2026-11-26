@@ -27,16 +27,7 @@ export function SkillGapPage() {
 
   return (
     <AppShell title="Diagnóstico de Brechas" subtitle={role?.name} showBack>
-      <div className="flex items-center justify-between text-xs font-semibold text-primary-600">
-        <span>PASO 5 DE 6 · DIAGNÓSTICO DE CARRERA</span>
-      </div>
-      <div className="mt-2 flex gap-1">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <span key={i} className={`h-1.5 flex-1 rounded-full ${i < 4 ? 'bg-emerald-500' : i === 4 ? 'bg-primary-500' : 'bg-neutral-200'}`} />
-        ))}
-      </div>
-
-      <div className="mt-4 flex items-center justify-between">
+      <div className="mt-2 flex items-center justify-between">
         <h1 className="text-lg font-extrabold text-neutral-950">Comparativa de brechas</h1>
         <Badge tone="danger">{priorityCount} prioritarias</Badge>
       </div>

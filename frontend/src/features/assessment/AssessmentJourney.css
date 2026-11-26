@@ -106,16 +106,6 @@
   animation-fill-mode: forwards;
 }
 
-.assessment-journey__percentage {
-  margin: 0.15rem 0 0;
-  color: #174b4a;
-  font-size: 0.875rem;
-  font-weight: 700;
-  line-height: 1.25rem;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
 @keyframes assessment-journey-walk {
   from { background-position: 0 0; }
   to { background-position: 100% 0; }

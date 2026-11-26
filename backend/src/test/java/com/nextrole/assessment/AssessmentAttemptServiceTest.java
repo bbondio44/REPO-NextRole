@@ -74,7 +74,7 @@ class AssessmentAttemptServiceTest {
     }
 
     @Test
-    void reevaluationUsesCurrentVersionsAndCopiesLatestCompletedSource() {
+    void reevaluationUsesCurrentVersionsAndKeepsLatestCompletedSourceOnlyAsLineage() {
         var service = service();
         AssessmentAttempt source = new AssessmentAttempt(UUID.randomUUID(), USER_ID, AssessmentAttemptStatus.COMPLETED,
                 QUESTIONNAIRE_ID, MATRIX_ID, Instant.now());
@@ -94,7 +94,7 @@ class AssessmentAttemptServiceTest {
         assertEquals(source.id, result.attempt().sourceAttemptId);
         assertEquals(QUESTIONNAIRE_ID, result.attempt().questionnaireVersionId);
         assertEquals(MATRIX_ID, result.attempt().matrixVersionId);
-        verify(answerService).copyAnswers(source, result.attempt());
+        verifyNoInteractions(answerService);
     }
 
     @Test

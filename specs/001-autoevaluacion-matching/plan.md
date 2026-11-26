@@ -8,6 +8,8 @@
 
 Replace the V1 skill-level/mock matching flow with a versioned assessment workflow on the existing Spring Boot API and React application. Persist one active draft per authenticated user, immutable completed attempts and six deterministic, precisely ranked role results. Implement the approved formula in a backend application service, expose authenticated V2 contracts, and connect the existing assessment/results UI to them. Use additive Flyway migrations; do not convert or delete V1 answers.
 
+The approved UI extension derives Home and Habilidades from existing active-draft/history queries, presents a shared accessible discard dialog, shows the latest persisted results on direct Roles navigation, and adds explicit no-history/role-exploration states to Roles and the Formation index. New reevaluations keep provenance but begin with no answers, which requires a focused backend service change and lifecycle-test updates. No schema, migration or new endpoint is needed; Learning's existing per-role recommendation page remains unchanged.
+
 All architecture, persistence, API and identifier choices in this Plan are technical proposals for implementation review; they do not add or change functional decisions.
 
 ## Technical Context
@@ -18,7 +20,7 @@ All architecture, persistence, API and identifier choices in this Plan are techn
 
 **Storage**: PostgreSQL 16; existing Flyway history currently ends at V4.
 
-**Testing**: JUnit 5 / Spring Boot Test / Testcontainers PostgreSQL; frontend checks use Vitest and Testing Library for component/service tests, plus the configured production build and Oxlint commands.
+**Testing**: JUnit 5 / Spring Boot Test / Testcontainers PostgreSQL; frontend uses Vitest and Testing Library for component/service tests, plus the configured production build and Oxlint commands.
 
 **Target Platform**: Browser client and authenticated Spring Boot web API.
 
@@ -26,16 +28,16 @@ All architecture, persistence, API and identifier choices in this Plan are techn
 
 **Performance Goals**: No new latency or throughput target is established by the functional specification. Finalizing one attempt evaluates 31 competencies against six roles and persists six results in one transaction.
 
-**Constraints**: Matching requires all 31 answers; level 0 is present data. Keep questionnaire and matrix versions independent and pinned to drafts. Use exact score comparisons before display rounding. Preserve applied migrations; add a new migration. No automatic V1 answer conversion or destructive data operation.
+**Constraints**: Matching requires all 31 answers; level 0 is present data. Keep questionnaire and matrix versions independent and pinned to drafts. Use exact score comparisons before display rounding. Reuse current-attempt and history queries, API routes and shared query keys. A newly created reevaluation has no answers; return an existing active draft with its own saved answers. Keep `source_attempt_id` as lineage only. Preserve the one-active-draft invariant and completed history. No schema/migration changes, automatic V1 answer conversion or destructive data operation.
 
-**Scale/Scope**: One shared 31-question catalog, six V2 roles, one active draft per user, completed-only history. Skill Gap, AI explanations, Learning, graphical comparison and role preference scoring remain outside this implementation.
+**Scale/Scope**: One shared 31-question catalog, six V2 roles, one active draft per user, completed-only history. Skill Gap V2, AI explanations, Learning V2, changes to per-role Learning recommendations, graphical comparison and role preference scoring remain outside this implementation. Existing Skill Gap receives only the already-approved marker removal; the existing Formation index receives the newly approved empty states/navigation only.
 
 ## Constitution Check
 
 | Principle | Gate result |
 |---|---|
 | I. Modular architecture | PASS — extend the existing modular monolith; keep React, API, business logic and persistence responsibilities separate. |
-| II. Approved requirements | PASS — the V2 specification/catalog supersede V1 mocks, seed values and scoring. |
+| II. Approved requirements | PASS — the approved Home extension supersedes the earlier restriction to the journey-only Home change. |
 | III. Specify and design first | PASS — this plan and its design artifacts precede Tasks and implementation. |
 | IV. Controlled V1 evolution | PASS — additive Flyway migration; no V1 answer conversion or deletion. |
 | V. Historical meaning | PASS — immutable attempts/results retain independent questionnaire and matrix versions. |
@@ -49,10 +51,12 @@ No Constitution violations require complexity justification.
 | Classification | Current components | Plan |
 |---|---|---|
 | Reuse | `AppShell`, `Card`, `Button`, `Badge`, React Router, TanStack Query; Spring Security/JWT, `CurrentUser`, Bean Validation, JPA/Flyway conventions, `ApiProblem` envelope | Keep layout, navigation/query tooling and authenticated user derivation. Reuse common error response conventions. The journey does not reuse the separate `ProgressBar` visual. |
-| Modify | `SkillAssessmentPage`, `SkillsIndexPage`, `SkillSummaryPage`, `RolesSuggestedPage`, `LevelPicker`, `frontend/src/services/api.ts`, `frontend/src/types/domain.ts`; V2 completion path in `MatchingService`/controller; integration tests | Show catalog text levels 0–4, save/recover server draft, gate completion on 31 answers, preserve the competency diagnosis using V2 declared levels, and show separate V2 role-matching results/history with persisted ranks. Replace V1 scoring only for V2; do not break other V1 routes. Connect service calls to authenticated API. The approved addition below is limited to the visual journey in the existing assessment card; it does not authorize a general Home redesign. |
+| Modify (approved UI extension) | `frontend/src/features/home/HomePage.tsx`, `frontend/src/features/assessment/AssessmentAccessPanel.tsx`, `frontend/src/features/assessment/AssessmentJourney.tsx`, `frontend/src/features/roles/RolesSuggestedPage.tsx`, `frontend/src/features/learning/LearningIndexPage.tsx`, `frontend/src/features/skill-gap/SkillGapPage.tsx`, related tests | Show the journey only for an active draft in Home/Habilidades, remove its visible number but keep progress ARIA, add static mascot Habilidades states, persisted latest-results default for direct Roles, and responsive empty states for Roles/Formation. Preserve per-role Learning V1 and Skill Gap content other than its old orientation markers. |
 | Add | Backend `assessment` module, V2 role catalog, V2 matching engine, versioned entities/repositories, V2 controller/DTOs, `AssessmentHistoryPage` and attempt detail UI, migration V5, API/unit/integration/frontend tests | Own the attempt lifecycle, snapshots, completion transaction, version context and completed-only history. Keep V2 role records out of the shared V1 role catalog to avoid changing existing V1 responses. |
-| Modify (approved journey addition) | `frontend/src/features/assessment/AssessmentAccessPanel.tsx` and its UI tests | Pass the existing draft/history state to the journey without changing the panel's current actions or issuing additional requests. A draft uses its saved answer count and total; completed history without a draft means 100%; no evaluation means 0%. |
+| Modify (approved journey addition) | `frontend/src/features/assessment/AssessmentAccessPanel.tsx`, `AssessmentJourney.tsx` and UI tests | Show the journey only for the active draft, with its saved answer count/total; otherwise show the new/recurrent static mascot state. Keep percentage accessible but visually hidden. Do not add queries. |
 | Add (approved journey addition) | `frontend/src/features/assessment/AssessmentJourney.tsx`, local journey styles, `AssessmentJourney.test.tsx` | Reusable visual-only component driven by target progress and completion state. One SVG path represents both completed and pending progress; the mascot position is computed along that same path. No questionnaire, competency, area, role or fixed-count dependency; no API, backend, data model or migration change. |
+| Add (shared UI) | `frontend/src/components/ui/ConfirmDiscardDialog.tsx`, `EmptyStateCard.tsx` and tests | Reuse one accessible modal for both discard actions and one consistent icon/title/description/action empty-state presentation for Roles and Formation. |
+| Add (assessment lifecycle adjustment) | `backend/src/test/java/com/nextrole/assessment/AssessmentAttemptServiceTest.java`, `AssessmentHistoryIntegrationTest.java`, `AssessmentHistoryApiContractTest.java`, `backend/src/test/java/com/nextrole/integration/AssessmentWorkflowIntegrationTest.java` | Verify new/reevaluation drafts start with an empty answer map while `source_attempt_id` remains provenance, existing draft recovery preserves its own answers, and completed source answers/results stay unchanged. Remove unused answer-copy logic; no schema changes. |
 
 The existing `integration/frontend-api-adapter.ts` is a reference, not a drop-in: it is outside the active client path, targets `/api/v1`, and models legacy affinity results. `storage.ts` must stop being authoritative for V2 answers, but existing local data is not cleared.
 
@@ -66,9 +70,20 @@ The existing `integration/frontend-api-adapter.ts` is a reference, not a drop-in
 - Calculate exact rational scores in Java and persist numerator/denominator. Compare scores by cross multiplication. Assign randomized positions only within exact tie groups once at completion and persist rank positions. Format presentation with `BigDecimal` scale 1 and `HALF_UP`; never use the formatted value for ranking.
 - Enforce one active draft per user with a PostgreSQL partial unique index and transactional recovery when concurrent starts race. Discard is a state transition, not a delete.
 - Treat new assessment data as V2 data. Do not migrate V1 answers. Keep current V1 tables and rows untouched.
-- For the approved Home journey, derive state from the two queries already used by `AssessmentAccessPanel`: active draft and completed history. Add no query or endpoint. A draft's `answeredCount / totalQuestions` is the target; no draft plus history is 100%; neither is 0%.
-- Keep `AssessmentJourney` independent of assessment structure: its inputs are a normalized target progress and a confirmed-completion flag. Animate one shared progress value so path coloring, mascot position and the displayed percentage stay synchronized. Keep the sprite frame cadence and maximum travel duration in named, easily adjustable animation settings. Use a finite animation capped at 1.76 seconds; use the supplied eight-frame sprite sheet and stop on arrival. Reduced-motion users see the target state directly.
-- Render one continuous curved SVG path with no checkpoints, divisions or intermediate milestones. The path itself is the only visual progress indicator; the flag marks the final goal. Preserve the existing assessment card actions and all other Home content.
+- For Home and Habilidades, derive state from the existing current-attempt and completed-history queries and query keys. Do not treat loading or failed queries as empty. Mount `AssessmentJourney` only for an active `DRAFT` and use persisted `answeredCount / totalQuestions`, including saved level 0. Do not render a visible numeric percentage; preserve `role=progressbar`, value and value text for assistive technology.
+- In Home, show progress copy deterministically from the saved-answer ratio: distinct zero-progress copy for first assessment versus a reevaluation (presence of completed history), then the approved 1–39%, 40–74%, 75–99% and 100% messages. Keep the raw ratio for path/mask/mascot sync; display no range/percentage number.
+- Without a draft, show the Home motivation variant based on whether completed history exists; render the latest-result card only when it does. Use `history[0]` (backend newest-first) and the stored rank-1 result, date and display percentage; do not recalculate or reorder results. Keep `/roles?attemptId={attemptId}` and `/habilidades/historial`.
+- Keep a shared discard mutation for Home and `AssessmentAccessPanel`. Call the existing endpoint, then set current-attempt cache to `null` only after backend success. Reuse one responsive `ConfirmDiscardDialog`; disable duplicate submission, retain the open modal and draft on failure, and keep callers on the origin route. Do not refetch completed history or create a replacement attempt.
+- Reevaluate on the backend by pinning current versions, preserving `source_attempt_id` to the latest completed source, and not calling answer-copy logic. Existing active draft recovery remains unchanged. `source_attempt_id` expresses provenance only; keep the column/FK and applied migrations, and do not modify old drafts or completed records.
+- In Habilidades, show the journey only with a draft. Without a draft, use the existing mascot asset in a static empty/access card; vary title/copy and explicit start button by history, and retain history access. Do not show the prior completed attempt as a finished journey.
+- In Roles without `attemptId`, use the existing completed-history response newest-first to present `history[0]`'s stored results; independently read current draft. When a draft exists, add the approved context note and pass a presentation flag that hides all role-exploration links while leaving persisted rank/percentages intact. After discard updates the existing current-attempt query cache to `null`, exploration becomes available again. With `attemptId`, continue retrieving that exact historical attempt with its existing `attemptId` links. Never invoke matching locally or replace a historical URL with latest.
+- In `/formacion`, derive entry states from existing current-attempt/history queries. A draft takes precedence even when completed history exists: show the approved empty-state copy, offer continuation, and no role-exploration action or previous-attempt context. Without a draft and without completed history, use the same copy and link to Habilidades; with history and no draft, invite exploring Roles. The shared discard cache update transitions the page back to the history state. Preserve `LearningPage` at `/roles/:roleId/formacion`, its API and V1 recommendations.
+- Explicit historical routes preserve the selected `attemptId` through results and related navigation; queries and displays must remain scoped to that attempt rather than using the current draft, another historical attempt, or a remembered role selection. No API or backend contract change is needed.
+- Remove the old orientation calculations, cards and CTA from `HomePage`; preserve shared V1 helpers with active consumers, `learning_steps`, other tabs and bottom navigation. Add no placeholder for the future Home start button. In Skill Gap remove only the two confirmed old-orientation markers.
+- In `SkillGapPage`, remove only the `PASO 5 DE 6` orientation label and its six-segment strip. Keep `ProgressBar` because it represents the real level of each competency, and preserve the title, gap calculation, data, training link and navigation. Keep registration, profile onboarding and assessment-specific progress indicators because they belong to separate flows.
+- Use existing design tokens and UI primitives. Reuse the current responsive `AppShell` width and preserve its mobile safe-area spacing and bottom navigation; do not change other screens' shared layout.
+- Keep `AssessmentJourney` independent of assessment structure: its inputs are a normalized target progress and a confirmed-completion flag. Animate one shared progress value so path coloring, mascot position and accessible progress stay synchronized. The rendered percentage number is removed. Keep sprite cadence and maximum travel duration adjustable and finite (1.76 seconds); reduced-motion users see the target directly.
+- Render one continuous curved SVG path with no checkpoints, divisions or intermediate milestones. The path itself is the only visual progress indicator; the flag marks the final goal. Home and Habilidades mount that component only for an active draft; Habilidades uses the static mascot access card without a draft.
 
 ## Project Structure
 
@@ -98,6 +113,7 @@ backend/src/test/java/com/nextrole/
 ├── assessment/       # Domain/service unit and API contract tests
 └── integration/      # Extend API/database integration coverage using Testcontainers PostgreSQL
 frontend/src/
+├── features/home/       # Replace the obsolete orientation composition with approved assessment-aware Home states
 ├── features/assessment/ # Update assessment, summary and add completed history/detail views
 ├── features/roles/      # Update suggestions display to consume V2 results, preserve rank
 ├── services/            # Replace assessment mock calls with authenticated HTTP calls
@@ -105,20 +121,22 @@ frontend/src/
 └── components/ui/       # Reuse and adapt LevelPicker, progress, cards and buttons
 ```
 
-The approved animated journey is confined to `frontend/src/features/assessment/AssessmentJourney.tsx` and its local styles, mounted by `AssessmentAccessPanel`. It does not require additions to API contracts, `data-model.md`, migrations, backend modules or questionnaire structure.
+`AssessmentJourney` remains reusable and is mounted in Home/Habilidades only for an active draft. The extension uses current/history endpoints as-is and adds no endpoint or migration. A focused backend service behavior changes reevaluation answer creation; `source_attempt_id` stays as lineage.
 
 **Structure Decision**: Extend the existing frontend/backend layout. A dedicated backend `assessment` module owns versioned questions, attempts, answers and history; the matching domain service computes scores during completion. Existing authentication, CurrentUser, security configuration, UI shell and general UI primitives are reused. Detailed entities, invariants and endpoints are in [data-model.md](data-model.md) and [contracts/assessment-api.md](contracts/assessment-api.md).
 
 ## Blockers, Risks, and Dependencies
 
-- **Functional blockers**: None for the initial V2 release. The approved questionnaire, matrix, scoring, ordering, versioning, draft, history, diagnosis/matching separation and role IDs are sufficiently defined.
+- **Functional blockers**: None for the approved extension. The exact empty-state copy, journey visibility, modal content, reevaluation policy and persisted Roles source are specified.
 - **Role IDs**: All six role IDs and labels are approved and seeded in the assessment-specific catalog. V1 role records remain untouched.
 - **Future version evolution**: If a later questionnaire changes competency codes, answer transfer for added/removed codes requires an explicit rule before publishing that changed version. This does not block the initial fixed 31-code catalog or same-version reevaluation.
-- **Frontend authentication seam**: Active UI services are mocks, while the HTTP adapter is a disconnected V1 prototype. The V2 flow depends on wiring authenticated requests to existing JWT/session behavior.
+- **Frontend data seam**: Assessment flows already use authenticated V2 contracts. Home currently reads V1 mock skill/role state for its obsolete orientation; the extension replaces only those Home consumers while retaining shared helpers used by other screens.
 - **Seed drift**: 31 question snapshots, 155 answer-level texts and 186 matrix cells must be mechanically compared with the canonical V2 Markdown during implementation/migration validation.
 - **Exact scores**: API serialization must preserve exact rational score components; clients render the supplied one-decimal string and rank position without sorting rounded values.
 - **Migration safety**: V5 is additive. Test against a disposable Testcontainers database; do not rewrite V1–V4 or delete/migrate legacy answers.
-- **Frontend test tooling**: No frontend test runner is configured. Add a Vite-compatible component/service test setup during implementation; backend JUnit/Testcontainers already exist.
+- **Frontend tests**: Vitest and Testing Library are already configured. No new testing dependencies are required.
+- **Source lineage**: `assessment_attempts.source_attempt_id` remains an optional historical link; reevaluation does not read/copy its answer rows. No persistent schema or already-applied migration changes are proposed.
+- **Roles/Formation state**: existing current-attempt and completed-history queries are sufficient. `/roles?attemptId=...` remains the historical detail path; direct `/roles` uses the newest persisted history item. `/formacion` changes only its entry/empty state; role-specific `LearningPage` stays untouched.
 
 ## Implementation Sequence (planning only)
 
@@ -128,5 +146,9 @@ The approved animated journey is confined to `frontend/src/features/assessment/A
 4. Add authenticated V2 API contracts, API contract tests and integration tests; retain V1 routes for other features.
 5. Connect the React assessment and results/history flow to the API; remove V1 localStorage/mocks from this flow without deleting stored local data.
 6. Validate the end-to-end workflow and regression contracts described in `quickstart.md`.
+7. Change reevaluation creation to leave answers empty, preserve source lineage, and prove that draft recovery and immutable history still work.
+8. Implement the shared discard dialog and the approved Home/Habilidades states, including hidden visual percentage with retained ARIA progress.
+9. Make direct Roles show latest persisted results while preserving `attemptId` history, and update only the global Formation index states/navigation; preserve per-role Learning V1.
+10. Remove the two obsolete orientation-only elements from Skill Gap and test that the diagnostic content/navigation remain intact; run frontend/backend validation and keep visual review tasks open until personally checked.
 
-Tasks and implementation are separate Spec Kit phases and were not run.
+The original V2 assessment implementation and US4 journey are already present. This extension adds the approved Home redesign, no-prefill reevaluation, shared discard dialog, Habilidades states and direct Roles/Formation entry states; the existing journey-specific visual review T040 remains separately pending.
