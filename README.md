@@ -1,89 +1,54 @@
-# NextRole — Potencia tu futuro IT
+# NextRole
 
-Proyecto universitario de desarrollo de software orientado a la creación de una plataforma de orientación profesional para personas interesadas en iniciar o desarrollar su carrera en el sector tecnológico.
+NextRole es una plataforma de orientación profesional para personas que buscan iniciar o desarrollar su carrera en IT. El repositorio conserva NextRole V1 y su evolución V2.
 
-## Objetivo
+## Versiones
 
-Desarrollar una plataforma que permita evaluar competencias técnicas, identificar roles IT compatibles con el perfil del usuario y recomendar recursos de formación para reducir las brechas de conocimientos.
+- **V1** está preservada en `main`; algunos flujos y catálogos heredados siguen utilizándose en pantallas que todavía no migraron.
+- **V2** se desarrolla e integra en `develop-v2`. Su flujo de autoevaluación usa el backend Spring Boot, el catálogo versionado de 31 competencias y respuestas persistidas por intento. Los resultados completados conservan su ranking y contexto de versión.
 
-## Cómo ejecutar NextRole V2
+La rama `develop-v2` es la base de trabajo actual. La guía de SDD describe cómo recuperar contexto y seguir los artefactos de Spec Kit. La guía de Git cubre ramas, revisión, commits autorizados y publicación.
 
-Para ejecutar el entorno completo de desarrollo (PostgreSQL, Spring Boot y React/Vite), es necesario tener instalado **Docker Desktop**.
+## Desarrollo local
 
-### 1. Clonar el repositorio
+Requisitos: Docker Desktop/Engine con Compose v2, y Git. Desde la raíz:
 
-```bash
-git clone https://github.com/bbondio44/REPO-NextRole.git
-cd REPO-NextRole
-git switch develop-v2
+```powershell
+Copy-Item .env.example .env
+docker compose up -d
 ```
 
-### 2. Iniciar la aplicación
+Revisá `.env.example` y configurá el secreto local de desarrollo según `docs/V2/entorno-docker-desarrollo.md`. No publiques `.env` ni credenciales.
 
-Con Docker Desktop abierto, ejecutar desde la raíz del repositorio:
-
-```bash
-docker-compose up --build -d
-```
-
-Este comando construye e inicia los contenedores del frontend, backend y base de datos.
-
-### 3. Acceder a la aplicación
-
-| Servicio | Dirección |
+| Servicio | Dirección local |
 |---|---|
-| Frontend | http://localhost:5173 |
-| Backend | http://localhost:8090 |
-| Estado del backend | http://localhost:8090/actuator/health |
+| Aplicación React/Vite | http://localhost:5173 |
+| API Spring Boot | http://localhost:8090 |
+| Salud de la API | http://localhost:8090/actuator/health |
 
-### 4. Detener la aplicación
+Compose monta el código de `frontend/` para que Vite actualice los módulos durante el desarrollo. No hace falta reconstruir imágenes por cada edición de código; consultá la guía de entorno para comprobar HTTP, frescura y reiniciar solo el servicio necesario.
 
-```bash
-docker-compose down
+## Validaciones
+
+Desde la raíz del repositorio:
+
+```powershell
+mvn -f backend/pom.xml test
+npm --prefix frontend test
+npm --prefix frontend run build
+npm --prefix frontend run lint
 ```
 
-Para conocer la configuración del entorno, los requisitos y otros comandos disponibles, consultar la [Guía de Docker Compose para NextRole V2](https://github.com/bbondio44/REPO-NextRole/blob/develop-v2/docs/V2/entorno-docker-desarrollo.md).
+Las pruebas de integración Testcontainers requieren Docker disponible. Ejecutá solo las comprobaciones afectadas por el cambio y registrá explícitamente las que no se realizaron.
 
-## Funcionalidades principales
+## Estado y especificaciones
 
-La plataforma contempla:
+`specs/001-autoevaluacion-matching/` es la especificación base del flujo V2 implementado. Las funcionalidades mayores futuras tendrán especificaciones independientes vinculadas a sus contratos existentes. `progress/current.md` resume el estado vigente y `progress/history.md` conserva checkpoints anteriores.
 
-- Registro e inicio de sesión.
-- Gestión del perfil académico y técnico.
-- Autoevaluación de competencias.
-- Recomendación de roles IT según afinidad.
-- Exploración de roles y sus requisitos.
-- Identificación de brechas de competencias.
-- Recomendación de recursos de formación.
+## Guías
 
-## Versiones del proyecto
-
-**NextRole V1:** primera versión funcional integrada de la plataforma, con frontend, backend y base de datos. Se conserva como versión consolidada en la rama `main`.
-
-**NextRole V2:** evolución del proyecto enfocada en mejorar la autoevaluación de competencias, el motor de matching, la recomendación de roles IT y la experiencia de usuario. Su desarrollo se realiza en la rama `develop-v2`.
-
-## Ramas del repositorio
-
-El repositorio utiliza distintas ramas para conservar las versiones del proyecto y organizar su evolución.
-
-| **Rama** | **Descripción** |
-|---|---|
-| `main` | Rama principal que contiene NextRole V1 consolidada. |
-| `develop-v2` | Rama base de desarrollo e integración de NextRole V2. |
-| `develop` | Rama histórica utilizada durante el desarrollo inicial de V1. |
-| `Frontend-beta` | Rama utilizada para desarrollar y probar las primeras versiones del frontend. |
-| `feature/backend-mvp-core` | Rama utilizada para implementar el backend inicial con Spring Boot. |
-| `integration/nextrole-v2` | Rama histórica utilizada para integrar frontend, backend y documentación antes de consolidar V1. |
-
-Las nuevas funcionalidades de V2 se desarrollan tomando `develop-v2` como referencia y se integran mediante Pull Requests una vez implementadas y validadas.
-
-## Guías de trabajo
-
-Para facilitar la colaboración y mantener un desarrollo consistente, NextRole V2 establece procedimientos compartidos para el uso de Git y el desarrollo de funcionalidades mediante inteligencia artificial.
-
-- [Cómo trabajar con Git y GitHub para subir cambios](https://github.com/bbondio44/REPO-NextRole/blob/main/docs/GUIA_GIT_NEXTROLE.md)
-- [Guía para usar GitHub Spec Kit con una IA](https://github.com/bbondio44/REPO-NextRole/blob/main/docs/GUIA_SDD_NEXTROLE.md)
-
----
-
-**NextRole — Potencia tu futuro IT**
+- [Metodología SDD y recuperación de sesiones](docs/GUIA_SDD_NEXTROLE.md)
+- [Trabajo con Git y GitHub](docs/GUIA_GIT_NEXTROLE.md)
+- [Entorno Docker Compose V2](docs/V2/entorno-docker-desarrollo.md)
+- [README del frontend](frontend/README.md)
+- [README del backend](backend/README.md)

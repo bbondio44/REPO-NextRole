@@ -1,91 +1,82 @@
 # Entorno local de desarrollo con Docker Compose
 
-El Compose de la raíz inicia PostgreSQL 16, la API Spring Boot y el servidor de desarrollo React/Vite. La base conserva sus datos en el volumen `nextrole-postgres`; Flyway aplica V1–V5 al iniciar el backend sobre una base nueva.
+Compose inicia PostgreSQL 16, el backend Spring Boot y el frontend React/Vite. PostgreSQL usa el volumen persistente `nextrole-postgres`. El backend ejecuta Flyway al iniciar; no borres el volumen ni reinicies la base para resolver problemas de aplicación.
 
-## Requisitos
+## Requisitos y configuración
 
-- Docker Desktop o Docker Engine en ejecución.
-- Docker Compose v2 (`docker compose`).
+- Docker Desktop o Docker Engine en ejecución, con Docker Compose v2.
+- Archivo `.env` local creado a partir de `.env.example`, con una clave JWT válida para desarrollo. `.env` debe permanecer fuera de Git.
 
-## Iniciar
-
-Desde la raíz del repositorio, crear el archivo local ignorado por Git y configurar una clave JWT de desarrollo válida en Base64 (al menos 32 bytes una vez decodificada):
-
-```bash
-cp .env.example .env
-```
-
-En PowerShell:
+En PowerShell, desde la raíz:
 
 ```powershell
 Copy-Item .env.example .env
 ```
 
-`.env.example` contiene valores locales únicamente. La clave incluida es ficticia para desarrollo; reemplazala antes de compartir el entorno o utilizarlo fuera de una máquina local. No guardes secretos reales en el repositorio.
+Revisá las variables y configurá el secreto local antes de iniciar. No compartas ni commits `.env` o credenciales. El Compose predeterminado publica los puertos de la máquina host en loopback; acceso desde un celular requiere una configuración LAN explícita, una red compartida y reglas de firewall apropiadas. No cambies la configuración local sin autorización.
 
-Iniciá los tres servicios:
+## Iniciar y consultar
 
-```bash
-docker compose up --build
-```
-
-Compose espera a que PostgreSQL esté saludable antes de iniciar Spring Boot y a que el endpoint de salud del backend responda antes de iniciar Vite.
-
-| Servicio | Dirección desde el equipo | Uso |
-|---|---|---|
-| Frontend | `http://localhost:5173` | React/Vite con recarga en caliente |
-| Backend | `http://localhost:8090` | API Spring Boot |
-| Salud del backend | `http://localhost:8090/actuator/health` | Estado de Spring Boot |
-| Swagger UI | `http://localhost:8090/swagger-ui.html` | Contratos disponibles |
-| PostgreSQL | Solo dentro de la red Docker, en `postgres:5432` | Sin puerto publicado hacia Windows |
-
-Los puertos host predeterminados del backend y frontend se pueden cambiar en `.env` (`BACKEND_PORT`, `FRONTEND_PORT`) si otro proceso los está usando. PostgreSQL no publica un puerto al equipo host; las conexiones entre contenedores usan `postgres:5432` y `backend:8080`.
-
-Dentro de la red Compose, el backend usa `postgres:5432` como host de base y el proxy de Vite dirige `/api` a `backend:8080`. El cliente React actual todavía usa sus servicios mock; el proxy deja preparado el canal local para la integración API sin cambiar el comportamiento funcional de la aplicación.
-
-## Detener y reconstruir
-
-Para detener y retirar contenedores y red, conservando los datos PostgreSQL:
-
-```bash
-docker compose down
-```
-
-Para reconstruir imágenes después de cambios en dependencias o Dockerfiles:
-
-```bash
-docker compose up --build
-```
-
-El código del frontend se monta desde `frontend/`, por lo que Vite detecta cambios. El contenedor ejecuta `npm ci` al iniciar para sincronizar `node_modules` con el lockfile.
-
-El volumen PostgreSQL es persistente y se reutiliza entre reinicios. No elimines el volumen para resolver problemas de inicio: eso borraría los datos locales. La configuración inicial de usuario/contraseña de PostgreSQL solo se aplica al crear el volumen por primera vez. Si ya existe uno, conservá las credenciales con las que fue creado. El Compose mantiene `nextrole_local` como valor predeterminado histórico de desarrollo para seguir usando volúmenes creados con la configuración previa.
-
-## Diagnóstico
-
-Ver estado y healthchecks:
-
-```bash
+```powershell
+docker compose up -d
 docker compose ps
 ```
 
-Consultar logs de un servicio o de todos:
+| Servicio | Host local | Uso |
+|---|---|---|
+| Frontend | `http://localhost:5173` | React/Vite con recarga en caliente |
+| Backend | `http://localhost:8090` | API Spring Boot (internamente `backend:8080`) |
+| Salud del backend | `http://localhost:8090/actuator/health` | Healthcheck de Spring Boot |
+| PostgreSQL | `postgres:5432` dentro de la red Compose | No se publica un puerto host por defecto |
 
-```bash
-docker compose logs -f postgres
-docker compose logs -f backend
-docker compose logs -f frontend
+Vite reenvía `/api` a `backend:8080`. El flujo V2 de autoevaluación usa los endpoints autenticados `/api/v2`; pantallas heredadas todavía consumen contratos V1.
+
+## Verificar disponibilidad y módulos actuales de Vite
+
+Comprobar que Compose muestre servicios en ejecución y que frontend y API respondan HTTP:
+
+```powershell
+Invoke-WebRequest http://localhost:5173/ -UseBasicParsing
+Invoke-WebRequest http://localhost:8090/actuator/health -UseBasicParsing
 ```
 
-Comprobar API y base desde el equipo:
+Para comprobar la fuente transformada actual, obtener del HTML de Vite una ruta de módulo importada por la pantalla que cambió y consultarla directamente. Por ejemplo:
 
-```bash
-curl http://localhost:8090/actuator/health
+```powershell
+$page = Invoke-WebRequest http://localhost:5173/ -UseBasicParsing
+$page.Content
+Invoke-WebRequest http://localhost:5173/src/main.tsx -UseBasicParsing
+```
+
+Si el módulo devuelto no contiene los cambios esperados, revisar `docker compose logs --tail=100 frontend` y que `frontend/` esté montado en el contenedor. La respuesta HTTP 200 comprueba disponibilidad; la comparación del contenido con la fuente local es la que ayuda a detectar una versión obsoleta. Una captura o inspección del navegador sigue siendo necesaria para validar la interfaz visualmente.
+
+## Reinicios y reconstrucciones
+
+El código frontend está montado desde `frontend/`; las ediciones normales deben actualizarse mediante Vite sin reconstrucción. Si el servidor quedó obsoleto, reiniciá solo frontend:
+
+```powershell
+docker compose restart frontend
+```
+
+Para cambios en código del backend, reconstruí solo ese servicio:
+
+```powershell
+docker compose up -d --build backend
+```
+
+Reconstruí frontend únicamente cuando cambien sus dependencias o Dockerfile. No reinicies PostgreSQL para actualizar código. `docker compose down` detiene el stack pero conserva el volumen; no uses `down -v`.
+
+## Diagnóstico
+
+```powershell
+docker compose logs --tail=100 frontend
+docker compose logs --tail=100 backend
+docker compose logs --tail=100 postgres
 docker compose exec postgres pg_isready -U nextrole -d nextrole
 ```
 
-Si el puerto `8090` o `5173` ya está ocupado, liberalo o elegí otro puerto host en `.env`. PostgreSQL no requiere un puerto host disponible. Si el backend no inicia, revisá primero los logs de PostgreSQL, luego que `.env` tenga una `JWT_SECRET` Base64 válida y que las credenciales coincidan con las del volumen persistido. Flyway reporta en esos logs cualquier error al aplicar V1–V5.
+Si falla la API, comprobar salud/logs del backend y PostgreSQL. Flyway aplica migraciones al inicio; no edites migraciones ya aplicadas ni elimines datos para solucionar un error. Los cambios de esquema requieren una migración aditiva aprobada y validación en una base desechable.
 
-## Desarrollo sin Docker
+## Pruebas locales
 
-El entorno local sigue disponible: ejecutar PostgreSQL localmente, configurar las variables de `backend/.env.example` en la sesión y arrancar Spring Boot con Maven; en otra terminal, usar `npm install` y `npm run dev` desde `frontend/`. El backend conecta a `localhost:5432` fuera de Compose. No es necesario ejecutar Compose para compilar ni correr las pruebas unitarias; las pruebas Testcontainers necesitan un runtime Docker operativo.
+`mvn -f backend/pom.xml test` ejecuta pruebas backend; las de integración Testcontainers requieren Docker. `npm --prefix frontend test`, `npm --prefix frontend run build` y `npm --prefix frontend run lint` validan el frontend. No hace falta levantar o reconstruir Docker para build, lint ni pruebas unitarias sin dependencias externas.

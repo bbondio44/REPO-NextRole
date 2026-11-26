@@ -1,6 +1,6 @@
 # Quickstart: V2 Assessment Validation
 
-Validation guide for implementation. Commands below are not run as part of Plan.
+Validation guide for implementation. It describes repeatable scenarios, not evidence that any scenario was run; execution results and the verified/pending manual subset belong in `progress/current.md` and its historical checkpoints. The approved reevaluation rule is to start every new attempt unanswered; the earlier prefill proposal is superseded and retained in `spec.md` clarification history.
 
 ## Prerequisites
 

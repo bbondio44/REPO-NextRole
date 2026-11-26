@@ -32,9 +32,11 @@
 
 ## Decision: Add V2 contracts without replacing unrelated V1 APIs
 
-**Finding**: Backend controllers use `/api/v1`; auth/JWT and `CurrentUser.id()` already identify users. `frontend/src/services/api.ts` currently uses mocks/localStorage. `integration/frontend-api-adapter.ts` is not wired into the build and assumes V1 paths and legacy matching types.
+**Finding at feature start**: The backend already had `/api/v1` controllers and authentication. The frontend service layer included mock/localStorage helpers, and `integration/frontend-api-adapter.ts` was not wired into the build and assumed legacy V1 types.
 
 **Decision**: Add authenticated `/api/v2` assessment endpoints and connect the assessment flow to a shared HTTP client in the current frontend service layer. Keep existing V1 endpoints for profile, Skill Gap and Learning unless separately migrated later.
+
+**Current implementation status**: The V2 assessment screens use authenticated `/api/v2` requests and persisted attempt/history contracts. Authentication/profile and legacy Skill Gap/per-role Learning flows continue to use applicable V1 services; legacy helpers may still use localStorage. Do not describe the whole frontend as mock-only or imply that the V2 assessment source of truth is localStorage.
 
 **Rationale**: This creates a bounded compatibility seam for the feature and avoids a broad route break.
 

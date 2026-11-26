@@ -16,7 +16,7 @@
 
 ### Session 2026-11-25 — Revisión manual y ampliación aprobada
 
-- La decisión previa de precargar en una reevaluación las respuestas de la última evaluación completa queda sustituida: toda evaluación nueva comienza vacía. Se conserva el `source_attempt_id` existente solo como relación de procedencia; no se borran columnas, migraciones ni datos históricos.
+- **Decisión sustituida (2026-11-25)**: la propuesta anterior de precargar en una reevaluación las respuestas de la última evaluación completa ya no aplica. La decisión aprobada vigente es que toda evaluación nueva comienza vacía. Se conserva el `source_attempt_id` solo como relación de procedencia; no se borran columnas, migraciones ni datos históricos.
 - El recorrido se muestra solo para un borrador activo tanto en Inicio como en Habilidades. El porcentaje numérico deja de ser visible, pero el progreso sigue disponible para accesibilidad y continúa controlando el camino y la posición de la mascota.
 - La tarjeta azul de Inicio necesita mostrar el título, mensajes deterministas según el progreso, la descripción, continuar y descartar. El descarte se confirma con un modal compartido.
 - Habilidades reemplaza el recorrido cuando no hay borrador por una presentación estática con mascota y CTA según exista historial. Los estados vacíos de Roles y Formación y la ruta directa de Roles para el último resultado persistido se incorporan a esta ampliación.
