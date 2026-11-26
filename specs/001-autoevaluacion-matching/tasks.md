@@ -90,12 +90,12 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 ### Tests for User Story 3
 
 - [X] T024 [P] [US3] Add API contract tests for reevaluation, explicit discard, completed-only history and historical detail in `backend/src/test/java/com/nextrole/assessment/AssessmentHistoryApiContractTest.java`, following `contracts/assessment-api.md`.
-- [ ] T025 [P] [US3] Update Testcontainers coverage in `backend/src/test/java/com/nextrole/assessment/AssessmentHistoryIntegrationTest.java`: a new reevaluation has zero answers while retaining `source_attempt_id`, the source answers/results remain unchanged, saved draft answers recover, only one draft exists, versions remain pinned, discard is retained, and completed history stays newest-first.
+- [X] T025 [P] [US3] Close the remaining Testcontainers assertion gaps in `backend/src/test/java/com/nextrole/assessment/AssessmentHistoryIntegrationTest.java`: directly assert that only one DRAFT row exists for the user and that an already-created draft retains its questionnaire/matrix versions when newer current versions exist. Existing integration coverage already checks empty answers, source lineage/immutability, draft-answer recovery, discard and newest-first history; do not duplicate those assertions. No implementation or schema change is implied. Verified by the full backend suite on 2026-11-26 (38 tests, 0 failures/errors).
 - [X] T026 [P] [US3] Add UI tests for completed-only history, historical detail, recovered draft and explicit discard flow in `frontend/src/features/assessment/AssessmentHistoryPage.test.tsx` and `frontend/src/features/assessment/AssessmentAccessPanel.test.tsx`; verify the question screen does not expose discard in `frontend/src/features/assessment/SkillAssessmentPage.test.tsx`.
 
 ### Implementation for User Story 3
 
-- [ ] T027 [US3] Implement reevaluation creation in `backend/src/main/java/com/nextrole/assessment/AssessmentAttemptService.java`; return an existing draft with its own saved answers if present, otherwise pin current versions and retain only the latest completed source reference. Do not copy `assessment_answers`. Keep the source immutable using `data-model.md` (`assessment_attempts.source_attempt_id/questionnaire_version_id/matrix_version_id` and `assessment_answers.attempt_id/competency_code/level`). Depends on T010, T011 and T020.
+- [X] T027 [US3] Implement reevaluation creation in `backend/src/main/java/com/nextrole/assessment/AssessmentAttemptService.java`; return an existing draft with its own saved answers if present, otherwise pin current versions and retain only the latest completed source reference. Do not copy `assessment_answers`. Keep the source immutable using `data-model.md` (`assessment_attempts.source_attempt_id/questionnaire_version_id/matrix_version_id` and `assessment_answers.attempt_id/competency_code/level`). Depends on T010, T011 and T020.
 - [X] T028 [US3] Implement explicit draft discard as a `DISCARDED` state transition in `backend/src/main/java/com/nextrole/assessment/AssessmentAttemptService.java` and expose `POST .../{attemptId}/discard` through `backend/src/main/java/com/nextrole/assessment/AssessmentController.java`; do not delete rows. Resolve state/date rules from `data-model.md` (`assessment_attempts.status/discarded_at/user_id`). Depends on T010.
 - [X] T029 [US3] Implement owned completed-history/detail queries in `backend/src/main/java/com/nextrole/assessment/AssessmentAttemptService.java` and `backend/src/main/java/com/nextrole/assessment/AssessmentController.java`; return completion date, six stored results and pinned questionnaire/matrix content, exclude drafts, sort by `completed_at DESC`. Use `data-model.md` (`assessment_attempts.status/completed_at/questionnaire_version_id/matrix_version_id` and `assessment_result_sets.attempt_id/calculated_at`). Depends on T020 and T028 to avoid overlapping controller edits.
 - [X] T030 [US3] Add completed-history and historical-attempt detail views/routes in `frontend/src/features/assessment/AssessmentHistoryPage.tsx`, `frontend/src/features/assessment/AssessmentAttemptDetailPage.tsx` and `frontend/src/app/router.tsx`; display stored scores and versions without recalculation. Depends on T029.
@@ -103,9 +103,9 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 
 **Checkpoint**: Re-evaluation never mutates its source, completed history is immutable and draft discard is explicit/non-destructive.
 
-## Phase 6: Polish and Cross-Cutting Validation
+## Phase 6: Core workflow checkpoint (US1–US3)
 
-**Purpose**: Verify the integrated V2 flow and report evidence without adding out-of-scope modules.
+**Purpose**: Record the initial US1–US3 core-flow validation. Later UI/lifecycle extensions are validated separately in the final verification phase.
 
 - [X] T033 Run the applicable backend suite `mvn -f backend/pom.xml test`, frontend tests `npm --prefix frontend test`, build `npm --prefix frontend run build`, lint `npm --prefix frontend run lint`, and record manual validation of the application as reported by the user, including mobile access. Individual quickstart scenario outcomes are not asserted unless explicitly recorded. Correct failures within this feature and record checks not runnable (including Docker/Testcontainers availability). Depends on T032.
 - [X] T034 Record actual changed files, test/build/lint outcomes, blockers and next authorized step in `progress/current.md`; do not mark unrun checks as passed or advance to Implement beyond the implementation authorization. Depends on T033.
@@ -129,7 +129,6 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 ### Validation for User Story 4
 
 - [X] T039 [US4] Run frontend tests, build and lint after integration; record failures and warnings. Depends on T038.
-- [ ] T040 [US4] Visually review the journey at mobile and desktop sizes for clipping, path/mascot synchronization, sprite cadence, scale, contrast, accessibility and reduced-motion behavior. Record unavailable checks without marking them passed. Depends on T038.
 - [X] T041 Record changed files, validation outcomes, manual checks actually completed and remaining review in `progress/current.md`. Keep this checkpoint separate from task status. Depends on T039.
 
 ## Phase 8: User Story 6 — Descartar el borrador sin iniciar otra evaluación
@@ -179,8 +178,7 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 **Purpose**: Validate the approved Home/discard behavior, record limitations precisely, and keep the animation's separate manual-review status accurate.
 
 - [X] T048 Update and review `specs/001-autoevaluacion-matching/quickstart.md` Home/discard/Skill Gap scenarios against the implementation; include reevaluation without prefill, Home/Habilidades no-journey states, modal outcomes, Roles latest/historical results and Formation empty states. Depends on T045 and T047.
-- [ ] T049 Review updated Home, Habilidades, Roles and Formation in a browser at mobile and desktop sizes, including modal, spacing, touch targets and bottom navigation. Record which states are actually checked. Keep T040's journey-specific visual review separate. Depends on T045.
-- [X] T050 Run `npm --prefix frontend test`, `npm --prefix frontend run build`, `npm --prefix frontend run lint`, and `git diff --check`; resolve in-scope failures and record warnings. No backend suite is needed unless implementation unexpectedly changes backend contracts or code. Depends on T045-T048; T049 remains a separate manual review.
+- [X] T050 Run `npm --prefix frontend test`, `npm --prefix frontend run build`, `npm --prefix frontend run lint`, and `git diff --check`; resolve in-scope failures and record warnings. No backend suite is needed unless implementation unexpectedly changes backend contracts or code. Depends on T045-T048; T049 is a separate manual review in the final phase.
 - [X] T051 Update `progress/current.md` with actual changed files and validation outcomes; report automated checks separately from visual review. Leave T040 unchecked until its full journey visual criteria are personally verified. Depends on T050.
 
 ## Phase 12: User Story 3 — Crear reevaluaciones independientes
@@ -190,7 +188,7 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 **Independent Test**: Starting reevaluation after completion returns an empty answer map and zero answered count; the source retains all saved answers/results. Saving one answer and fetching the same draft returns only that saved answer; another create request recovers it, and the one-draft constraint remains.
 
 - [X] T052 [US3] Update unit and API contract assertions in `backend/src/test/java/com/nextrole/assessment/AssessmentAttemptServiceTest.java` and `AssessmentHistoryApiContractTest.java` for empty reevaluations, source immutability, saved draft recovery, one active draft and pinned versions.
-- [X] T053 [US3] Remove `copyAnswers` use from `AssessmentAttemptService.reevaluate` and its now-unused implementation from `AssessmentAnswerService`; preserve `source_attempt_id` provenance and existing schema/data. Depends on T025 and T052.
+- [X] T053 [US3] Remove `copyAnswers` use from `AssessmentAttemptService.reevaluate` and its now-unused implementation from `AssessmentAnswerService`; preserve `source_attempt_id` provenance and existing schema/data. Depends on T052.
 - [X] T032 Update the authenticated end-to-end Testcontainers workflow in `backend/src/test/java/com/nextrole/integration/AssessmentWorkflowIntegrationTest.java` to prove a reevaluation is empty, recovers only its own saved answers, and does not replace completed source results. Depends on T023, T030, T031 and T053.
 
 ## Phase 13: User Story 8 — Ajustar el recorrido y los estados de Habilidades
@@ -214,15 +212,7 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 - [X] T059 [US9] Implement a reusable styled `frontend/src/components/ui/EmptyStateCard.tsx` and update `RolesSuggestedPage.tsx` to use the newest persisted results for direct `/roles`, preserve `attemptId` fetches, and show the approved no-results states without fake ranks. Depends on T057.
 - [X] T060 [US9] Update only `frontend/src/features/learning/LearningIndexPage.tsx` to use existing assessment current/history queries and the reusable empty state. Remove selected-role dependency only from this index route; leave `LearningPage.tsx`, its per-role APIs/resources and role-specific navigation unchanged. Depends on T058 and T059.
 
-## Phase 15: Verification and review handoff
-
-**Purpose**: Revalidate backend/frontend behavior and leave the app available without claiming manual checks the user has not performed.
-
-- [X] T061 Run `mvn -f backend/pom.xml test`, `npm --prefix frontend test`, `npm --prefix frontend run build`, `npm --prefix frontend run lint`, and `git diff --check`; record exact results and any environment blockers. Do not change matching or competency data. Depends on T032, T053, T056, T059 and T060.
-- [X] T062 Review `specs/001-autoevaluacion-matching/quickstart.md` against implementation, record the user-reported checks separately from unperformed scenarios, and keep T040 and T049 unchecked until their respective visual reviews occur. Depends on T061.
-- [X] T063 Update `progress/current.md` with files, test outcomes, service availability and pending manual checks. Keep docker-compose/local files intact and do not commit or push. Depends on T062.
-
-## Phase 16: Preserve evaluation context in Roles and Formación
+## Phase 15: Preserve evaluation context in Roles and Formación
 
 **Goal**: Keep completed results and explicit historical navigation isolated from an active draft, and restore current exploration only after the draft is discarded.
 
@@ -234,10 +224,25 @@ description: "Dependency-ordered implementation tasks for V2 assessment and role
 - [X] T067 [US9] Update `RolesSuggestedPage.tsx` and `LearningIndexPage.tsx` to apply draft precedence using the existing current/history query keys; keep persisted ranking values and historical navigation unchanged. No backend changes.
 - [X] T068 Review the US9 acceptance criteria and `specs/001-autoevaluacion-matching/quickstart.md` for draft/history coexistence, discard state transition, and explicit historical `attemptId`; record tests and pending manual review in `progress/current.md`.
 
+## Phase 16: Verification and review handoff
+
+**Purpose**: Run final technical verification after all implementation stories, record evidence and leave unperformed manual reviews open.
+
+**Manual review**: the following tasks remain open until the specified browser checks are actually performed.
+
+- [ ] T040 [US4] Visually review the journey at mobile and desktop sizes for clipping, path/mascot synchronization, sprite cadence, scale, contrast, accessibility and reduced-motion behavior. Record unavailable checks without marking them passed. Depends on T038.
+- [ ] T049 Review current Home, Habilidades, Roles and Formation in a browser at mobile and desktop sizes, including modal, spacing, touch targets and bottom navigation. Record which states are actually checked. Keep T040's journey-specific visual review separate. Depends on T068.
+**Purpose**: Revalidate backend/frontend behavior and leave the app available without claiming manual checks the user has not performed.
+
+- [X] T061 Run `mvn -f backend/pom.xml test`, `npm --prefix frontend test`, `npm --prefix frontend run build`, `npm --prefix frontend run lint`, and `git diff --check`; record exact results and any environment blockers. Do not change matching or competency data. Depends on T032, T053, T056, T059, T060 and T068. T025 was subsequently closed by its dedicated Testcontainers assertions and the 2026-11-26 full backend suite.
+- [X] T062 Review `specs/001-autoevaluacion-matching/quickstart.md` against implementation, record user-reported checks separately from unperformed scenarios, and keep T040/T049 unchecked until their respective visual reviews occur. Depends on T061.
+- [X] T063 Update `progress/current.md` with actual files, test outcomes, service availability and pending manual checks. Preserve local files; no commit or push is implied. Depends on T062.
+
 ## Dependencies & Execution Order
 
 ### Phase Dependencies
 
+- Phases 1–5 cover the core assessment/matching flow. Phase 6 is its historical core-flow checkpoint, not final validation of later extensions. Phases 7–15 contain the subsequently approved journey, Home, discard, and context-preservation work. Phase 16 is the final technical validation and review handoff after those implementation phases.
 - **Setup (Phase 1)**: T001 creates the frontend test runner required by UI tests.
 - **Foundational (Phase 2)**: T002 precedes T003; T003 precedes T004–T005. Complete the foundation before story implementation.
 - **Role IDs**: The IDs `qa-jr` and `cloud-jr` are approved and may be seeded additively by T003; no role-ID confirmation gate remains.

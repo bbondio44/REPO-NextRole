@@ -130,7 +130,7 @@ frontend/src/
 - **Functional blockers**: None for the approved extension. The exact empty-state copy, journey visibility, modal content, reevaluation policy and persisted Roles source are specified.
 - **Role IDs**: All six role IDs and labels are approved and seeded in the assessment-specific catalog. V1 role records remain untouched.
 - **Future version evolution**: If a later questionnaire changes competency codes, answer transfer for added/removed codes requires an explicit rule before publishing that changed version. This does not block the initial fixed 31-code catalog or same-version reevaluation.
-- **Frontend data seam**: Assessment flows already use authenticated V2 contracts. Home currently reads V1 mock skill/role state for its obsolete orientation; the extension replaces only those Home consumers while retaining shared helpers used by other screens.
+- **Current frontend data seam**: Assessment flows, Home's active-draft/latest-history states, direct Roles results and the general Formation entry state use authenticated V2 assessment queries/contracts. Legacy V1 services remain for features not migrated in this scope; do not treat their mocks/localStorage as V2 assessment state. The old Home orientation consumers were removed while shared legacy helpers with other active consumers were preserved.
 - **Seed drift**: 31 question snapshots, 155 answer-level texts and 186 matrix cells must be mechanically compared with the canonical V2 Markdown during implementation/migration validation.
 - **Exact scores**: API serialization must preserve exact rational score components; clients render the supplied one-decimal string and rank position without sorting rounded values.
 - **Migration safety**: V5 is additive. Test against a disposable Testcontainers database; do not rewrite V1–V4 or delete/migrate legacy answers.
@@ -138,17 +138,13 @@ frontend/src/
 - **Source lineage**: `assessment_attempts.source_attempt_id` remains an optional historical link; reevaluation does not read/copy its answer rows. No persistent schema or already-applied migration changes are proposed.
 - **Roles/Formation state**: existing current-attempt and completed-history queries are sufficient. `/roles?attemptId=...` remains the historical detail path; direct `/roles` uses the newest persisted history item. `/formacion` changes only its entry/empty state; role-specific `LearningPage` stays untouched.
 
-## Implementation Sequence (planning only)
+## Implementation and validation status
 
-1. Add the V2 catalog/matrix seed and attempt/result schema through a new additive Flyway migration.
-2. Add immutable published version records, repositories and transactional draft lifecycle services.
-3. Add exact-rational matching and completed-result persistence.
-4. Add authenticated V2 API contracts, API contract tests and integration tests; retain V1 routes for other features.
-5. Connect the React assessment and results/history flow to the API; remove V1 localStorage/mocks from this flow without deleting stored local data.
-6. Validate the end-to-end workflow and regression contracts described in `quickstart.md`.
-7. Change reevaluation creation to leave answers empty, preserve source lineage, and prove that draft recovery and immutable history still work.
-8. Implement the shared discard dialog and the approved Home/Habilidades states, including hidden visual percentage with retained ARIA progress.
-9. Make direct Roles show latest persisted results while preserving `attemptId` history, and update only the global Formation index states/navigation; preserve per-role Learning V1.
-10. Remove the two obsolete orientation-only elements from Skill Gap and test that the diagnostic content/navigation remain intact; run frontend/backend validation and keep visual review tasks open until personally checked.
+The sequence below is an implementation summary, not a command to repeat completed work. The current task state and validation evidence are recorded in `tasks.md`, `quickstart.md` and `progress/current.md`.
+
+1. Additive V5 schema, versioned catalogs, transactional draft lifecycle, exact-rational matching, persisted results, authenticated V2 API and history were implemented while preserving V1 routes and data.
+2. The React assessment/results/history flow was connected to persisted V2 contracts. A prior answer-prefill proposal for reevaluations was superseded on 2026-11-25: new reevaluations now start unanswered, retain `source_attempt_id` only as provenance, and active draft recovery returns that draft's own answers.
+3. The journey, Home/Habilidades states, shared discard behavior, direct Roles results, Formation entry states and narrow Skill Gap orientation-marker removal were implemented using existing contracts. Per-role Learning V1 remains intact.
+4. Automated checks were recorded after implementation. Final verification appears after implementation phases in `tasks.md`; T040 and T049 remain separate manual visual reviews. T025 was initially left open for its specifically identified Testcontainers assertions; those assertions were subsequently added and passed in the 2026-11-26 full backend suite, as recorded on the task.
 
 The original V2 assessment implementation and US4 journey are already present. This extension adds the approved Home redesign, no-prefill reevaluation, shared discard dialog, Habilidades states and direct Roles/Formation entry states; the existing journey-specific visual review T040 remains separately pending.

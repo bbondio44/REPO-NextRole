@@ -1,8 +1,13 @@
 package com.nextrole.assessment;
 
 import com.nextrole.data.AssessmentAnswerRepository;
+import com.nextrole.data.AssessmentAttempt;
 import com.nextrole.data.AssessmentAttemptRepository;
 import com.nextrole.data.AssessmentAttemptStatus;
+import com.nextrole.data.AssessmentMatrixVersion;
+import com.nextrole.data.AssessmentMatrixVersionRepository;
+import com.nextrole.data.AssessmentQuestionnaireVersion;
+import com.nextrole.data.AssessmentQuestionnaireVersionRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -38,6 +43,8 @@ class AssessmentHistoryIntegrationTest {
     @Autowired TestRestTemplate rest;
     @Autowired AssessmentAttemptRepository attempts;
     @Autowired AssessmentAnswerRepository answers;
+    @Autowired AssessmentQuestionnaireVersionRepository questionnaireVersions;
+    @Autowired AssessmentMatrixVersionRepository matrixVersions;
 
     @Test
     @SuppressWarnings("unchecked")
@@ -88,6 +95,55 @@ class AssessmentHistoryIntegrationTest {
         Map<String, Object> historicalDetail = detail(user, originalId);
         assertEquals("M1", historicalDetail.get("matrixVersion"));
         assertEquals(31, ((Map<String, Object>) historicalDetail.get("answers")).size());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void oneDraftIsPersistedAndKeepsItsPinnedVersionsWhenNewVersionsBecomeCurrent() {
+        HttpHeaders user = register("history-version-pin-" + UUID.randomUUID() + "@example.test");
+        Map<String, Object> draft = createReevaluation(user);
+        UUID draftId = UUID.fromString(draft.get("attemptId").toString());
+        AssessmentAttempt pinned = attempts.findById(draftId).orElseThrow();
+        AssessmentQuestionnaireVersion pinnedQuestionnaire = questionnaireVersions
+                .findById(pinned.questionnaireVersionId).orElseThrow();
+        AssessmentMatrixVersion pinnedMatrix = matrixVersions.findById(pinned.matrixVersionId).orElseThrow();
+        UUID newerQuestionnaireId = UUID.randomUUID();
+        UUID newerMatrixId = UUID.randomUUID();
+        AssessmentQuestionnaireVersion newerQuestionnaire = new AssessmentQuestionnaireVersion(newerQuestionnaireId,
+                "Q-T025-" + UUID.randomUUID().toString().substring(0, 8), java.time.Instant.now(), true);
+        AssessmentMatrixVersion newerMatrix = new AssessmentMatrixVersion(newerMatrixId,
+                "M-T025-" + UUID.randomUUID().toString().substring(0, 8), java.time.Instant.now(), true);
+
+        try {
+            pinnedQuestionnaire.current = false;
+            pinnedMatrix.current = false;
+            questionnaireVersions.save(pinnedQuestionnaire);
+            matrixVersions.save(pinnedMatrix);
+            questionnaireVersions.save(newerQuestionnaire);
+            matrixVersions.save(newerMatrix);
+
+            Map<String, Object> recovered = createReevaluation(user);
+            assertEquals(draftId.toString(), recovered.get("attemptId").toString());
+            assertEquals(pinnedQuestionnaire.versionCode, recovered.get("questionnaireVersion"));
+            assertEquals(pinnedMatrix.versionCode, recovered.get("matrixVersion"));
+            assertEquals(1, attempts.findAll().stream()
+                    .filter(attempt -> attempt.userId.equals(pinned.userId)
+                            && attempt.status == AssessmentAttemptStatus.DRAFT)
+                    .count());
+            assertEquals(pinned.questionnaireVersionId, attempts.findById(draftId).orElseThrow().questionnaireVersionId);
+            assertEquals(pinned.matrixVersionId, attempts.findById(draftId).orElseThrow().matrixVersionId);
+        } finally {
+            newerQuestionnaire.current = false;
+            newerMatrix.current = false;
+            questionnaireVersions.save(newerQuestionnaire);
+            matrixVersions.save(newerMatrix);
+            pinnedQuestionnaire.current = true;
+            pinnedMatrix.current = true;
+            questionnaireVersions.save(pinnedQuestionnaire);
+            matrixVersions.save(pinnedMatrix);
+            questionnaireVersions.deleteById(newerQuestionnaireId);
+            matrixVersions.deleteById(newerMatrixId);
+        }
     }
 
     private Map<String, Object> createReevaluation(HttpHeaders user) {
