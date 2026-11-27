@@ -1,0 +1,23 @@
+{
+  "roleId": "data-analyst-jr",
+  "roleName": "Data Analyst",
+  "roleDescription": "Se encarga de transformar datos en información útil para la toma de decisiones. Sus responsabilidades incluyen obtener, limpiar, procesar y analizar datos, identificar patrones e interpretar indicadores de negocio. Utiliza técnicas estadísticas y herramientas de visualización para comunicar resultados, fundamentar conclusiones y contribuir a la resolución de problemas.",
+  "matchingPercentage": 84.0,
+  "competencies": [
+    {
+      "id": "sql-queries",
+      "name": "Consultas SQL",
+      "current": {
+        "level": 2,
+        "description": "Puedo realizar consultas sencillas para obtener, filtrar o modificar información y comprender los resultados obtenidos."
+      },
+      "required": {
+        "level": 3,
+        "description": "Tengo experiencia utilizando SQL para resolver necesidades de una aplicación, relacionar información de distintas tablas y verificar que las consultas produzcan los resultados esperados."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 1,
+      "trainingPriority": 2
+    }
+  ]
+}

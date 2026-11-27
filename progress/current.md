@@ -2,24 +2,23 @@
 
 **Actualizado:** 2026-11-27
 **Rama activa:** `develop-v2`
-**HEAD/checkpoint:** `2deff66c7dfd395f0bc28df61f46f04075c6b363` — `docs: define Explainability y Formación y prepara su implementación`; Checkpoint 1 de Explainability listo para commit selectivo.
-**Estado Git:** rama un commit por delante de `origin/develop-v2`; hay cambios locales del Checkpoint 1 y del trabajo visual paralelo, aún sin staging.
+**HEAD/checkpoint:** `55ff734` — `Reorganiza Inicio e integra la introducción de autoevaluación`; Checkpoint 1 de Explainability permanece en `9f90c9af9aafd46226ee8a2f76accfff65299a68`.
+**Estado Git:** `develop-v2` está tres commits por delante y dos por detrás de `origin/develop-v2`. El staging estaba vacío al preparar el cierre selectivo de Checkpoint 2; quedan cambios locales paralelos que deben preservarse.
 
-## Estado actual — Implement, Explainability Checkpoint 1
+## Estado actual — Implement, Explainability Checkpoint 2
 
-- Se completaron T001–T007 y T036 de `specs/003-explainability-formacion/tasks.md`. No se avanzó a construcción de contexto, proveedor HTTP, generación de diagnósticos ni frontend.
-- V7 es aditiva y parte de V6. Agrega las descripciones y nombres profesionales oficiales en `assessment_roles` y `explainability_diagnostics` con estados, snapshots, JSONB, metadatos operativos, unicidad, claves foráneas y restricciones. V1–V6 no se modificaron.
-- El catálogo autenticado V2 está disponible en `GET /api/v2/roles/{roleId}`. El catálogo V1 y sus rutas no cambiaron.
-- Se incorporaron el mapeo y repositorio de diagnósticos con operaciones compare-and-set/fencing, configuración tipada, selección de la versión conocida V5 y el recurso de prompt. No hay adaptador OpenRouter ni generación conectada.
-- SHA-256 del recurso V5: `84C45ABE0D028E4ADB7376E387597993D196F5F2C8990596D853D11FDCF23AF5`, igual al aprobado y al prompt experimental. El contrato Python queda referenciado en los recursos de prueba.
-- V7 se ejecutó únicamente en PostgreSQL desechable mediante Testcontainers. No se migró la base de desarrollo ni se reiniciaron servicios.
-- Validación: `mvn -f backend/pom.xml test` finalizó con 48 pruebas, 0 fallos y 0 errores. Después se ejecutó otra vez el test de catálogo/configuración con API key explícitamente vacía (3 pruebas, 0 fallos), para verificar binding y arranque sin credencial.
-- Los tests demuestran que PostgreSQL impone unicidad, claves foráneas y checks de estado/payload; el repositorio impone las transiciones compare-and-set, fencing por token y no sobrescritura de éxitos. Las garantías de autorización y orquestación quedan para tareas posteriores.
-- No hubo llamadas a proveedores, costos, commits ni push.
+- Checkpoint 1 quedó en `9f90c9a`. En este checkpoint se completaron T008, T009 y T012–T017: contexto histórico determinístico, DTOs serializables, validación estricta, puerto/fake, adaptador OpenRouter con RestClient y servicio de generación inicial.
+- T010 está parcialmente verificada: los tests del servicio pasan; las pruebas dependientes del controller/contrato HTTP se conservan para el checkpoint que implemente el controller. T031 permanece abierta: está agregado el fake válido básico de T014; faltan sus escenarios extendidos de error.
+- El contexto toma el intento completado propietario, descripciones de niveles de su cuestionario fijado, matching persistido, y las brechas e importancia de Skill Gap V2 mediante llamadas directas a servicios Spring. Solo calcula `trainingPriority`; no recalcula matching ni gaps.
+- El JSON backend tiene orden de propiedades explícito, números/valores compatibles con el contrato Pydantic y excluye identificadores/versions locales. `context_hash` es SHA-256 de los bytes UTF-8 del JSON determinístico enviado por Java. Python define equivalencia semántica, pero no una canonicalización byte-a-byte compartida; no se afirma que los hashes entre lenguajes coincidan.
+- La generación inicial valida propiedad y estado COMPLETED; reclama una fila única antes de invocar al proveedor fuera de transacción; valida antes de persistir y finaliza mediante token/CAS. Reutiliza éxito y no llama de nuevo para estados GENERATING o FAILED. No se añadieron rutas públicas, retry manual ni recuperación de leases.
+- V5 continúa íntegro, SHA-256 `84C45ABE0D028E4ADB7376E387597993D196F5F2C8990596D853D11FDCF23AF5`.
+- `mvn -f backend/pom.xml test`: 69 pruebas, 0 fallos, 0 errores, 0 omitidas. Incluyó migraciones y persistencia en PostgreSQL/Testcontainers desechable; no se migró la base de desarrollo.
+- No se realizaron llamadas reales a OpenRouter ni otros proveedores, costos, cambios frontend, cambios Docker, commits de Checkpoint 2 ni push.
 
-## Próximo paso — Explainability
+## Próximo paso — Checkpoint 3
 
-Crear el commit selectivo del Checkpoint 1 aprobado; después avanzar únicamente con T008–T010, T012–T017 y el fake básico asociado a T014. V7 no debe aplicarse a la base compartida.
+Crear el commit selectivo aprobado del motor de Explainability; después avanzar exclusivamente con las tareas de API, historial y recuperación autorizadas para Checkpoint 3. No incluir ni alterar cambios paralelos ni publicar commits.
 
 ## Trabajo paralelo de Inicio e identidad visual
 

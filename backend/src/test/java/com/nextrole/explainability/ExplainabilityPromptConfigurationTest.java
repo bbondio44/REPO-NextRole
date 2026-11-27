@@ -9,6 +9,7 @@ import java.util.Properties;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.test.util.ReflectionTestUtils;
 
 class ExplainabilityPromptConfigurationTest {
     @Test
@@ -36,5 +37,19 @@ class ExplainabilityPromptConfigurationTest {
         assertEquals(java.time.Duration.ofSeconds(45), properties.getResponseTimeout());
         assertEquals(1200, properties.getMaxOutputTokens());
         assertEquals(java.time.Duration.ofMinutes(2), properties.getLease());
+    }
+
+    @Test
+    void restClientRequestFactoryAppliesConfiguredConnectionAndResponseTimeouts() {
+        ExplainabilityProperties properties = new ExplainabilityProperties();
+        var factory = new ExplainabilityConfiguration().requestFactory(properties);
+
+        assertEquals(3000, ReflectionTestUtils.getField(factory, "connectTimeout"));
+        assertEquals(45000, ReflectionTestUtils.getField(factory, "readTimeout"));
+        properties.setConnectTimeout(java.time.Duration.ofMillis(800));
+        properties.setResponseTimeout(java.time.Duration.ofSeconds(7));
+        factory = new ExplainabilityConfiguration().requestFactory(properties);
+        assertEquals(800, ReflectionTestUtils.getField(factory, "connectTimeout"));
+        assertEquals(7000, ReflectionTestUtils.getField(factory, "readTimeout"));
     }
 }
