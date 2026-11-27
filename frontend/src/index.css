@@ -26,12 +26,16 @@
   --color-neutral-900: #0f2234;
   --color-neutral-800: #163049;
 
+  --color-app-background: #e4f1fa;
+  --color-surface-tint: #f0f8fe;
+  --color-info-surface: #d9ecfa;
+
   --radius-card: 1rem;
 }
 
 @layer base {
   body {
-    @apply bg-slate-50 text-neutral-950 antialiased;
+    @apply bg-app-background text-neutral-950 antialiased;
     font-family: var(--font-sans);
   }
 }

@@ -1,73 +1,12 @@
-.home-welcome-card {
-  background: linear-gradient(118deg, #16385e 0%, #087eae 100%);
-  box-shadow: 0 10px 26px rgb(11 55 91 / 14%);
+.home-secondary-card,
+.home-journey-card {
+  border-color: var(--color-primary-100);
+  background: var(--color-surface-tint);
 }
 
-.home-welcome-orb {
-  position: absolute;
-  display: block;
-  border: 1px solid rgb(255 255 255 / 12%);
-  border-radius: 9999px;
-  background: rgb(255 255 255 / 5%);
-  pointer-events: none;
-}
-
-.home-welcome-orb-one {
-  top: -4.5rem;
-  right: -2.5rem;
-  width: 12rem;
-  height: 12rem;
-}
-
-.home-welcome-orb-two {
-  bottom: -5.5rem;
-  left: -3.5rem;
-  width: 10rem;
-  height: 10rem;
-}
-
-.home-step-card {
-  min-width: 0;
-  min-height: 8.5rem;
-  border: 1px solid rgb(18 48 74 / 4%);
-  border-radius: 1rem;
-  padding: 0.7rem;
-}
-
-.home-step-icon {
-  display: flex;
-  width: 2.5rem;
-  height: 2.5rem;
-  flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  border-radius: 0.8rem;
-  background: rgb(255 255 255 / 90%);
-  box-shadow: 0 1px 2px rgb(15 34 52 / 8%);
-}
-
-.home-step-blue {
-  color: #007ebb;
-  background: #ddf0fc;
-}
-
-.home-step-purple {
-  color: #7851c5;
-  background: #eae2fa;
-}
-
-.home-step-amber {
-  color: #9b6411;
-  background: #fceccf;
-}
-
-.home-step-green {
-  color: #13836c;
-  background: #d7f1e7;
-}
-
-.home-step-card h3 {
-  color: #12304a;
+.home-info-panel,
+.home-info-icon {
+  background: var(--color-info-surface);
 }
 
 .home-start-action {
@@ -133,18 +72,6 @@
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-}
-
-@media (max-width: 360px) {
-  .home-step-card {
-    min-height: 8.25rem;
-    padding: 0.6rem;
-  }
-
-  .home-step-icon {
-    width: 2.25rem;
-    height: 2.25rem;
   }
 }
 

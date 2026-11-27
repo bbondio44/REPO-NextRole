@@ -11,11 +11,9 @@ import './AssessmentJourney.css'
 const ROUTE_PATH = 'M 28 178 C 112 190, 122 128, 220 136 S 322 204, 394 164 S 470 120, 566 132'
 const VIEWBOX_WIDTH = 600
 const VIEWBOX_HEIGHT = 240
-const WALK_FRAME_COUNT = 8
-const WALK_FRAME_DURATION_MS = 110
-const WALK_CYCLE_DURATION_MS = WALK_FRAME_COUNT * WALK_FRAME_DURATION_MS
-const MAX_WALK_CYCLES = 2
-const MAX_TRAVEL_DURATION_MS = WALK_CYCLE_DURATION_MS * MAX_WALK_CYCLES
+const WALK_CYCLE_COUNT = 2
+const WALK_CYCLE_DURATION_MS = 1000
+const WALK_TRAVEL_DURATION_MS = WALK_CYCLE_COUNT * WALK_CYCLE_DURATION_MS
 const START_POINT = { x: 28, y: 178 }
 
 interface JourneyPoint {
@@ -69,13 +67,21 @@ export function AssessmentJourney({ progress, completed }: AssessmentJourneyProp
   const prefersReducedMotion = usePrefersReducedMotion()
   const routeRef = useRef<SVGPathElement>(null)
   const animationFrameRef = useRef<number | null>(null)
+  const targetProgressRef = useRef(targetProgress)
+  const previousTargetProgressRef = useRef(targetProgress)
+  const hasPlayedEntryAnimationRef = useRef(false)
   const initialProgress = prefersReducedMotion || completed ? targetProgress : 0
   const progressRef = useRef(initialProgress)
   const [pathLength, setPathLength] = useState(0)
+  const [walkSpriteReady, setWalkSpriteReady] = useState(false)
   const [visualProgress, setVisualProgress] = useState(initialProgress)
   const [point, setPoint] = useState<JourneyPoint>(START_POINT)
   const [walkingCycleCount, setWalkingCycleCount] = useState(0)
   const [isWalking, setIsWalking] = useState(false)
+
+  useLayoutEffect(() => {
+    targetProgressRef.current = targetProgress
+  }, [targetProgress])
 
   useLayoutEffect(() => {
     const path = routeRef.current
@@ -90,36 +96,32 @@ export function AssessmentJourney({ progress, completed }: AssessmentJourneyProp
       animationFrameRef.current = null
     }
 
-    const startProgress = progressRef.current
     if (pathLength <= 0) return
 
-    if (completed || prefersReducedMotion || startProgress === targetProgress) {
-      progressRef.current = targetProgress
-      setVisualProgress(targetProgress)
-      setPoint(getPointAtProgress(routeRef.current, pathLength, targetProgress))
+    const currentTarget = targetProgressRef.current
+    if (completed || prefersReducedMotion || currentTarget === 0) {
+      hasPlayedEntryAnimationRef.current = true
+      progressRef.current = currentTarget
+      setVisualProgress(currentTarget)
+      setPoint(getPointAtProgress(routeRef.current, pathLength, currentTarget))
       setWalkingCycleCount(0)
       setIsWalking(false)
       return
     }
 
-    const distance = Math.abs(targetProgress - startProgress) * pathLength
-    const distancePerCycle = pathLength * 0.42
-    const cycleCount = Math.min(
-      MAX_WALK_CYCLES,
-      Math.max(1, Math.ceil(distance / distancePerCycle)),
-    )
-    const duration = Math.min(MAX_TRAVEL_DURATION_MS, cycleCount * WALK_CYCLE_DURATION_MS)
-    const from = startProgress
-    const delta = targetProgress - from
+    if (hasPlayedEntryAnimationRef.current || !walkSpriteReady) return
+
+    hasPlayedEntryAnimationRef.current = true
+    const from = progressRef.current
     let startTime: number | null = null
 
-    setWalkingCycleCount(cycleCount)
+    setWalkingCycleCount(WALK_CYCLE_COUNT)
     setIsWalking(true)
 
     const step = (timestamp: number) => {
       if (startTime === null) startTime = timestamp
-      const elapsed = Math.min(1, (timestamp - startTime) / duration)
-      const nextProgress = from + delta * elapsed
+      const elapsed = Math.min(1, (timestamp - startTime) / WALK_TRAVEL_DURATION_MS)
+      const nextProgress = from + (targetProgressRef.current - from) * elapsed
       progressRef.current = nextProgress
       setVisualProgress(nextProgress)
       setPoint(getPointAtProgress(routeRef.current, pathLength, nextProgress))
@@ -130,9 +132,10 @@ export function AssessmentJourney({ progress, completed }: AssessmentJourneyProp
       }
 
       animationFrameRef.current = null
-      progressRef.current = targetProgress
-      setVisualProgress(targetProgress)
-      setPoint(getPointAtProgress(routeRef.current, pathLength, targetProgress))
+      const finalProgress = targetProgressRef.current
+      progressRef.current = finalProgress
+      setVisualProgress(finalProgress)
+      setPoint(getPointAtProgress(routeRef.current, pathLength, finalProgress))
       setIsWalking(false)
     }
 
@@ -141,12 +144,23 @@ export function AssessmentJourney({ progress, completed }: AssessmentJourneyProp
       if (animationFrameRef.current !== null) {
         window.cancelAnimationFrame(animationFrameRef.current)
         animationFrameRef.current = null
+        hasPlayedEntryAnimationRef.current = false
       }
     }
-  }, [completed, pathLength, prefersReducedMotion, targetProgress])
+  }, [completed, pathLength, prefersReducedMotion, walkSpriteReady])
+
+  useEffect(() => {
+    if (previousTargetProgressRef.current === targetProgress) return
+    previousTargetProgressRef.current = targetProgress
+    if (pathLength <= 0 || isWalking || !hasPlayedEntryAnimationRef.current) return
+
+    progressRef.current = targetProgress
+    setVisualProgress(targetProgress)
+    setPoint(getPointAtProgress(routeRef.current, pathLength, targetProgress))
+  }, [isWalking, pathLength, targetProgress])
 
   const safeProgress = clampProgress(visualProgress)
-  const percentage = Math.round(safeProgress * 100)
+  const percentage = Math.round(targetProgress * 100)
   const mascotPose = completed ? 'celebration' : isWalking ? 'walking' : safeProgress === 0 ? 'pointing' : 'idle'
   const mascotLabel = mascotPose === 'celebration'
     ? 'Mascota celebrando la evaluación completada'
@@ -174,6 +188,14 @@ export function AssessmentJourney({ progress, completed }: AssessmentJourneyProp
       data-completed={completed}
     >
       <div className="assessment-journey__scene">
+        <img
+          className="assessment-journey__walk-preload"
+          src={mascotWalkSprite}
+          alt=""
+          aria-hidden="true"
+          data-testid="assessment-journey-walk-preload"
+          onLoad={() => setWalkSpriteReady(true)}
+        />
         <svg
           className="assessment-journey__landscape"
           viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`}

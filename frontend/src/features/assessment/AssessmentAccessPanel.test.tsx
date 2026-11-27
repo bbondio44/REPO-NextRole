@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -59,6 +59,7 @@ describe('AssessmentAccessPanel', () => {
 
     expect(await screen.findByRole('link', { name: 'Continuar evaluación' })).toHaveAttribute('href', '/habilidades/evaluacion')
     expect(createAssessmentAttempt).not.toHaveBeenCalled()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
   it('uses the active attempt saved-answer ratio, including an explicit zero, without extra data requests', async () => {
@@ -218,8 +219,26 @@ describe('AssessmentAccessPanel', () => {
     renderPanel()
 
     fireEvent.click(await screen.findByRole('button', { name: 'Comenzar evaluación' }))
+    const dialog = await screen.findByRole('dialog', { name: '¡Descubrí tu potencial!' })
+    expect(createAssessmentAttempt).not.toHaveBeenCalled()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Comenzar autoevaluación' }))
     await waitFor(() => expect(createAssessmentAttempt).toHaveBeenCalledTimes(1))
     expect(await screen.findByText('/habilidades/evaluacion')).toBeInTheDocument()
+  })
+
+  it('cancels the introduction in Habilidades without creating an attempt', async () => {
+    vi.mocked(getCurrentAssessmentAttempt).mockResolvedValue(null)
+    vi.mocked(getAssessmentHistory).mockResolvedValue([])
+    renderPanel()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Comenzar evaluación' }))
+    const dialog = await screen.findByRole('dialog', { name: '¡Descubrí tu potencial!' })
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Ahora no' }))
+
+    expect(screen.queryByRole('dialog', { name: '¡Descubrí tu potencial!' })).not.toBeInTheDocument()
+    expect(await screen.findByText('/habilidades')).toBeInTheDocument()
+    expect(createAssessmentAttempt).not.toHaveBeenCalled()
+    expect(createAssessmentReevaluation).not.toHaveBeenCalled()
   })
 
   it('shows completed results without creating a draft when returning to the tabs', async () => {
@@ -239,6 +258,9 @@ describe('AssessmentAccessPanel', () => {
     renderPanel()
 
     fireEvent.click(await screen.findByRole('button', { name: 'Comenzar nueva evaluación' }))
+    const dialog = await screen.findByRole('dialog', { name: '¡Descubrí tu potencial!' })
+    expect(createAssessmentReevaluation).not.toHaveBeenCalled()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Comenzar autoevaluación' }))
     await waitFor(() => expect(createAssessmentReevaluation).toHaveBeenCalledTimes(1))
     expect(createAssessmentAttempt).not.toHaveBeenCalled()
     expect(await screen.findByText('/habilidades/evaluacion')).toBeInTheDocument()

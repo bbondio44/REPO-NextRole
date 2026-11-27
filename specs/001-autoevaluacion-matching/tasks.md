@@ -349,3 +349,66 @@ Task: T026 history/draft UI tests in frontend/src/features/assessment/Assessment
 - [ ] T079 Review the Home first-visit, draft, history and discard states at narrow mobile and desktop viewport sizes. The user approved the current visual design on 2026-11-27; keep this task open for actual viewport review and unverified responsive/accessibility checks.
 
 **Execution order**: T075 approves and records the revised requirements. T076 adds behavioral coverage, T077 implements the scoped UI/shared hook, T078 validates automated checks, and T079 tracks manual browser review separately.
+
+## Phase 19: Chromatic surfaces, journey mascot and bottom navigation (approved 2026-11-27)
+
+**Goal**: Extend the institutional blue/cyan identity to the app background and Home surfaces, enlarge the assessment journey mascot without changing its path or motion, and make the active bottom-navigation tab more distinct while preserving routes and accessibility.
+
+**Independent Test**: AppShell has the approved pale-blue background with a white header/nav; Home secondary cards and info insets use the approved tint hierarchy while welcome/draft blue remain. The five nav routes and active semantics persist; icon holders stay 48×36 px as the current route changes. The journey path and progress remain unchanged and the larger mascot can render beyond the scene edge without being clipped by it.
+
+- [X] T080 Record the approved color hierarchy, unchanged Home welcome/draft cards, icon concepts, safe-area behavior and journey-mascot sizing in this feature's `spec.md` and `plan.md`; do not edit shared progress files.
+- [X] T081 Add `frontend/src/components/layout/BottomNav.test.tsx` for all five routes, accessible labels/hidden decorative icons, current-tab semantics, fixed icon-holder dimensions and active/inactive treatment after navigation.
+- [X] T082 Update `frontend/src/features/home/HomePage.test.tsx` to verify the shared app-background token and the informational-card structure remains while Home tint classes change; retain all first-visit/draft/history behavior tests.
+- [X] T083 Update only `index.css`, `AppShell.tsx`, `BottomNav.tsx`, `AssessmentJourney.css`, `HomePage.tsx` and `HomePage.css` as needed. Reuse existing primary-100 for borders, preserve header/nav white and approved welcome/draft blue, add no icon dependency, and do not alter journey route or animation logic.
+- [X] T084 Focused Home/navigation/journey tests passed (3 files, 20 tests); full frontend suite passed (14 files, 79 tests); build passed; lint passed with the pre-existing `SessionContext.tsx:45` Fast Refresh warning; `git diff --check` passed.
+- [ ] T085 Review the background, Home cards, journey mascot at start/middle/goal and all bottom-nav tabs at narrow mobile and desktop sizes. Check clipping, safe areas, focus, touch targets and reduced-motion behavior. Keep this task open until actually observed.
+
+**Execution order**: T080 records requirements, T081–T082 establish frontend coverage, T083 implements the visual updates, T084 validates automated checks and T085 remains the manual visual review.
+
+## Phase 20: Assessment journey entry animation (approved 2026-11-27)
+
+**Goal**: Make the existing walk on Home and Habilidades perceptible and repeat it once per screen entry, while keeping it a visual-only rendering of saved progress.
+
+**Independent Test**: With motion enabled and positive progress, the existing spritesheet is ready before walking begins; the mascot and filled path move from 0 to the latest saved target over ~2 seconds, then stop. A rerender/refetch during the same mount does not restart the animation, but unmount/remount plays it again. Zero progress and reduced motion remain still/direct. The accessible progress value always remains the actual saved value.
+
+- [X] T086 Record the cause (one 880 ms sprite cycle for targets up to 42 %, plus sprite loading on first use), approved ~2 second timing, one-play-per-mount behavior and visual-only/accessibility boundary in `spec.md` and `plan.md`; do not edit shared progress files.
+- [X] T087 Extend `AssessmentJourney.test.tsx` for sprite-load gating, the 2 second movement/fill endpoint, stable in-flight animation across target rerenders, saved ARIA value, zero progress, reduced motion and replay after remount.
+- [X] T088 Update only `AssessmentJourney.tsx` and `AssessmentJourney.css`: preload the existing sprite, synchronize two existing sprite cycles with a finite 2 second requestAnimationFrame walk, capture target updates without restarting, handle zero/reduced motion and keep the actual ARIA value separate from interpolation. Preserve all approved colors, mascot size, scenery, route and flag.
+- [X] T089 Focused AssessmentJourney/Home/AccessPanel tests passed (3 files, 36 tests); full frontend suite passed (14 files, 82 tests); build passed; lint passed with the existing `SessionContext.tsx:45` Fast Refresh warning; `git diff --check` passed. Verified Vite root, journey module and CSS return HTTP 200 with the updated preload/ref/reduced-motion markers after restarting only the verified frontend container. Backend tests were not needed.
+- [ ] T090 Review Home and Habilidades entries at mobile and desktop, including repeat-on-return, first/middle/goal positions, mascot clipping, sprite visibility, reduced motion and accessibility. Keep open until manually observed.
+
+**Execution order**: T086 records requirements, T087 adds behavioral coverage, T088 implements the shared component behavior, T089 runs automated checks, and T090 tracks manual visual review separately.
+
+## Phase 21: Permanent Home steps and assessment introduction (approved 2026-11-27)
+
+**Goal**: Keep the four explanatory steps visible for every resolved Home state and require a shared accessible introduction before creating a new assessment from Home or Habilidades. Reuse the approved one-shot animated quiz mascot without dependencies or custom frame playback.
+
+**Independent Test**: For no-draft/no-history, draft-only, history-only and draft-plus-history, Home displays all four steps with full cards only for first visit and compact cards otherwise, while retaining draft/results. Home and Habilidades start actions open one dialog and make no request until confirmation. Cancel/close/Escape keep the original screen and data; confirmation reuses the existing start flow, handles pending/error once, then navigates on success. Reopening replays the WebP, reduced motion/error use the static final pose.
+
+- [X] T091 Record approved permanent-step variants, exact modal copy/actions, shared start semantics, WebP loop/static fallback and suspended-walk boundary in this feature's `spec.md` and `plan.md`; do not edit shared progress files.
+- [ ] T092 Inspect quiz assets and independently preview the animated WebP in a browser before integration. Record dimensions, alpha, duration, loop configuration and production/support files. If browser playback cannot be observed, keep this validation open and report it.
+- [X] T093 Add reusable data-driven Home step cards and make them permanent across the four draft/history combinations; preserve the complete approved first-visit cards, use compact returning cards, and preserve draft/results hierarchy.
+- [X] T094 Add the shared accessible `AssessmentIntroDialog` and wire Home/Habilidades new-assessment actions to open it. Call only the existing `useStartAssessmentAttempt` after explicit confirmation; retain duplicate prevention, error/loading and successful navigation. Do not show it for resume/history/results/discard.
+- [X] T095 Add tests for all Home state variants, modal open/cancel/close/Escape, no creation before confirm, success/error/pending duplicate prevention, reduced motion/fallback and reopen image remount. Keep actual animation playback and responsive/accessibility visual acceptance open until observed.
+- [X] T096 Run focused frontend tests, full suite, build, lint and `git diff --check`; verify the current container/bind mount and Vite modules/assets without restarting shared services. Record actual results here only; do not edit shared progress.
+- [X] T097 The user confirmed visual and functional review of the implemented introduction flow and mascot on 2026-11-27. This records the user's integrated application review; independent media inspection remains tracked separately in T092.
+
+**Validation record (2026-11-27)**: Focused Home/dialog/Habilidades tests passed (3 files, 36 tests); full frontend suite passed (15 files, 90 tests). `npm --prefix frontend run build` passed; Vite emitted its bundle-size advisory for the 502.23 kB JavaScript chunk. Lint exited successfully with the `SessionContext.tsx:45` fast-refresh warning. `git diff --check` passed. Read-only Docker inspection found `next-role-frontend-1` healthy and running with `/app` bind-mounted from the workspace's `frontend` directory. HTTP checks on port 5173 returned 200/no-cache for Home, dialog and shared-step Vite modules/styles; both animated and static WebP assets returned 200 as `image/webp` at 185,906 and 15,880 bytes. No Docker service was restarted. The user subsequently confirmed visual and functional review of the implemented changes. Independent standalone media inspection remains open under T092.
+
+**Execution order**: T091 records requirements, T092 tracks independent media inspection, T093 and T094 implement the Home/dialog flow, T095 adds behavioral coverage, T096 validates code and Vite, and T097 records user-confirmed integrated visual and functional acceptance.
+
+## Phase 22: Unified Home composition (approved 2026-11-27)
+
+**Goal**: Consolidate the welcome/steps into one state-aware Home card, preserve the four approved draft/history orders, and show the existing circular Play after results when no draft is active.
+
+**Independent Test**: The four Home states render the approved order, card variant, subtitle and mascot pose; results contain only historical information/actions; the Play is circular, outside results, follows content and opens the existing introduction without creating an attempt before confirmation. Existing continue/discard/history flows remain unchanged.
+
+- [X] T098 Reconcile FR-043, FR-047, FR-061, FR-062, the approved composition addendum in `spec.md` and the technical order in `plan.md`. Explicitly supersede separate welcome/motivation cards and the prior placement of steps/Play; do not edit shared progress.
+- [X] T099 Reuse `HomeJourneySteps`, `NEXTROLE_STEPS`, `Card`, `Mascot`, existing Play markup/styles and dialog flow to implement the four approved variants/order in `HomePage.tsx`, `HomePage.css`, `NextRoleSteps.tsx` and `NextRoleSteps.css`. Do not change assessment lifecycle logic, dialog, journey, backend or IA files.
+- [X] T100 Update `HomePage.test.tsx` for all four state orders, `wave`/`thumbsUp`/no repeated mascot, full/compact steps, Play location/style and intro behavior while preserving history, continue and discard coverage. Focused Home/dialog/Habilidades tests passed (3 files, 36 tests).
+- [X] T101 Run focused Home tests, full frontend suite, build, lint, `git diff --check` and read-only Vite endpoint checks. Record exact outcomes here; do not edit shared progress or restart other services.
+- [X] T102 Review the four compositions at mobile and desktop sizes, including mascot scale, 2×2 legibility, vertical scrolling, Play reachability and bottom-nav clearance. The user confirmed visual and functional review of this stage on 2026-11-27.
+
+**Validation record (2026-11-27)**: Focused Home/dialog/Habilidades tests passed (3 files, 36 tests); full frontend suite passed (15 files, 90 tests). Build passed with the existing Vite advisory for the 501.45 kB JS chunk. Lint exited successfully with the existing `SessionContext.tsx:45` Fast Refresh warning. `git diff --check` passed. `http://localhost:5173/` returned 200; Home and shared-step Vite modules and both CSS modules returned 200 with `no-cache` and the reorganized Home/step markers. No service restart was performed. The user confirmed visual and functional review of the four Home states on 2026-11-27; T102 is complete.
+
+**Execution order**: T098 records the superseding decisions; T099 implements the composition; T100 covers state/behavior; T101 validates technically; T102 records visual acceptance separately from automated checks.

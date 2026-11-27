@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -74,6 +74,12 @@ function configureState(attempt: AssessmentAttempt | null, history: AssessmentHi
   vi.mocked(getAssessmentHistory).mockResolvedValue(history)
 }
 
+function expectDomOrder(...elements: Element[]) {
+  for (let index = 1; index < elements.length; index += 1) {
+    expect(elements[index - 1].compareDocumentPosition(elements[index]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  }
+}
+
 describe('HomePage', () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -82,29 +88,41 @@ describe('HomePage', () => {
 
   afterEach(() => cleanup())
 
-  it('shows new-user motivation when there is no draft or completed history', async () => {
+  it('shows the full path card and circular Play on a first visit', async () => {
     configureState(null, [])
     renderHome()
 
-    expect(await screen.findByText('¡Descubrí tu potencial!')).toBeInTheDocument()
+    expect(await screen.findByText('Tu camino con NextRole')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /Hola, Luz/ })).toBeInTheDocument()
+    expect(screen.getByRole('main').parentElement).toHaveClass('bg-app-background')
     expect(screen.getByText('Tu próximo paso profesional empieza acá.')).toBeInTheDocument()
-    expect(screen.getByText('Tu camino con NextRole')).toBeInTheDocument()
-    expect(screen.getByText('Tu futuro profesional en cuatro pasos.')).toBeInTheDocument()
+    expect(screen.getByText('Tu futuro profesional en cuatro pasos')).toBeInTheDocument()
+    expect(screen.queryByText('¡Descubrí tu potencial!')).not.toBeInTheDocument()
     expect(screen.getByText('Conocé tus habilidades')).toBeInTheDocument()
     expect(screen.getByText('Explorá roles IT')).toBeInTheDocument()
     expect(screen.getByText('Identificá qué mejorar')).toBeInTheDocument()
     expect(screen.getByText('Seguí creciendo')).toBeInTheDocument()
     const journey = screen.getByRole('region', { name: 'Tu camino con NextRole' })
     expect(journey.querySelectorAll('article')).toHaveLength(4)
+    expect(journey.querySelector('article')).toHaveClass('home-step-card')
     expect(journey.querySelectorAll('a, button')).toHaveLength(0)
-    expect(screen.getByRole('button', { name: 'Comenzar autoevaluación' })).toBeInTheDocument()
+    expect(journey.firstElementChild).toHaveClass('home-journey-card')
+    expect(journey.querySelectorAll('article p')).toHaveLength(4)
+    expect(screen.getByTestId('home-journey-mascot')).toHaveAttribute('data-pose', 'wave')
+    expect(screen.getByTestId('home-journey-mascot').querySelector('img')).toHaveClass('h-24', 'w-24')
+    const play = screen.getByRole('button', { name: 'Comenzar autoevaluación' })
+    expect(play.querySelector('.home-play-button')).toBeInTheDocument()
+    expectDomOrder(
+      screen.getByRole('heading', { name: /Hola, Luz/ }),
+      journey,
+      play.closest('.home-start-action')!,
+    )
     expect(screen.queryByRole('progressbar', { name: 'Progreso de autoevaluación' })).not.toBeInTheDocument()
     expect(screen.queryByText('Tu última evaluación')).not.toBeInTheDocument()
     expect(createAssessmentAttempt).not.toHaveBeenCalled()
   })
 
-  it('shows only the active-draft card for a user without completed history', async () => {
+  it('shows the active draft followed by compact steps without repeating the mascot or Play', async () => {
     configureState(draft, [])
     renderHome()
 
@@ -115,15 +133,39 @@ describe('HomePage', () => {
     expect(screen.getByRole('link', { name: 'Continuar evaluación' })).toHaveAttribute('href', '/habilidades/evaluacion')
     expect(screen.queryByRole('button', { name: /Comenzar autoevaluación/ })).not.toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Descartar borrador' })).toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     expect(screen.queryByText('¡Descubrí tu potencial!')).not.toBeInTheDocument()
-    expect(screen.queryByText('Tu camino con NextRole')).not.toBeInTheDocument()
+    const steps = screen.getByRole('region', { name: 'Tu camino con NextRole' })
+    expect(steps.querySelectorAll('article.home-step-card--compact')).toHaveLength(4)
+    expect(steps.querySelectorAll('article p')).toHaveLength(0)
+    expect(screen.queryByTestId('home-journey-mascot')).not.toBeInTheDocument()
     expect(screen.queryByText('Tu última evaluación')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: '¡Cada paso cuenta!' })).toBeInTheDocument()
     expect(screen.getByText('Seguí descubriendo tus habilidades.')).toBeInTheDocument()
+    expectDomOrder(
+      screen.getByRole('heading', { name: /Hola, Luz/ }),
+      screen.getByRole('heading', { name: 'Tu autoevaluación' }),
+      steps,
+    )
     expect(createAssessmentAttempt).not.toHaveBeenCalled()
   })
 
-  it('starts an initial assessment directly from Home and prevents duplicate requests', async () => {
+  it('cancels the introduction from Home without creating or changing an assessment', async () => {
+    configureState(null, [])
+    renderHome()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Comenzar autoevaluación' }))
+    const dialog = await screen.findByRole('dialog', { name: '¡Descubrí tu potencial!' })
+    expect(createAssessmentAttempt).not.toHaveBeenCalled()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Ahora no' }))
+
+    expect(screen.queryByRole('dialog', { name: '¡Descubrí tu potencial!' })).not.toBeInTheDocument()
+    expect(screen.getByTestId('location')).toHaveTextContent('/')
+    expect(createAssessmentAttempt).not.toHaveBeenCalled()
+    expect(createAssessmentReevaluation).not.toHaveBeenCalled()
+  })
+
+  it('shows the introduction first and starts an initial assessment only after confirmation', async () => {
     configureState(null, [])
     let resolveAttempt: ((value: AssessmentAttempt) => void) | undefined
     vi.mocked(createAssessmentAttempt).mockReturnValue(new Promise((resolve) => { resolveAttempt = resolve }))
@@ -131,10 +173,14 @@ describe('HomePage', () => {
 
     const start = await screen.findByRole('button', { name: 'Comenzar autoevaluación' })
     fireEvent.click(start)
-    fireEvent.click(start)
+    expect(createAssessmentAttempt).not.toHaveBeenCalled()
+    const dialog = await screen.findByRole('dialog', { name: '¡Descubrí tu potencial!' })
+    const confirm = within(dialog).getByRole('button', { name: 'Comenzar autoevaluación' })
+    fireEvent.click(confirm)
+    fireEvent.click(confirm)
     expect(createAssessmentAttempt).toHaveBeenCalledTimes(1)
-    expect(start).toBeDisabled()
-    expect(screen.getByText('Preparando autoevaluación…')).toBeInTheDocument()
+    expect(confirm).toBeDisabled()
+    expect(within(dialog).getByRole('button', { name: 'Preparando evaluación…' })).toBeDisabled()
 
     await act(async () => resolveAttempt?.(draft))
     expect(await screen.findByText('Cuestionario')).toBeInTheDocument()
@@ -147,25 +193,57 @@ describe('HomePage', () => {
     renderHome()
 
     fireEvent.click(await screen.findByRole('button', { name: 'Comenzar autoevaluación' }))
+    expect(createAssessmentAttempt).not.toHaveBeenCalled()
+    fireEvent.click(within(await screen.findByRole('dialog')).getByRole('button', { name: 'Comenzar autoevaluación' }))
     expect(await screen.findByRole('alert')).toHaveTextContent('No pudimos iniciar por conexión.')
-    expect(screen.getByRole('button', { name: 'Comenzar autoevaluación' })).toBeEnabled()
+    expect(within(screen.getByRole('dialog')).getByRole('button', { name: 'Comenzar autoevaluación' })).toBeEnabled()
     expect(screen.getByTestId('location')).toHaveTextContent('/')
   })
 
-  it('shows recurrent motivation and stored latest results when there is history but no draft', async () => {
+  it('shows compact steps with the thumbs-up mascot, then latest results and Play for a returning user', async () => {
     configureState(null, [completed])
     renderHome()
 
-    expect(await screen.findByText('¡Seguí creciendo!')).toBeInTheDocument()
+    expect(await screen.findByText('Descubrí tu potencial y seguí creciendo')).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: '¡Seguí creciendo!' })).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Tu última evaluación' })).toBeInTheDocument()
     expect(screen.getByText(/Backend/)).toBeInTheDocument()
     expect(screen.getByText('82.0%')).toBeInTheDocument()
     expect(screen.getByText(/22 de nov de 2026/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ver resultados' })).toHaveAttribute('href', '/roles?attemptId=completed-1')
     expect(screen.getByRole('link', { name: 'Ver historial de evaluaciones' })).toHaveAttribute('href', '/habilidades/historial')
-    expect(screen.queryByRole('button', { name: /Comenzar autoevaluación/ })).not.toBeInTheDocument()
-    expect(screen.queryByText('Tu camino con NextRole')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Tu última evaluación' }).closest('.home-secondary-card')).toBeInTheDocument()
+    expect(screen.getByText('82.0%').closest('.home-info-panel')).toBeInTheDocument()
+    const play = screen.getByRole('button', { name: 'Comenzar nueva autoevaluación' })
+    expect(play.querySelector('.home-play-button')).toBeInTheDocument()
+    const steps = screen.getByRole('region', { name: 'Tu camino con NextRole' })
+    expect(steps.querySelectorAll('article.home-step-card--compact')).toHaveLength(4)
+    expect(steps.querySelectorAll('article p')).toHaveLength(0)
+    expect(screen.getByTestId('home-journey-mascot')).toHaveAttribute('data-pose', 'thumbsUp')
+    const latest = screen.getByRole('heading', { name: 'Tu última evaluación' }).closest('.home-secondary-card')!
+    expect(latest.querySelector('.home-start-action')).toBeNull()
+    expectDomOrder(
+      screen.getByRole('heading', { name: /Hola, Luz/ }),
+      steps,
+      latest,
+      play.closest('.home-start-action')!,
+    )
     expect(screen.queryByRole('progressbar', { name: 'Progreso de autoevaluación' })).not.toBeInTheDocument()
+    expect(createAssessmentAttempt).not.toHaveBeenCalled()
+  })
+
+  it('opens the introduction for a returning Home user before creating a reevaluation', async () => {
+    configureState(null, [completed])
+    vi.mocked(createAssessmentReevaluation).mockResolvedValue(draft)
+    renderHome()
+
+    fireEvent.click(await screen.findByRole('button', { name: 'Comenzar nueva autoevaluación' }))
+    const dialog = await screen.findByRole('dialog', { name: '¡Descubrí tu potencial!' })
+    expect(createAssessmentReevaluation).not.toHaveBeenCalled()
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Comenzar autoevaluación' }))
+
+    await screen.findByText('Cuestionario')
+    expect(createAssessmentReevaluation).toHaveBeenCalledTimes(1)
     expect(createAssessmentAttempt).not.toHaveBeenCalled()
   })
 
@@ -177,9 +255,20 @@ describe('HomePage', () => {
     expect(screen.getByRole('heading', { name: 'Tu última evaluación' })).toBeInTheDocument()
     expect(screen.getByRole('progressbar', { name: 'Progreso de autoevaluación' })).toHaveAttribute('aria-valuenow', '25')
     expect(screen.getByText('82.0%')).toBeInTheDocument()
-    expect(screen.queryByText('¡Seguí creciendo!')).not.toBeInTheDocument()
-    expect(screen.queryByText('Tu camino con NextRole')).not.toBeInTheDocument()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    const steps = screen.getByRole('region', { name: 'Tu camino con NextRole' })
+    expect(steps.querySelectorAll('article.home-step-card--compact')).toHaveLength(4)
+    expect(steps.querySelectorAll('article p')).toHaveLength(0)
+    expect(screen.queryByTestId('home-journey-mascot')).not.toBeInTheDocument()
+    const latest = screen.getByRole('heading', { name: 'Tu última evaluación' }).closest('.home-secondary-card')!
     expect(screen.getByRole('link', { name: 'Ver resultados' })).toHaveAttribute('href', '/roles?attemptId=completed-1')
+    expect(screen.queryByRole('button', { name: /Comenzar/ })).not.toBeInTheDocument()
+    expectDomOrder(
+      screen.getByRole('heading', { name: /Hola, Luz/ }),
+      screen.getByRole('heading', { name: 'Tu autoevaluación' }),
+      steps,
+      latest,
+    )
   })
 
   it('keeps a fully answered but unfinished draft at 100% without celebrating', async () => {
@@ -255,7 +344,7 @@ describe('HomePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Descartar borrador' }))
     fireEvent.click(screen.getByRole('button', { name: /^Descartar$/ }))
 
-    expect(await screen.findByText('¡Seguí creciendo!')).toBeInTheDocument()
+    expect(await screen.findByText('Descubrí tu potencial y seguí creciendo')).toBeInTheDocument()
     expect(screen.getByTestId('location')).toHaveTextContent('/')
     expect(discardAssessmentAttempt).toHaveBeenCalledWith('draft-1', expect.anything())
     expect(createAssessmentAttempt).not.toHaveBeenCalled()
@@ -295,7 +384,7 @@ describe('HomePage', () => {
       client.setQueryData(['assessment-history'], [newest, completed])
     })
 
-    expect(await screen.findByText('¡Seguí creciendo!')).toBeInTheDocument()
+    expect(await screen.findByText('Descubrí tu potencial y seguí creciendo')).toBeInTheDocument()
     expect(screen.queryByRole('progressbar', { name: 'Progreso de autoevaluación' })).not.toBeInTheDocument()
     expect(screen.getByText('91.0%')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Ver resultados' })).toHaveAttribute('href', '/roles?attemptId=completed-new')

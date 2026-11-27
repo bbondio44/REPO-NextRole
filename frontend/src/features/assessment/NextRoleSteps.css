@@ -1,0 +1,132 @@
+.home-journey-header {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.home-journey-header--with-mascot {
+  gap: 0.5rem;
+}
+
+.home-step-card {
+  min-width: 0;
+  min-height: 8.5rem;
+  border: 1px solid color-mix(in srgb, var(--step-accent) 24%, white);
+  border-radius: 1rem;
+  padding: 0.7rem;
+  color: var(--color-primary-700);
+  background: var(--step-surface);
+}
+
+.home-step-card--blue,
+.assessment-intro-step--blue { --step-surface: #ddf0fc; --step-accent: #007ebb; }
+.home-step-card--violet,
+.assessment-intro-step--violet { --step-surface: #eae2fa; --step-accent: #7851c5; }
+.home-step-card--amber,
+.assessment-intro-step--amber { --step-surface: #fceccf; --step-accent: #b97816; }
+.home-step-card--mint,
+.assessment-intro-step--mint { --step-surface: #d7f1e7; --step-accent: #13836c; }
+
+.home-step-icon,
+.assessment-intro-step__icon {
+  display: flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.8rem;
+  color: var(--step-accent);
+  background: white;
+  box-shadow: 0 1px 2px rgb(15 34 52 / 8%);
+}
+
+.home-step-number,
+.assessment-intro-step__number {
+  padding-top: 0.125rem;
+  color: var(--step-accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.025em;
+}
+
+.home-step-card h3 {
+  margin-top: 0.625rem;
+  color: #12304a;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.home-step-card p {
+  margin-top: 0.25rem;
+  color: rgb(51 65 85 / 88%);
+  font-size: 0.6875rem;
+  line-height: 1.35;
+}
+
+.home-step-card--compact {
+  min-height: 5.25rem;
+  padding: 0.65rem 0.7rem;
+}
+
+.home-step-card--compact h3 {
+  margin-top: 0.4rem;
+  font-size: 0.8125rem;
+}
+
+.assessment-intro-steps {
+  display: grid;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.assessment-intro-step {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--step-accent) 20%, white);
+  border-radius: 1rem;
+  padding: 0.75rem 0.875rem;
+  background: color-mix(in srgb, var(--step-surface) 46%, white);
+}
+
+.assessment-intro-step__topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.assessment-intro-step__icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 0.7rem;
+}
+
+.assessment-intro-step__icon svg {
+  width: 1.375rem;
+  height: 1.375rem;
+}
+
+.assessment-intro-step h3 {
+  margin-top: 0.55rem;
+  color: #12304a;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.assessment-intro-step p {
+  margin-top: 0.25rem;
+  color: #334155;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+@media (max-width: 360px) {
+  .home-step-card { padding: 0.6rem; }
+  .home-step-icon { width: 2.25rem; height: 2.25rem; }
+  .home-step-card h3 { font-size: 0.75rem; }
+  .home-journey-header h2 { font-size: 0.9375rem; }
+}

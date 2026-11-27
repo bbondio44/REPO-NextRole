@@ -14,9 +14,9 @@ interface AppShellProps {
 
 export function AppShell({ children, title, subtitle, showBack, right, compactBottomNavSpacing = false }: AppShellProps) {
   return (
-    <div className="min-h-dvh bg-slate-50">
+    <div className="min-h-dvh bg-app-background">
       <TopBar title={title} subtitle={subtitle} showBack={showBack} right={right} />
-      <main className={`mx-auto max-w-md px-4 ${compactBottomNavSpacing ? 'pb-[calc(4.5rem_+_env(safe-area-inset-bottom))]' : 'pb-24'} pt-4`}>
+      <main className={`mx-auto max-w-md px-4 ${compactBottomNavSpacing ? 'pb-[calc(4.5rem_+_env(safe-area-inset-bottom))]' : 'pb-[calc(6rem_+_env(safe-area-inset-bottom))]'} pt-4`}>
         {children}
       </main>
       <BottomNav />

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { ConfirmDiscardDialog } from '@/components/ui/ConfirmDiscardDialog'
 import { Mascot } from '@/components/ui/Mascot'
+import { AssessmentIntroDialog } from '@/features/assessment/AssessmentIntroDialog'
 import { AssessmentJourney } from '@/features/assessment/AssessmentJourney'
 import { getAssessmentHistory, getCurrentAssessmentAttempt } from '@/services/api'
 import { useDiscardAssessmentAttempt } from '@/features/assessment/useDiscardAssessmentAttempt'
@@ -17,6 +18,8 @@ interface AssessmentAccessPanelProps {
 
 export function AssessmentAccessPanel({ showDraftDiscardAction = false }: AssessmentAccessPanelProps) {
   const [confirmDiscard, setConfirmDiscard] = useState(false)
+  const [introOpen, setIntroOpen] = useState(false)
+  const [introRun, setIntroRun] = useState(0)
   const { discard, isDiscarding, discardError, clearDiscardError } = useDiscardAssessmentAttempt()
   const current = useQuery({ queryKey: ['assessment-attempt'], queryFn: getCurrentAssessmentAttempt })
   const history = useQuery({ queryKey: ['assessment-history'], queryFn: getAssessmentHistory })
@@ -36,6 +39,17 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
     } catch {
       // The shared dialog presents the error and keeps the draft visible.
     }
+  }
+
+  function openIntro() {
+    clearStartError()
+    setIntroRun((run) => run + 1)
+    setIntroOpen(true)
+  }
+
+  function closeIntro() {
+    setIntroOpen(false)
+    clearStartError()
   }
 
   if (current.isLoading || history.isLoading) return <p role="status">Consultando tu autoevaluación…</p>
@@ -83,7 +97,7 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
       )}
 
       {!draft && (
-        <Button fullWidth disabled={starting} onClick={startAssessment}>
+        <Button fullWidth disabled={starting} onClick={openIntro}>
           {starting ? 'Preparando evaluación…' : latestCompleted ? 'Comenzar nueva evaluación' : 'Comenzar evaluación'}
         </Button>
       )}
@@ -92,7 +106,15 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
           Ver historial de evaluaciones
         </Link>
       )}
-      {startError && <p role="alert" className="text-sm text-red-600">{startError}</p>}
+      <AssessmentIntroDialog
+        key={introRun}
+        open={introOpen}
+        playbackRun={introRun}
+        starting={starting}
+        error={startError}
+        onClose={closeIntro}
+        onConfirm={startAssessment}
+      />
       <ConfirmDiscardDialog
         open={confirmDiscard && Boolean(hasDraft)}
         pending={isDiscarding}
