@@ -36,9 +36,9 @@ class AssessmentMigrationIntegrationTest {
     private static final List<String> ROLE_IDS = List.of(
             "backend-dev-jr", "frontend-dev-jr", "fullstack-dev-jr", "qa-jr", "data-analyst-jr", "cloud-jr");
     private static final Map<String, String> ROLE_LABELS = Map.of(
-            "backend-dev-jr", "Backend",
-            "frontend-dev-jr", "Frontend",
-            "fullstack-dev-jr", "Full Stack",
+            "backend-dev-jr", "Backend Developer",
+            "frontend-dev-jr", "Frontend Developer",
+            "fullstack-dev-jr", "Full Stack Developer",
             "qa-jr", "QA",
             "data-analyst-jr", "Data Analyst",
             "cloud-jr", "Cloud");

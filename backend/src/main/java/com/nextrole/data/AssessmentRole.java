@@ -15,5 +15,14 @@ public class AssessmentRole {
     @Column(name = "name", nullable = false, unique = true, length = 180)
     public String name;
 
+    @Column(name = "description", nullable = false, columnDefinition = "text")
+    public String description;
+
+    public AssessmentRole(String id, String name, String description) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+    }
+
     protected AssessmentRole() {}
 }

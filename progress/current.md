@@ -2,34 +2,33 @@
 
 **Actualizado:** 2026-11-27
 **Rama activa:** `develop-v2`
-**Checkpoint:** `766429b` — `Mejora la bienvenida de Inicio e incorpora acceso directo a la autoevaluación`; HEAD y `origin/develop-v2` alineados al verificar.
-**Estado Git:** se preservan cambios locales preexistentes en `docker-compose.yml`, `experiments/`, `package-lock.local-backup.json` y `tatus`. No se cambió de rama.
+**HEAD/checkpoint:** `2deff66c7dfd395f0bc28df61f46f04075c6b363` — `docs: define Explainability y Formación y prepara su implementación`; Checkpoint 1 de Explainability listo para commit selectivo.
+**Estado Git:** rama un commit por delante de `origin/develop-v2`; hay cambios locales del Checkpoint 1 y del trabajo visual paralelo, aún sin staging.
 
-## Estado actual — Plan cerrado y Tasks de Explainability/Formation
+## Estado actual — Implement, Explainability Checkpoint 1
 
-- **Etapa:** Specify y Clarify de `specs/003-explainability-formacion` aprobadas; Plan corregido según decisiones aprobadas y `tasks.md` generado. Pendiente revisión del usuario antes de Implement. No se inició implementación.
-- **Modelo inicial aprobado:** OpenRouter con `baidu/ernie-5.5-flash-preview:free` y prompt V5 existente e inmutable. Configurable y registrado. Sin llamadas reales, modelos pagos, fallbacks ni reintentos automáticos.
-- **Diseño:** monolito modular; reutilización directa de `AssessmentAttemptService` y `SkillGapV2Service`; Matching persistido; prioridad calculada solo por Explainability; V7 aditiva propuesta; persistencia JSONB y snapshots históricos de rol; contexto compatible con el contrato experimental Python.
-- **Ciclo corregido:** `generate` solo desde ausencia de fila; `GENERATING` se consulta; `SUCCEEDED` se reutiliza; `FAILED` requiere acción manual por `retry`. Un lease vencido no llama al proveedor. No hay cuotas propias; `attempt_count` es informativo y los límites upstream siguen siendo errores del proveedor.
-- **Navegación reconciliada:** botones V2 «Explorar rol» llevan a `/formacion/roles/:roleId?attemptId=...` y regreso a `/roles?attemptId=...`. Entrada general, rutas/consumidores V1 y `002-skill-gap-v2` quedan intactos.
-- **Roles:** revisión de consumidores comprobó que actualizar `assessment_roles.name` en V7 no modifica los nombres mostrados en ranking actual/histórico, resultados persistidos ni pantallas V1; el frontend usa su mapa de nombres y RoleDetail consulta el catálogo V1. Los tests de migración deberán reflejar los nombres oficiales.
-- **Validación documental:** coherencia revisada entre spec, plan, research, data model, contratos, quickstart y checklist; el prompt V5 y su contrato experimental permanecen intactos. No se realizaron llamadas a proveedores ni pruebas de aplicación/migraciones.
-- **Próximo paso:** revisar `tasks.md`; Implement solo después de aprobación explícita.
+- Se completaron T001–T007 y T036 de `specs/003-explainability-formacion/tasks.md`. No se avanzó a construcción de contexto, proveedor HTTP, generación de diagnósticos ni frontend.
+- V7 es aditiva y parte de V6. Agrega las descripciones y nombres profesionales oficiales en `assessment_roles` y `explainability_diagnostics` con estados, snapshots, JSONB, metadatos operativos, unicidad, claves foráneas y restricciones. V1–V6 no se modificaron.
+- El catálogo autenticado V2 está disponible en `GET /api/v2/roles/{roleId}`. El catálogo V1 y sus rutas no cambiaron.
+- Se incorporaron el mapeo y repositorio de diagnósticos con operaciones compare-and-set/fencing, configuración tipada, selección de la versión conocida V5 y el recurso de prompt. No hay adaptador OpenRouter ni generación conectada.
+- SHA-256 del recurso V5: `84C45ABE0D028E4ADB7376E387597993D196F5F2C8990596D853D11FDCF23AF5`, igual al aprobado y al prompt experimental. El contrato Python queda referenciado en los recursos de prueba.
+- V7 se ejecutó únicamente en PostgreSQL desechable mediante Testcontainers. No se migró la base de desarrollo ni se reiniciaron servicios.
+- Validación: `mvn -f backend/pom.xml test` finalizó con 48 pruebas, 0 fallos y 0 errores. Después se ejecutó otra vez el test de catálogo/configuración con API key explícitamente vacía (3 pruebas, 0 fallos), para verificar binding y arranque sin credencial.
+- Los tests demuestran que PostgreSQL impone unicidad, claves foráneas y checks de estado/payload; el repositorio impone las transiciones compare-and-set, fencing por token y no sobrescritura de éxitos. Las garantías de autorización y orquestación quedan para tareas posteriores.
+- No hubo llamadas a proveedores, costos, commits ni push.
+
+## Próximo paso — Explainability
+
+Crear el commit selectivo del Checkpoint 1 aprobado; después avanzar únicamente con T008–T010, T012–T017 y el fake básico asociado a T014. V7 no debe aplicarse a la base compartida.
+
+## Trabajo paralelo de Inicio e identidad visual
+
+- Se preservan los cambios locales de Inicio, Habilidades, navegación inferior y el recorrido de autoevaluación, junto con las adiciones paralelas de `specs/001-autoevaluacion-matching/`. No forman parte del commit de Explainability.
+- El registro de `specs/001` documenta como completadas las fases visuales 19–21 y sus validaciones automatizadas. Quedan abiertas para revisión visual manual T085 y T090; en fase 21 quedan pendientes T092 (preview del recurso animado) y T097 (revisión visual/responsive del diálogo). No inferir que esas revisiones manuales ocurrieron.
+- La validación automática más reciente registrada por esa instancia es: suite frontend 15 archivos/90 pruebas, build exitoso y lint exitoso con advertencia existente en `SessionContext.tsx:45`. Docker/Vite se inspeccionaron sin reiniciar servicios en el último registro.
 
 ## Cambios locales que deben preservarse
 
-Mantener todos los cambios previos que ya existían antes de la implementación de Skill Gap V2, entre ellos `AGENTS.md`, documentación README, `docker-compose.yml`, documentos de guía, `progress/current.md`, artefactos de `specs/001-autoevaluacion-matching/` y `testing/README.md`.
+Mantener las modificaciones paralelas de frontend/identidad visual, `docker-compose.yml`, `specs/001-autoevaluacion-matching/`, `experiments/` y demás archivos locales. No incorporar el entorno experimental ni cambios ajenos a este checkpoint en staging.
 
-Archivos locales no rastreados que no deben eliminarse ni incorporarse automáticamente a commits:
-
-- `package-lock.local-backup.json`
-- `tatus`
-- `experiments/`
-- `progress/history.md`
-- `docs/GUIA_SDD_NEXTROLE.md`
-
-`docker-compose.yml` contiene configuración local y debe preservarse. No se realizaron commits, push ni operaciones destructivas.
-
-## Historial
-
-Los checkpoints y reportes cronológicos previos se conservan en [`progress/history.md`](history.md). Este resumen describe el estado vigente; verificar siempre Git antes de retomar trabajo.
+Los checkpoints cronológicos previos están en [`progress/history.md`](history.md). Verificar siempre Git y el estado real antes de continuar.

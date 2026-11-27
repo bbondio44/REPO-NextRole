@@ -15,8 +15,8 @@ description: "Implementation tasks for Explainability and role-specific Formatio
 
 **Purpose**: Confirm the additive migration slot and stable test inputs before implementation.
 
-- [ ] T001 Confirm the applied Flyway chain ends at V6 and V7 is unused using `backend/src/main/resources/db/migration/`; if this precondition has changed, stop before creating a migration and update the plan.
-- [ ] T002 Record the approved experimental prompt SHA-256 and input-contract reference from `experiments/explainability/prompts/explainability-v5.md` and `experiments/explainability/src/explainability/models.py` in the implementation test setup under `backend/src/test/resources/contracts/`; do not change experiment files or prompt content.
+- [x] T001 Confirm the applied Flyway chain ends at V6 and V7 is unused using `backend/src/main/resources/db/migration/`; if this precondition has changed, stop before creating a migration and update the plan.
+- [x] T002 Record the approved experimental prompt SHA-256 and input-contract reference from `experiments/explainability/prompts/explainability-v5.md` and `experiments/explainability/src/explainability/models.py` in the implementation test setup under `backend/src/test/resources/contracts/`; do not change experiment files or prompt content.
 
 ---
 
@@ -24,11 +24,12 @@ description: "Implementation tasks for Explainability and role-specific Formatio
 
 **Purpose**: Add the versioned role descriptions, canonical persisted state, and minimal secure prompt/provider configuration used by all stories.
 
-- [ ] T003 First add a failing disposable-PostgreSQL migration assertion in `backend/src/test/java/com/nextrole/assessment/ExplainabilityMigrationIntegrationTest.java`, then add the additive `backend/src/main/resources/db/migration/V7__explainability.sql` migration for official V2 role names/descriptions and `explainability_diagnostics`; keep V1–V6 immutable, preserve assessment rows, and implement every canonical field/constraint defined in `data-model.md`: `AssessmentRole.description`; `ExplainabilityDiagnostic.id`, `ExplainabilityDiagnostic.attempt_id`, `ExplainabilityDiagnostic.role_id`, `ExplainabilityDiagnostic.status`, `ExplainabilityDiagnostic.generation_token`, `ExplainabilityDiagnostic.lease_until`, `ExplainabilityDiagnostic.attempt_count`, `ExplainabilityDiagnostic.role_name_snapshot`, `ExplainabilityDiagnostic.role_description_snapshot`, `ExplainabilityDiagnostic.diagnosis_content`, `ExplainabilityDiagnostic.provider`, `ExplainabilityDiagnostic.model_requested`, `ExplainabilityDiagnostic.model_served`, `ExplainabilityDiagnostic.prompt_version`, `ExplainabilityDiagnostic.prompt_hash`, `ExplainabilityDiagnostic.context_hash`, `ExplainabilityDiagnostic.duration_ms`, `ExplainabilityDiagnostic.input_tokens`, `ExplainabilityDiagnostic.output_tokens`, `ExplainabilityDiagnostic.reasoning_tokens`, `ExplainabilityDiagnostic.provider_cost`, `ExplainabilityDiagnostic.failure_code`, `ExplainabilityDiagnostic.created_at`, `ExplainabilityDiagnostic.updated_at`, `ExplainabilityDiagnostic.succeeded_at`.
-- [ ] T004 First add failing mapping/repository tests in `backend/src/test/java/com/nextrole/explainability/ExplainabilityDiagnosticRepositoryTest.java`, then add role-description and diagnosis persistence mappings/repository under `backend/src/main/java/com/nextrole/assessment/` and `backend/src/main/java/com/nextrole/explainability/`; follow the field constraints and state invariants for `AssessmentRole.description` and each `ExplainabilityDiagnostic.*` field defined in `specs/003-explainability-formacion/data-model.md`.
-- [ ] T005 First add failing catalog tests in `backend/src/test/java/com/nextrole/assessment/RoleCatalogServiceTest.java` and `RoleCatalogApiIntegrationTest.java`, then add the centralized V2 role catalog service and authenticated read endpoint under `backend/src/main/java/com/nextrole/assessment/`; expose the six approved names/descriptions without changing the V1 `roles` catalog or its consumers.
-- [ ] T006 First add a failing hash/configuration test in `backend/src/test/java/com/nextrole/explainability/ExplainabilityPromptConfigurationTest.java`, then add the typed Explainability configuration and exact V5 classpath resource at `backend/src/main/resources/prompts/explainability-v5.md`; load only configured known prompt versions, obtain `OPENROUTER_API_KEY` from backend configuration, disable provider fallbacks, and test the SHA-256 against `experiments/explainability/prompts/explainability-v5.md`.
-- [ ] T007 Add repository integration tests in `backend/src/test/java/com/nextrole/explainability/` for the unique `(attempt_id, role_id)` row, allowed status transitions, success immutability, lease/token compare-and-set, and successful-role snapshots; run them against disposable PostgreSQL/Testcontainers without operating on development data.
+- [x] T003 First add a failing disposable-PostgreSQL migration assertion in `backend/src/test/java/com/nextrole/assessment/ExplainabilityMigrationIntegrationTest.java`, then add the additive `backend/src/main/resources/db/migration/V7__explainability.sql` migration for official V2 role names/descriptions and `explainability_diagnostics`; keep V1–V6 immutable, preserve assessment rows, and implement every canonical field/constraint defined in `data-model.md`: `AssessmentRole.description`; `ExplainabilityDiagnostic.id`, `ExplainabilityDiagnostic.attempt_id`, `ExplainabilityDiagnostic.role_id`, `ExplainabilityDiagnostic.status`, `ExplainabilityDiagnostic.generation_token`, `ExplainabilityDiagnostic.lease_until`, `ExplainabilityDiagnostic.attempt_count`, `ExplainabilityDiagnostic.role_name_snapshot`, `ExplainabilityDiagnostic.role_description_snapshot`, `ExplainabilityDiagnostic.diagnosis_content`, `ExplainabilityDiagnostic.provider`, `ExplainabilityDiagnostic.model_requested`, `ExplainabilityDiagnostic.model_served`, `ExplainabilityDiagnostic.prompt_version`, `ExplainabilityDiagnostic.prompt_hash`, `ExplainabilityDiagnostic.context_hash`, `ExplainabilityDiagnostic.duration_ms`, `ExplainabilityDiagnostic.input_tokens`, `ExplainabilityDiagnostic.output_tokens`, `ExplainabilityDiagnostic.reasoning_tokens`, `ExplainabilityDiagnostic.provider_cost`, `ExplainabilityDiagnostic.failure_code`, `ExplainabilityDiagnostic.created_at`, `ExplainabilityDiagnostic.updated_at`, `ExplainabilityDiagnostic.succeeded_at`.
+- [x] T004 First add failing mapping/repository tests in `backend/src/test/java/com/nextrole/explainability/ExplainabilityDiagnosticRepositoryTest.java`, then add role-description and diagnosis persistence mappings/repository under `backend/src/main/java/com/nextrole/assessment/` and `backend/src/main/java/com/nextrole/explainability/`; follow the field constraints and state invariants for `AssessmentRole.description` and each `ExplainabilityDiagnostic.*` field defined in `specs/003-explainability-formacion/data-model.md`.
+- [x] T005 First add failing catalog tests in `backend/src/test/java/com/nextrole/assessment/RoleCatalogServiceTest.java` and `RoleCatalogApiIntegrationTest.java`, then add the centralized V2 role catalog service and authenticated read endpoint under `backend/src/main/java/com/nextrole/assessment/`; expose the six approved names/descriptions without changing the V1 `roles` catalog or its consumers.
+- [x] T006 First add a failing hash/configuration test in `backend/src/test/java/com/nextrole/explainability/ExplainabilityPromptConfigurationTest.java`, then add the typed Explainability configuration and exact V5 classpath resource at `backend/src/main/resources/prompts/explainability-v5.md`; load only configured known prompt versions, obtain `OPENROUTER_API_KEY` from backend configuration, disable provider fallbacks, and test the SHA-256 against `experiments/explainability/prompts/explainability-v5.md`.
+- [x] T007 Add repository integration tests in `backend/src/test/java/com/nextrole/explainability/` for the unique `(attempt_id, role_id)` row, allowed status transitions, success immutability, lease/token compare-and-set, and successful-role snapshots; run them against disposable PostgreSQL/Testcontainers without operating on development data.
+- [x] T036 Extend `backend/src/test/java/com/nextrole/assessment/ExplainabilityMigrationIntegrationTest.java` with seeded Q1/Q2/M1 attempts, answers and matching results; prove V7 preserves those existing records in addition to the schema/catalog checks introduced by T003. This migration-history check is part of the foundational checkpoint and must run before V7 is applied to any shared development database.
 
 **Checkpoint**: V7 and persistence foundations are additive, role descriptions are single-source in the backend, and the V5 resource is byte-identical to the experiment.
 
@@ -51,7 +52,7 @@ description: "Implementation tasks for Explainability and role-specific Formatio
 
 - [ ] T012 [US1] Implement the deterministic context projection in `backend/src/main/java/com/nextrole/explainability/ExplainabilityContextService.java`, reusing `AssessmentAttemptService`, persisted Matching results and `SkillGapV2Service` directly; associate historical answer-option descriptions and role requirements by stable competency ID and compute only `trainingPriority = max(0, requiredLevel - currentLevel) × (ESSENTIAL ? 2 : 1)`.
 - [ ] T013 [US1] Implement the typed context/competency DTOs and canonical JSON serialization in `backend/src/main/java/com/nextrole/explainability/ExplainabilityContext.java` and `ExplainabilityCompetencyContext.java`; make serialization satisfy the compatibility contract tests without exposing attempt/user/version metadata.
-- [ ] T014 [US1] Implement the provider boundary `DiagnosisGenerator` and result/usage types in `backend/src/main/java/com/nextrole/explainability/DiagnosisGenerator.java`; include requested/served model and nullable provider usage without leaking transport details into business services.
+- [ ] T014 [US1] Implement the provider boundary `DiagnosisGenerator` and result/usage types in `backend/src/main/java/com/nextrole/explainability/DiagnosisGenerator.java`; include requested/served model and nullable provider usage without leaking transport details into business services. Immediately afterward, add the basic valid-response `FakeDiagnosisGenerator` in the test support package before integration tests depend on it.
 - [ ] T015 [US1] Implement strict diagnosis parsing/validation in `backend/src/main/java/com/nextrole/explainability/DiagnosisValidator.java`; require exactly the five contract properties, four non-empty strings, a list of context competency IDs only, and reject additional, missing, repeated or unknown identifiers before persistence.
 - [ ] T016 [US1] First add mock-server request/error tests in `backend/src/test/java/com/nextrole/explainability/OpenRouterDiagnosisGeneratorTest.java`, then implement `OpenRouterDiagnosisGenerator` with Spring `RestClient` in `backend/src/main/java/com/nextrole/explainability/OpenRouterDiagnosisGenerator.java`; use configured endpoint/model, bearer secret, exact V5 prompt, no `models` alternatives, no paid fallback, no automatic retry, connection/response timeouts and configurable 1200-token output cap.
 - [ ] T017 [US1] Implement the synchronous initial-generation orchestration in `backend/src/main/java/com/nextrole/explainability/ExplainabilityService.java` and repository claim operation; create only from no prior row, perform provider I/O outside DB transactions, validate before success, persist operational metadata and role snapshots, and return existing success without regeneration.
@@ -100,7 +101,7 @@ description: "Implementation tasks for Explainability and role-specific Formatio
 - [ ] T028 [US3] Implement provider error and timeout translation in `backend/src/main/java/com/nextrole/explainability/OpenRouterDiagnosisGenerator.java` and `ExplainabilityService.java`; sanitize upstream errors, preserve deterministic role/matching data, record nullable usage/cost, and expose no credentials/raw response.
 - [ ] T029 [US3] Implement compare-and-set manual retry and lease recovery in `backend/src/main/java/com/nextrole/explainability/ExplainabilityService.java` and the diagnosis repository; `POST generate` only claims absent rows, `POST retry` only claims FAILED/expired rows after user action, GET derives an expired generation as interrupted without writing, and fencing prevents stale completion overwrites.
 - [ ] T030 [US3] Implement explicit error/retry UI in `frontend/src/features/explainability/RoleFormationPage.tsx` and `frontend/src/features/explainability/RoleFormationPage.css`; keep deterministic header and plan visible, use the approved error text and button, and issue a retry request only from the user’s button action.
-- [ ] T031 [US3] Add shared simulated provider fixtures in `backend/src/test/java/com/nextrole/explainability/support/FakeDiagnosisGenerator.java` for valid, invalid, timeout, unavailable, rate-limited and delayed responses; ensure all automated suites use the fake and never call OpenRouter.
+- [ ] T031 [US3] Extend the basic fake from T014 with invalid, timeout, unavailable, rate-limited and delayed scenarios in `backend/src/test/java/com/nextrole/explainability/support/FakeDiagnosisGenerator.java`; ensure automated suites use the fake and never call OpenRouter.
 
 **Checkpoint**: Failures remain isolated to the diagnosis; provider limits are reported as upstream errors, with no application-owned quota or automatic retry.
 
@@ -114,8 +115,8 @@ description: "Implementation tasks for Explainability and role-specific Formatio
 
 ### Tests
 
-- [ ] T032 [P] [US4] Add role-visual mapping and accessible component tests in `frontend/src/features/roles/roleVisuals.test.ts` and `frontend/src/features/explainability/RoleFormationPage.test.tsx` for all six stable IDs, labels/alt text, keyboard access, contrast token use and reduced-motion behavior.
-- [ ] T033 [P] [US4] Add plan placeholder tests in `frontend/src/features/explainability/RoleFormationPage.test.tsx` verifying the independent «Tu plan de formación» card displays only «Próximamente» in loading, success and failure states and does not consume diagnosis text.
+- [ ] T032 [US4] Add role-visual mapping and accessible component tests in `frontend/src/features/roles/roleVisuals.test.ts` and `frontend/src/features/explainability/RoleFormationPage.test.tsx` for all six stable IDs, labels/alt text, keyboard access, contrast token use and reduced-motion behavior.
+- [ ] T033 [US4] After T032, add plan placeholder tests in `frontend/src/features/explainability/RoleFormationPage.test.tsx` verifying the independent «Tu plan de formación» card displays only «Próximamente» in loading, success and failure states and does not consume diagnosis text. These tasks run sequentially because they share the same test file.
 
 ### Implementation
 
@@ -130,7 +131,6 @@ description: "Implementation tasks for Explainability and role-specific Formatio
 
 **Purpose**: Verify migration safety, deterministic contracts, existing regressions and the eventual manual review gates.
 
-- [ ] T036 [P] Extend `backend/src/test/java/com/nextrole/assessment/ExplainabilityMigrationIntegrationTest.java` with seeded Q1/Q2/M1 attempts, answers and matching results; prove V7 preserves those existing records in addition to the schema/catalog checks introduced by T003.
 - [ ] T037 [P] Add a separate reproducible Q2/M1 fixture-generation path for all six roles under `experiments/explainability/cases/q2-m1/` using backend deterministic results; preserve all existing Q1/M1 contexts/runs and verify each generated context’s matching percentage, competency gaps and priority against backend calculations.
 - [ ] T038 [P] Run and record backend unit/integration regression checks from `backend/pom.xml`, including PostgreSQL/Testcontainers, with the simulated provider and no real credentials.
 - [ ] T039 [P] Run and record frontend tests, build and lint using `frontend/package.json`; verify no regression in the current ranking, V1 role detail, general Formation entry or shared bottom navigation.
@@ -154,13 +154,14 @@ La tabla explicita prerrequisitos y evidencia observable de cada ítem; la prueb
 | T005 | T003 | Pruebas de catálogo muestran los seis descriptores por ID y autenticación. |
 | T006 | T002 | Test del recurso de classpath confirma bytes/hash V5 y configuración segura. |
 | T007 | T003, T004 | Pruebas PostgreSQL confirman unicidad, compare-and-set, token y snapshot. |
+| T036 | T003, T007 | Migración V7 preserva filas Q1/Q2/M1 sembradas antes de aplicarla. |
 | T008 | T004, T005 | Pruebas unitarias verifican prioridad, historial, no-brechas y proyección de competencias. |
 | T009 | T002, T004, T005 | Serialización Java valida el contrato Python y excluye metadatos locales. |
 | T010 | T004, T006 | Tests de servicio/API pasan para autorización, validación, generación y reutilización. |
 | T011 | Diseño aprobado y componentes de ranking existentes | Tests frontend nuevos fallan antes de ruta/pantalla y luego pasan al completar US1. |
 | T012 | T004, T005, T008 | Pruebas de contexto confirman servicios reutilizados y fórmula de prioridad exacta. |
 | T013 | T009, T012 | JSON serializado pasa test de compatibilidad experimental. |
-| T014 | T006 | Tests del puerto validan intercambio tipado y metadatos de uso opcionales. |
+| T014 | T006 | Tests del puerto y fake básico validan intercambio tipado y metadatos de uso opcionales antes de las pruebas de integración. |
 | T015 | T014 | Tests del validador aceptan solo el contrato exacto y rechazan entradas inválidas. |
 | T016 | T006, T014 | Mock HTTP verifica modelo/configuración, Bearer no registrado, timeout y ausencia de fallback/retry. |
 | T017 | T007, T012–T016 | Integración con fake prueba POST inicial, GET puro, respuestas y persistencia. |
@@ -177,12 +178,11 @@ La tabla explicita prerrequisitos y evidencia observable de cada ítem; la prueb
 | T028 | T015, T016 | Tests con fake/mocks validan mapeo saneado, timeout, proveedor 429 y metadatos nullables. |
 | T029 | T007, T017, T026 | Tests prueban generate/retry por estado y que lease vencido no llama al proveedor. |
 | T030 | T027, T029 | Tests UI muestran error aprobado y retry ocurre solo tras click explícito. |
-| T031 | T014 | Suites automatizadas pasan solo con fake y escenarios reproducibles. |
+| T031 | T014 | Fake ampliado cubre errores reproducibles; suites automatizadas no usan OpenRouter. |
 | T032 | Role IDs, palette values and accessibility requirements in `spec.md` | Pruebas visuales/accesibilidad verifican seis asociaciones de emblema/paleta y fallan antes de implementar el mapa. |
-| T033 | T019 | Tests prueban placeholder separado en carga, éxito y error. |
+| T033 | T019, T032 | Tests prueban placeholder separado en carga, éxito y error; secuencial respecto de T032 por archivo compartido. |
 | T034 | Entrega de los seis SVG aprobados | Archivos/copias pasan revisión de identidad, fills/strokes y mapa por ID. |
 | T035 | T019, T033; T034 para emblemas | Tests responsivos/semánticos verifican las secciones y el placeholder independiente. |
-| T036 | T003, T007 | Test de migración verifica V7 aditiva, catálogo actualizado e historial intacto. |
 | T037 | T009, T012, T013 | Fixtures Q2/M1 de seis roles reproducibles coinciden con los motores determinísticos. |
 | T038 | T003–T031, T036 | `mvn -f backend/pom.xml test` pasa sin credenciales ni llamadas externas. |
 | T039 | T018–T035 | Tests, build y lint frontend pasan; consumidores V1/regresiones se mantienen. |
@@ -194,7 +194,7 @@ Las tareas `[P]` pueden prepararse en paralelo una vez satisfechas sus dependenc
 ### Phase dependencies
 
 - Setup (T001–T002) precedes the Foundational phase. T001 is a gate: if V7 is no longer free, stop and revise the plan before implementation.
-- Foundational (T003–T007) blocks all user stories because API and UI depend on the role catalog, persistence invariants, secure configuration and exact V5 resource.
+- Foundational (T003–T007 plus T036) blocks all user stories because API and UI depend on the role catalog, persistence invariants, secure configuration, exact V5 resource and verified history preservation. T036 runs immediately after T007, before any shared development migration.
 - User Story 1 (P1) is the MVP and follows Foundational. It delivers deterministic context, validated synchronous generation, persisted reuse and the first Formation screen.
 - User Story 2 (P1) follows the core context/API contract in US1; it completes historical snapshots and navigation semantics.
 - User Story 3 (P2) follows the generation/state foundation in US1; it completes recoverable failures and explicit retry behavior.
@@ -207,8 +207,8 @@ Las tareas `[P]` pueden prepararse en paralelo una vez satisfechas sus dependenc
 - In US1, T008–T011 are parallelizable test additions in separate test/fixture paths; the context, adapter, validator and UI tasks are otherwise sequenced by their dependencies.
 - In US2, T021 and T022 can be prepared in parallel because they target separate backend/frontend test paths.
 - In US3, T025–T027 can be prepared in parallel; provider error handling, state claiming and UI handling should integrate only after those contracts are stable.
-- In US4, T032 and T033 can be authored in parallel. The official-asset task T034 is independent of backend stories but cannot complete until the user supplies the SVGs.
-- T036 (migration/history regression) and T037 (separate Python fixtures) can proceed independently after their prerequisites. After T036, T038 (full backend suite) and T039 (frontend test/build/lint) can run in parallel; T037 can run alongside them when its backend deterministic inputs are available.
+- In US4, T032 and T033 must run sequentially because both modify `RoleFormationPage.test.tsx`; T033 depends on T032. The official-asset task T034 is independent of backend stories but cannot complete until the user supplies the SVGs.
+- T036 (migration/history regression) runs in the foundational checkpoint after T003/T007 and before shared development migration. T037 (separate Python fixtures) can proceed independently after its prerequisites. After T036, T038 (full backend suite) and T039 (frontend test/build/lint) can run in parallel; T037 can run alongside them when its backend deterministic inputs are available.
 
 ## MVP and delivery strategy
 
