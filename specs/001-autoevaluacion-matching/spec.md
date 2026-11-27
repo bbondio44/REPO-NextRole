@@ -32,6 +32,13 @@
 - La antigua orientación se elimina de Inicio y solo mediante el rótulo y la tira indicados en Skill Gap. Se conservan servicios compartidos vigentes, el resto del diagnóstico y Learning; en Habilidades el recorrido se presenta solo mientras exista un borrador activo.
 - Se eliminan también de Skill Gap únicamente el rótulo «PASO 5 DE 6» y su tira de seis segmentos. Se conserva el diagnóstico completo; los pasos independientes de registro, onboarding y el progreso propio de la autoevaluación no forman parte de la ruta antigua y permanecen.
 
+### Session 2026-11-27 — Inicio para primera visita
+
+- **Aprobación visual del usuario (2026-11-27)**: se aprueba el diseño actual de Inicio. Esta aprobación registra la dirección y composición visual; no sustituye ni da por realizadas comprobaciones manuales de responsive o accesibilidad.
+- Se amplía el estado de Inicio sin borrador ni historial: conserva el saludo y presenta una tarjeta de bienvenida con la mascota original, cuatro tarjetas informativas y una acción Play para comenzar la autoevaluación directamente.
+- Las cuatro tarjetas explican el recorrido de NextRole y son informativas, sin navegación, progreso ni estados de completitud. El botón reutiliza el flujo de inicio de Habilidades: recupera el borrador existente cuando corresponde, crea intento inicial o reevaluación según el historial, previene solicitudes duplicadas y navega al cuestionario solo tras una respuesta exitosa.
+- La tarjeta principal usa el azul aprobado, mantiene la tipografía e identidad visual existentes y no altera los estados de Inicio con borrador o historial. No hay cambios de backend, base de datos ni otras pestañas. Esta decisión sustituye la nota previa que excluía agregar una acción de inicio en Inicio.
+
 ### Session 2026-11-25 — Revisión manual y ampliación aprobada
 
 - **Decisión sustituida (2026-11-25)**: la propuesta anterior de precargar en una reevaluación las respuestas de la última evaluación completa ya no aplica. La decisión aprobada vigente es que toda evaluación nueva comienza vacía. Se conserva el `source_attempt_id` solo como relación de procedencia; no se borran columnas, migraciones ni datos históricos.
@@ -99,7 +106,7 @@ Como estudiante que retoma o completa su autoevaluación, quiero ver el progreso
 Como estudiante, quiero que Inicio muestre solo las acciones y los resultados que corresponden a mis evaluaciones actuales y completadas.
 
 **Acceptance Scenarios**:
-1. **Given** que no hay borrador ni historial completado, **When** se carga Inicio, **Then** veo mi saludo y la tarjeta motivacional para usuario nuevo; no se muestra recorrido ni tarjeta de última evaluación.
+1. **Given** que no hay borrador ni historial completado, **When** se carga Inicio, **Then** veo mi saludo, la bienvenida con la mascota original, cuatro pasos informativos no interactivos y la acción Play «Comenzar autoevaluación»; no se muestran recorrido de progreso ni tarjeta de última evaluación.
 2. **Given** que existe un borrador, **When** se carga Inicio, **Then** veo la tarjeta azul con `AssessmentJourney`, progreso del intento activo, y las acciones para continuar o descartar; no veo la tarjeta motivacional.
 3. **Given** que existe una evaluación completada y no hay borrador, **When** se carga Inicio, **Then** veo la tarjeta motivacional recurrente y la tarjeta de la última evaluación completada, sin el recorrido de una evaluación anterior.
 4. **Given** que existe un borrador y evaluaciones completadas, **When** se carga Inicio, **Then** el recorrido representa solo el borrador y la tarjeta de última evaluación conserva los datos persistidos más recientes.
@@ -228,6 +235,8 @@ Como estudiante, quiero que Roles y Formación orienten el siguiente acceso usan
 - **FR-058**: Roles y Formación MUST distinguir los estados de carga/error de un vacío real. Una consulta pendiente MUST NOT mostrar estados vacíos y un fallo MUST comunicar que los datos no pudieron obtenerse en lugar de fingir ausencia de evaluaciones.
 - **FR-059**: La selección histórica explícita MUST conservar su `attemptId` a través de las rutas de resultados y vistas asociadas. Cada ranking, diagnóstico, brecha o recomendación consultada debe derivarse exclusivamente del intento seleccionado; el borrador actual o la última evaluación de otro contexto MUST NOT sustituirlo.
 - **FR-060**: La publicación aprobada del cuestionario Q2 MUST cambiar exactamente las diez descripciones enumeradas en la aclaración del 2026-11-26. Q1 MUST permanecer inmutable; Q2 MUST conservar los mismos 31 códigos, preguntas, posiciones y 155 niveles, con las otras 145 descripciones idénticas a Q1. M1, sus 186 requisitos, clasificaciones, Matching y cálculo de brechas MUST NOT cambiar. Los intentos existentes MUST seguir usando las versiones fijadas al crearse; los nuevos MUST usar Q2/M1. Las opciones MUST describir capacidades declaradas y evitar explicaciones que puedan inducir a seleccionar un nivel no poseído.
+- **FR-061**: Cuando Inicio no tenga borrador activo ni evaluaciones completadas, MUST mostrar debajo del saludo una tarjeta de bienvenida con la mascota original y el mensaje «¡Descubrí tu potencial! / Conocé tus habilidades y encontrá tu próximo camino profesional», seguida de «Tu camino con NextRole» y sus cuatro pasos aprobados en una cuadrícula 2×2. Los pasos MUST ser informativos, sin enlaces, acciones ni indicadores de progreso. La acción Play y su texto «Comenzar autoevaluación» MUST constituir un único control accesible y visible en la zona inferior del contenido, con foco visible, estado de carga, errores y movimiento reducido respetado.
+- **FR-062**: La acción de inicio en Inicio MUST reutilizar el flujo y servicios existentes de Habilidades: recuperar un borrador existente, crear intento inicial si no hay historial o reevaluación si existe historial, impedir solicitudes duplicadas, mostrar errores y navegar al cuestionario únicamente después de una respuesta exitosa. No MUST cambiar backend ni persistencia. Los estados de Inicio con borrador o historial MUST conservar su comportamiento vigente y no mostrar los cuatro pasos ni la acción Play.
 
 ## Decisiones aprobadas
 
@@ -244,7 +253,7 @@ Como estudiante, quiero que Roles y Formación orienten el siguiente acceso usan
 11. El recorrido es una visualización continua sin puntos de control. El mismo progreso controla su tramo coloreado, la posición de la mascota y el indicador accesible; no se muestra un porcentaje numérico.
 12. La celebración nunca se infiere de respuestas completas mientras el intento siga en `DRAFT`. Cuando el backend confirma `COMPLETED`, Inicio y Habilidades dejan de mostrar el recorrido y no trasladan la celebración a otra pantalla en este alcance.
 13. En Inicio, el recorrido solo se muestra para un borrador activo; con historial pero sin borrador se muestra la tarjeta motivacional recurrente y la última evaluación.
-14. Descartar un borrador desde Inicio o Habilidades solo descarta el intento actual. No inicia otro; el usuario debe usar después el acceso explícito disponible en Habilidades.
+14. Descartar un borrador desde Inicio o Habilidades solo descarta el intento actual. No inicia otro; el usuario debe usar después el acceso explícito disponible en Habilidades. **Para la primera visita, sustituido el 2026-11-27**: Inicio también ofrece una acción Play directa cuando no hay borrador ni historial.
 15. Inicio lee fecha y resultados de la última evaluación desde el historial persistido y mantiene sus rutas actuales de resultados e historial.
 16. El rediseño de Inicio no requiere nuevos endpoints. Se modifica la lógica de creación de reevaluaciones para dejar sus respuestas vacías, conservando `source_attempt_id` como procedencia y sin tocar esquema ni migraciones. Las recomendaciones existentes de Learning por rol se conservan.
 17. En Skill Gap se retiran solo el rótulo y la tira de progreso de la antigua orientación. Registro, onboarding y progreso interno de la autoevaluación son flujos independientes y se conservan.
@@ -302,6 +311,7 @@ No quedan cuestiones funcionales abiertas que bloqueen la implementación de est
 - **SC-034**: Tras publicar Q2, Q1 conserva exactamente 31 preguntas y 155 descripciones; Q2 conserva esos mismos códigos, preguntas y posiciones, y cambia exactamente las diez descripciones aprobadas. Las otras 145 opciones son idénticas entre versiones.
 - **SC-035**: Q2 es la única versión actual del cuestionario y M1 permanece intacta y actual. Un borrador Q1 puede recuperarse, guardar respuestas y completarse con Q1; un intento nuevo queda fijado a Q2/M1.
 - **SC-036**: Las respuestas, versiones, descripciones servidas y resultados persistidos de intentos Q1 completados no cambian. Para un mismo mapa de respuestas numéricas, Q1/M1 y Q2/M1 producen los mismos Matching y brechas deterministas.
+- **SC-037**: En el estado inicial de Inicio, las cuatro tarjetas informativas y el botón Play se muestran; cada tarjeta carece de semántica de botón/enlace. Una solicitud exitosa desde Play abre el cuestionario y una solicitud pendiente no permite un segundo inicio.
 
 ## Assumptions
 

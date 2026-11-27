@@ -1,25 +1,21 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 
 import { Button } from '@/components/ui/Button'
 import { Card } from '@/components/ui/Card'
 import { ConfirmDiscardDialog } from '@/components/ui/ConfirmDiscardDialog'
 import { Mascot } from '@/components/ui/Mascot'
 import { AssessmentJourney } from '@/features/assessment/AssessmentJourney'
-import { createAssessmentAttempt, createAssessmentReevaluation, getAssessmentHistory, getCurrentAssessmentAttempt } from '@/services/api'
-import type { AssessmentAttempt } from '@/types/domain'
+import { getAssessmentHistory, getCurrentAssessmentAttempt } from '@/services/api'
 import { useDiscardAssessmentAttempt } from '@/features/assessment/useDiscardAssessmentAttempt'
+import { useStartAssessmentAttempt } from '@/features/assessment/useStartAssessmentAttempt'
 
 interface AssessmentAccessPanelProps {
   showDraftDiscardAction?: boolean
 }
 
 export function AssessmentAccessPanel({ showDraftDiscardAction = false }: AssessmentAccessPanelProps) {
-  const navigate = useNavigate()
-  const queryClient = useQueryClient()
-  const [starting, setStarting] = useState(false)
-  const [startError, setStartError] = useState<string | null>(null)
   const [confirmDiscard, setConfirmDiscard] = useState(false)
   const { discard, isDiscarding, discardError, clearDiscardError } = useDiscardAssessmentAttempt()
   const current = useQuery({ queryKey: ['assessment-attempt'], queryFn: getCurrentAssessmentAttempt })
@@ -27,28 +23,13 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
 
   const draft = current.data
   const latestCompleted = history.data?.[0]
+  const { startAssessment, starting, startError, clearStartError } = useStartAssessmentAttempt(Boolean(latestCompleted))
   const hasDraft = draft?.status === 'DRAFT'
   const journeyProgress = hasDraft && draft.totalQuestions > 0 ? draft.answeredCount / draft.totalQuestions : 0
 
-  async function startAssessment() {
-    setStarting(true)
-    setStartError(null)
-    try {
-      const attempt = latestCompleted
-        ? await createAssessmentReevaluation()
-        : await createAssessmentAttempt()
-      queryClient.setQueryData<AssessmentAttempt | null>(['assessment-attempt'], attempt)
-      navigate('/habilidades/evaluacion')
-    } catch (error) {
-      setStartError(error instanceof Error ? error.message : 'No pudimos comenzar la evaluación.')
-    } finally {
-      setStarting(false)
-    }
-  }
-
   async function discardDraft() {
     if (!draft || draft.status !== 'DRAFT') return
-    setStartError(null)
+    clearStartError()
     try {
       await discard(draft.attemptId)
       setConfirmDiscard(false)
@@ -95,7 +76,7 @@ export function AssessmentAccessPanel({ showDraftDiscardAction = false }: Assess
           type="button"
           className="text-xs font-medium text-neutral-500 underline-offset-2 hover:text-neutral-700 hover:underline disabled:opacity-50"
           disabled={isDiscarding}
-          onClick={() => { clearDiscardError(); setStartError(null); setConfirmDiscard(true) }}
+          onClick={() => { clearDiscardError(); clearStartError(); setConfirmDiscard(true) }}
         >
           Descartar borrador
         </button>

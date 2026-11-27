@@ -335,3 +335,17 @@ Task: T026 history/draft UI tests in frontend/src/features/assessment/Assessment
 - [X] T074 Run targeted migration/history tests and `mvn -f backend/pom.xml test`; run `git diff --check`. Record actual results and update progress/history. Preserve unrelated local changes; no commit or push.
 
 **Execution order**: T069/T070 establish approved requirements and normative documentation. T073 adds the immutable Q2 publication; T071/T072 validate migration and compatibility behavior; T074 records actual validation and handoff.
+
+## Phase 18: First-visit Home welcome and direct assessment start (approved 2026-11-27)
+
+**Goal**: Improve only the no-draft/no-history Home state with a branded welcome, four noninteractive explanatory cards and a direct accessible Play action. Reuse the Habilidades start flow and preserve all other Home states.
+
+**Independent Test**: The first-visit state shows the greeting, original mascot, four informational steps and Play action; steps are not controls. Starting creates one initial attempt and opens the questionnaire after success, while a pending request cannot be repeated and an error remains visible with retry available. Draft/history states retain their existing content and actions.
+
+- [X] T075 Update this feature's `spec.md` and `plan.md` with the approved first-visit Home state, direct start behavior and the superseded Habilidades-only entry decision. Keep progress snapshots and shared docs untouched.
+- [X] T076 Update `frontend/src/features/home/HomePage.test.tsx` for all four step descriptions, the initial-only Play action, successful direct navigation, pending duplicate prevention, backend error/retry, and absence of the new onboarding content in draft/history states.
+- [X] T077 Redesign only the first-visit Home state in `HomePage.tsx`/`HomePage.css`. Extract and reuse the existing start behavior from `AssessmentAccessPanel` so initial/reevaluation choice, query-cache update, error, loading, duplicate guard and questionnaire navigation stay consistent. Preserve draft/history UI and bottom navigation.
+- [X] T078 Run focused Home/AssessmentAccessPanel tests (2 files, 28 passed), frontend suite (13 files, 77 passed), build (passed), lint (passed with the existing `SessionContext.tsx:45` Fast Refresh warning) and `git diff --check` (passed). After verifying the sole frontend container belongs to this checkout, restarted only that container; it is healthy and the Home module/CSS return HTTP 200 with the new markers. Visual review is tracked separately.
+- [ ] T079 Review the Home first-visit, draft, history and discard states at narrow mobile and desktop viewport sizes. The user approved the current visual design on 2026-11-27; keep this task open for actual viewport review and unverified responsive/accessibility checks.
+
+**Execution order**: T075 approves and records the revised requirements. T076 adds behavioral coverage, T077 implements the scoped UI/shared hook, T078 validates automated checks, and T079 tracks manual browser review separately.

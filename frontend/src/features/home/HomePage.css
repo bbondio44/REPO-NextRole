@@ -1,0 +1,156 @@
+.home-welcome-card {
+  background: linear-gradient(118deg, #16385e 0%, #087eae 100%);
+  box-shadow: 0 10px 26px rgb(11 55 91 / 14%);
+}
+
+.home-welcome-orb {
+  position: absolute;
+  display: block;
+  border: 1px solid rgb(255 255 255 / 12%);
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 5%);
+  pointer-events: none;
+}
+
+.home-welcome-orb-one {
+  top: -4.5rem;
+  right: -2.5rem;
+  width: 12rem;
+  height: 12rem;
+}
+
+.home-welcome-orb-two {
+  bottom: -5.5rem;
+  left: -3.5rem;
+  width: 10rem;
+  height: 10rem;
+}
+
+.home-step-card {
+  min-width: 0;
+  min-height: 8.5rem;
+  border: 1px solid rgb(18 48 74 / 4%);
+  border-radius: 1rem;
+  padding: 0.7rem;
+}
+
+.home-step-icon {
+  display: flex;
+  width: 2.5rem;
+  height: 2.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.8rem;
+  background: rgb(255 255 255 / 90%);
+  box-shadow: 0 1px 2px rgb(15 34 52 / 8%);
+}
+
+.home-step-blue {
+  color: #007ebb;
+  background: #ddf0fc;
+}
+
+.home-step-purple {
+  color: #7851c5;
+  background: #eae2fa;
+}
+
+.home-step-amber {
+  color: #9b6411;
+  background: #fceccf;
+}
+
+.home-step-green {
+  color: #13836c;
+  background: #d7f1e7;
+}
+
+.home-step-card h3 {
+  color: #12304a;
+}
+
+.home-start-action {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding-top: 1.25rem;
+  padding-bottom: calc(0.25rem + env(safe-area-inset-bottom));
+}
+
+.home-start-button {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  gap: 0.55rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  cursor: pointer;
+  transition: transform 140ms ease;
+}
+
+.home-play-button {
+  display: flex;
+  width: 3.75rem;
+  height: 3.75rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  color: white;
+  background: linear-gradient(145deg, #18b9eb 0%, #0068b5 100%);
+  box-shadow: 0 6px 14px rgb(0 104 181 / 24%), 0 0 0 5px rgb(24 185 235 / 8%);
+  animation: home-play-enter 420ms ease-out both;
+  transition: transform 140ms ease, box-shadow 140ms ease, filter 140ms ease;
+}
+
+.home-start-button:hover:not(:disabled) .home-play-button {
+  filter: saturate(1.08);
+  box-shadow: 0 8px 17px rgb(0 104 181 / 28%), 0 0 0 6px rgb(24 185 235 / 10%);
+}
+
+.home-start-button:active:not(:disabled) .home-play-button {
+  transform: scale(0.95);
+}
+
+.home-start-button:focus-visible {
+  outline: 3px solid #12304a;
+  outline-offset: 5px;
+}
+
+.home-start-button:disabled {
+  cursor: wait;
+  opacity: 0.78;
+}
+
+@keyframes home-play-enter {
+  from {
+    opacity: 0;
+    transform: translateY(7px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 360px) {
+  .home-step-card {
+    min-height: 8.25rem;
+    padding: 0.6rem;
+  }
+
+  .home-step-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-play-button {
+    animation: none;
+    transition: none;
+  }
+}
