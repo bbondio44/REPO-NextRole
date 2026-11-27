@@ -139,7 +139,7 @@ frontend/src/
 - **Migration safety**: V5 is additive. Test against a disposable Testcontainers database; do not rewrite V1–V4 or delete/migrate legacy answers.
 - **Frontend tests**: Vitest and Testing Library are already configured. No new testing dependencies are required.
 - **Source lineage**: `assessment_attempts.source_attempt_id` remains an optional historical link; reevaluation does not read/copy its answer rows. No persistent schema or already-applied migration changes are proposed.
-- **Roles/Formation state**: existing current-attempt and completed-history queries are sufficient. `/roles?attemptId=...` remains the historical detail path; direct `/roles` uses the newest persisted history item. `/formacion` changes only its entry/empty state; role-specific `LearningPage` stays untouched.
+- **Roles/Formation state**: existing current-attempt and completed-history queries are sufficient. `/roles?attemptId=...` remains the ranking for that historical attempt; direct `/roles` uses the newest persisted history item. Per the later approved decision in `003-explainability-formacion`, only V2 ranking buttons «Explorar rol» navigate to `/formacion/roles/:roleId?attemptId=...` and return to `/roles?attemptId=...`. `/formacion` changes only its entry/empty state; V1 role details, role-specific `LearningPage`, and their routes/consumers stay untouched.
 
 ## Implementation and validation status
 
