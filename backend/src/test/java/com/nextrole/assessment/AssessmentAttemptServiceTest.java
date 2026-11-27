@@ -20,6 +20,7 @@ import static org.mockito.Mockito.*;
 class AssessmentAttemptServiceTest {
     private static final UUID USER_ID = UUID.fromString("10000000-0000-0000-0000-000000000001");
     private static final UUID QUESTIONNAIRE_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
+    private static final UUID CURRENT_QUESTIONNAIRE_ID = UUID.fromString("00000000-0000-0000-0000-000000000003");
     private static final UUID MATRIX_ID = UUID.fromString("00000000-0000-0000-0000-000000000002");
     private static final UUID ATTEMPT_ID = UUID.fromString("20000000-0000-0000-0000-000000000001");
 
@@ -40,7 +41,7 @@ class AssessmentAttemptServiceTest {
         AssessmentAttempt persistedDraft = draft(ATTEMPT_ID, USER_ID, QUESTIONNAIRE_ID, MATRIX_ID);
         when(attempts.findFirstByUserIdAndStatus(USER_ID, AssessmentAttemptStatus.DRAFT))
                 .thenReturn(Optional.empty(), Optional.of(persistedDraft));
-        when(questionnaireVersions.findFirstByCurrentTrue()).thenReturn(Optional.of(questionnaireVersion(QUESTIONNAIRE_ID, "Q1")));
+        when(questionnaireVersions.findFirstByCurrentTrue()).thenReturn(Optional.of(questionnaireVersion(CURRENT_QUESTIONNAIRE_ID, "Q2")));
         when(matrixVersions.findFirstByCurrentTrue()).thenReturn(Optional.of(matrixVersion(MATRIX_ID, "M1")));
         when(attempts.save(any(AssessmentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -48,7 +49,7 @@ class AssessmentAttemptServiceTest {
         var recovered = service.startOrRecover(USER_ID);
 
         assertTrue(created.created());
-        assertEquals(QUESTIONNAIRE_ID, created.attempt().questionnaireVersionId);
+        assertEquals(CURRENT_QUESTIONNAIRE_ID, created.attempt().questionnaireVersionId);
         assertEquals(MATRIX_ID, created.attempt().matrixVersionId);
         assertEquals(AssessmentAttemptStatus.DRAFT, created.attempt().status);
         assertFalse(recovered.created());
@@ -83,7 +84,7 @@ class AssessmentAttemptServiceTest {
         when(attempts.findFirstByUserIdAndStatus(USER_ID, AssessmentAttemptStatus.DRAFT)).thenReturn(Optional.empty());
         when(attempts.findFirstByUserIdAndStatusOrderByCompletedAtDesc(USER_ID, AssessmentAttemptStatus.COMPLETED))
                 .thenReturn(Optional.of(source));
-        when(questionnaireVersions.findFirstByCurrentTrue()).thenReturn(Optional.of(questionnaireVersion(QUESTIONNAIRE_ID, "Q1")));
+        when(questionnaireVersions.findFirstByCurrentTrue()).thenReturn(Optional.of(questionnaireVersion(CURRENT_QUESTIONNAIRE_ID, "Q2")));
         when(matrixVersions.findFirstByCurrentTrue()).thenReturn(Optional.of(matrixVersion(MATRIX_ID, "M1")));
         when(attempts.save(any(AssessmentAttempt.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
@@ -92,7 +93,7 @@ class AssessmentAttemptServiceTest {
         assertTrue(result.created());
         assertEquals(AssessmentAttemptStatus.DRAFT, result.attempt().status);
         assertEquals(source.id, result.attempt().sourceAttemptId);
-        assertEquals(QUESTIONNAIRE_ID, result.attempt().questionnaireVersionId);
+        assertEquals(CURRENT_QUESTIONNAIRE_ID, result.attempt().questionnaireVersionId);
         assertEquals(MATRIX_ID, result.attempt().matrixVersionId);
         verifyNoInteractions(answerService);
     }

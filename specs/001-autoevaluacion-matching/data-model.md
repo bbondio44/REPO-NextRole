@@ -1,6 +1,6 @@
 # Data Model: Autoevaluación técnica y matching de roles
 
-This is a technical proposal. It does not modify JPA entities or the live database. `V5__assessment_v2.sql` is the proposed first additive migration after the existing V1–V4 history. Existing V1 tables remain available and are not converted or deleted.
+This document records the implemented V2 data model. V5 established the versioned assessment schema after V1–V4. V6 publishes questionnaire Q2 without schema changes. Existing V1 tables remain available and are not converted or deleted.
 
 ## Catalog and independent versions
 
@@ -35,6 +35,10 @@ QuestionnaireVersion 1 ── 31 AssessmentQuestion 1 ── 5 AnswerLevelOption
 RoleMatrixVersion 1 ── 186 RoleRequirement (6 roles × 31 competencies)
 ```
 
+## Published questionnaire versions after Q2 approval
+
+The implemented version history now consists of immutable questionnaire Q1 (seeded by V5) and Q2 (published additively by V6). Q2 copies the same 31 competency codes, question text, positions and 155 levels, changing only the ten approved option descriptions; the other 145 descriptions are unchanged. Q2 is current. Matrix M1 remains the current, unchanged set of 186 requirements. Each attempt continues referencing its original questionnaire and matrix versions, so Q1 answers, their displayed option descriptions, and persisted results remain tied to Q1. No table, entity or API shape changes are needed to publish Q2.
+
 ## Database constraints and transaction boundaries
 
 - Use composite foreign keys so answers reference competency codes in the attempt's pinned questionnaire version and result roles exist in `assessment_roles`. The answer's `questionnaire_version_id` is a denormalized FK discriminator that must match its attempt. Keep V2 role records isolated from the V1 `roles` table so V1 endpoints retain their existing catalog behavior.
@@ -47,4 +51,4 @@ RoleMatrixVersion 1 ── 186 RoleRequirement (6 roles × 31 competencies)
 
 ## Initial migration and seed
 
-Add `V5__assessment_v2.sql`; preserve V1–V4. Create the V2 role catalog and versioned questionnaire, matrix, attempt, answer and result tables; indexes and checks; seed the six approved stable role IDs, questionnaire version 1 from the canonical Markdown and matrix version 1 from its exact 186 cells. Do not change the V1 role catalog or existing user answer rows.
+`V5__assessment_v2.sql` created the V2 role catalog and versioned questionnaire, matrix, attempt, answer and result tables and seeded Q1/M1. `V6__publish_questionnaire_q2.sql` copies Q1 to Q2 and updates exactly ten approved option descriptions, preserving the other 145 descriptions, all 31 questions, and the independent M1 matrix. Attempts retain the questionnaire and matrix versions assigned at creation; published snapshots are immutable. No V1 role catalog, Q1 row or existing user answer is changed.

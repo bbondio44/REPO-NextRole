@@ -11,13 +11,13 @@ Validation guide for implementation. It describes repeatable scenarios, not evid
 
 ## Automated validation
 
-1. Run backend unit, API contract and integration suite: `mvn -f backend/pom.xml test`. Expected: matching domain tests pass, V2 routes/DTOs/auth/error responses conform to `contracts/assessment-api.md`, migration V5 applies on a clean PostgreSQL test database, and lifecycle tests cover drafts, authorization, completion, exact ordering and history. Seed validation must compare all 31 competency titles/questions, all 155 option descriptions and all 186 role-matrix cells (importance/relevance/expected level) with `docs/V2/autoevaluacion-matriz-vigente.md`, not just record counts.
+1. Run backend unit, API contract and integration suite: `mvn -f backend/pom.xml test`. Expected: matching domain tests pass, V2 routes/DTOs/auth/error responses conform to `contracts/assessment-api.md`, migrations V1–V6 apply on disposable PostgreSQL, Q1/Q2 version and historical-attempt checks pass, and lifecycle tests cover drafts, authorization, completion, exact ordering and history. Seed validation compares all 31 competency titles/questions, all 155 current Q2 option descriptions and all 186 unchanged M1 role-matrix cells (importance/relevance/expected level) with `docs/V2/autoevaluacion-matriz-vigente.md`, not just record counts.
 2. Run frontend checks: `npm --prefix frontend run build` and `npm --prefix frontend run lint`.
 3. Run frontend tests: `npm --prefix frontend test`. Expected: five-level selector, explicit zero, pending state, autosave/recovery, persisted result order, completed-only history, a competency diagnosis sourced from declared V2 levels and separated from role matching, and result copy identifying the scores as self-assessed rather than a certification.
 
 ## End-to-end scenarios
 
-1. Authenticate as a user and open autoevaluation. API returns or creates one draft pinned to Q1/M1.
+1. Authenticate as a user and open autoevaluation. A new draft is pinned to current Q2/M1; an existing Q1 draft is recovered with its original versions and option descriptions.
 2. Save level 0 on one competency, reload, and verify that 0 is selected and the question is answered. Save several other levels; verify progress survives re-entry.
 3. Attempt completion with 30 answers. Expect `INCOMPLETE_ASSESSMENT`, missing competency codes, editable draft and no results.
 4. Answer all 31, complete, and verify six roles, exact score fractions, one-decimal HALF_UP strings, descending exact ranking and persisted order for exact ties.

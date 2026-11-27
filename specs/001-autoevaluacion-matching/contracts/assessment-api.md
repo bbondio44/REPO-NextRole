@@ -7,6 +7,7 @@ Proposed authenticated JSON API. All routes derive the user from the existing JW
 - Level: integer `0..4`; absent answer is represented by absence from the answer map, never by `0` or `null` as a saved level.
 - Attempt status: `DRAFT`, `COMPLETED`, or `DISCARDED`.
 - A draft response includes its pinned `questionnaireVersion` and `matrixVersion`; question text/options are returned from that pinned version.
+- The current catalog and newly created attempts use questionnaire Q2 with matrix M1. Existing Q1 attempts, including active drafts, continue returning their pinned Q1 questions and options.
 - Every newly created attempt starts with an empty `answers` map and `answeredCount: 0`; a recovered draft returns only answers previously saved to that draft. The optional persisted source-attempt relationship does not prefill or merge answer data.
 - The competency diagnosis reads the declared levels from the attempt's `answers` map. It remains distinct from role-matching results; no additional diagnosis endpoint or derived scoring metric is introduced by this contract.
 - Each result includes stable `roleId`, `rankPosition`, exact score numerator/denominator as decimal strings, and `displayPercentage` as a one-decimal string formatted with `HALF_UP`.
@@ -33,7 +34,7 @@ Proposed authenticated JSON API. All routes derive the user from the existing JW
 {
   "attemptId": "uuid",
   "status": "DRAFT",
-  "questionnaireVersion": "Q1",
+  "questionnaireVersion": "Q2",
   "matrixVersion": "M1",
   "answeredCount": 1,
   "totalQuestions": 31,
@@ -47,6 +48,8 @@ Proposed authenticated JSON API. All routes derive the user from the existing JW
   }]
 }
 ```
+
+Historical completed-attempt example: an evaluation created before Q2 publication remains pinned to Q1/M1.
 
 ```json
 {
@@ -74,3 +77,4 @@ The exact fraction expresses the unrounded percentage. The decimal display is ge
 - Starting concurrent drafts relies on the unique active-draft invariant; the loser returns the winning active draft, not a duplicate or an opaque server error.
 - Repeating completion for an already completed attempt returns the same persisted results and tie order. It does not recalculate or randomize again.
 - History contains completed attempts only, newest first; detail returns the historical question/options, matrix version, answers and persisted results.
+- Questionnaire Q1 remains immutable after Q2 publication. Q2 contains the same 31 competency codes, question stems, positions and 155 levels, with only the ten approved option descriptions changed; matrix M1 remains unchanged.

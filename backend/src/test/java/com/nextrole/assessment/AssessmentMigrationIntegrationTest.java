@@ -16,8 +16,10 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -68,8 +70,105 @@ class AssessmentMigrationIntegrationTest {
         try (Connection connection = DriverManager.getConnection(
                 POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword())) {
             assertQuestionnaireMatches(connection, questions);
+            assertQuestionnaireVersionHistory(connection);
             assertMatrixMatches(connection, matrix);
             assertRolesExist(connection);
+        }
+    }
+
+    private static void assertQuestionnaireVersionHistory(Connection connection) throws SQLException {
+        Map<String, Boolean> versions = new HashMap<>();
+        try (PreparedStatement statement = connection.prepareStatement(
+                "SELECT version_code, is_current FROM assessment_questionnaire_versions ORDER BY version_code");
+                ResultSet rows = statement.executeQuery()) {
+            while (rows.next()) versions.put(rows.getString("version_code"), rows.getBoolean("is_current"));
+        }
+        assertEquals(Map.of("Q1", false, "Q2", true), versions);
+
+        Map<String, String> q1Questions = loadQuestionSnapshot(connection, "Q1");
+        Map<String, String> q2Questions = loadQuestionSnapshot(connection, "Q2");
+        assertEquals(31, q1Questions.size());
+        assertEquals(q1Questions, q2Questions, "Q2 question IDs, wording and order must match Q1");
+
+        Map<String, String> q1Options = loadOptionSnapshot(connection, "Q1");
+        Map<String, String> q2Options = loadOptionSnapshot(connection, "Q2");
+        assertEquals(155, q1Options.size());
+        assertEquals(q1Options.keySet(), q2Options.keySet());
+        Map<String, String> approved = approvedQ2Descriptions();
+        Set<String> changed = new HashSet<>();
+        for (String key : q1Options.keySet()) {
+            if (!q1Options.get(key).equals(q2Options.get(key))) changed.add(key);
+            if (!approved.containsKey(key)) {
+                assertEquals(q1Options.get(key), q2Options.get(key), "unchanged option " + key);
+            }
+        }
+        assertEquals(approved.keySet(), changed);
+        approved.forEach((key, description) -> assertEquals(description, q2Options.get(key), key));
+        assertEquals(186, scalarInt(connection,
+                "SELECT count(*) FROM assessment_role_requirements r JOIN assessment_matrix_versions m " +
+                "ON m.id = r.matrix_version_id WHERE m.version_code = 'M1' AND m.is_current = TRUE"));
+        assertEquals(1, scalarInt(connection,
+                "SELECT count(*) FROM assessment_matrix_versions WHERE is_current = TRUE AND version_code = 'M1'"));
+    }
+
+    private static Map<String, String> loadQuestionSnapshot(Connection connection, String version) throws SQLException {
+        String sql = """
+                SELECT q.competency_code, q.position, q.title, q.question_text
+                  FROM assessment_questions q
+                  JOIN assessment_questionnaire_versions v ON v.id = q.questionnaire_version_id
+                 WHERE v.version_code = ? ORDER BY q.position
+                """;
+        Map<String, String> snapshot = new HashMap<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, version);
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) snapshot.put(rows.getString("competency_code"),
+                        rows.getInt("position") + "|" + rows.getString("title") + "|" + rows.getString("question_text"));
+            }
+        }
+        return snapshot;
+    }
+
+    private static Map<String, String> loadOptionSnapshot(Connection connection, String version) throws SQLException {
+        String sql = """
+                SELECT o.competency_code, o.level, o.description
+                  FROM assessment_answer_options o
+                  JOIN assessment_questionnaire_versions v ON v.id = o.questionnaire_version_id
+                 WHERE v.version_code = ? ORDER BY o.competency_code, o.level
+                """;
+        Map<String, String> snapshot = new HashMap<>();
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
+            statement.setString(1, version);
+            try (ResultSet rows = statement.executeQuery()) {
+                while (rows.next()) snapshot.put(optionKey(rows.getString("competency_code"), rows.getInt("level")),
+                        rows.getString("description"));
+            }
+        }
+        return snapshot;
+    }
+
+    private static Map<String, String> approvedQ2Descriptions() {
+        return Map.ofEntries(
+                Map.entry(optionKey("rest-api-consumption", 0), "No comprendo cómo se realizan solicitudes a una API REST existente ni cómo se utiliza la información que devuelve."),
+                Map.entry(optionKey("rest-api-consumption", 1), "Comprendo cómo una aplicación realiza solicitudes HTTP a una API REST existente y utiliza las respuestas obtenidas."),
+                Map.entry(optionKey("rest-api-development", 1), "Comprendo cómo funciona una API REST desde la perspectiva de su desarrollo y qué función cumplen los endpoints, los métodos HTTP y las respuestas JSON."),
+                Map.entry(optionKey("api-testing", 1), "Comprendo cómo se verifica el comportamiento de una API y qué aspectos se deben comprobar al probar sus endpoints."),
+                Map.entry(optionKey("api-testing", 2), "Puedo enviar solicitudes sencillas a una API utilizando herramientas como Postman y comprobar si la respuesta coincide con un resultado esperado simple."),
+                Map.entry(optionKey("programming-fundamentals", 3), "Tengo experiencia desarrollando programas para resolver problemas habituales, organizando la lógica en funciones y verificando que los resultados obtenidos sean los esperados."),
+                Map.entry(optionKey("programming-fundamentals", 4), "Puedo comparar diferentes formas de resolver un problema, evaluar la lógica y organización del código, y justificar las decisiones de implementación tomadas."),
+                Map.entry(optionKey("object-oriented-programming", 4), "Puedo evaluar el diseño de clases y objetos, identificar problemas en la distribución de responsabilidades, cohesión o acoplamiento, y mejorar el modelo utilizando abstracciones y relaciones adecuadas."),
+                Map.entry(optionKey("web-interface-development", 3), "Tengo experiencia desarrollando y adaptando interfaces con formularios, componentes reutilizables e interacciones, verificando su funcionamiento y visualización en diferentes tamaños de pantalla."),
+                Map.entry(optionKey("data-cleaning-preparation", 2), "Puedo identificar problemas sencillos, como duplicados, valores faltantes o formatos incorrectos, y aplicar un tratamiento apropiado con herramientas de análisis de datos."));
+    }
+
+    private static String optionKey(String competency, int level) {
+        return competency + ":" + level;
+    }
+
+    private static int scalarInt(Connection connection, String sql) throws SQLException {
+        try (PreparedStatement statement = connection.prepareStatement(sql); ResultSet rows = statement.executeQuery()) {
+            assertTrue(rows.next());
+            return rows.getInt(1);
         }
     }
 

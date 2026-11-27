@@ -320,3 +320,18 @@ Task: T026 history/draft UI tests in frontend/src/features/assessment/Assessment
 - Every implementing task that enforces data constraints cites `data-model.md` and the canonical table/field names.
 - No task includes Skill Gap V2, Learning V2 or per-role Learning recommendation changes; the narrowly approved Skill Gap marker removal and `/formacion` empty state are included. No V1 answer conversion, destructive data operations, commits or changes to existing migrations V1–V4 are included.
 - Spec Kit Tasks ends here; this file does not authorize or execute Implement.
+
+## Phase 17: Publish questionnaire Q2 (approved 2026-11-26)
+
+**Goal**: Publish the ten approved option-description changes in an immutable Q2 snapshot, retain Q1 and all pinned attempt history, and reuse M1 unchanged.
+
+**Independent Test**: On disposable PostgreSQL, upgrade V5 to V6 with one completed Q1 attempt and one active Q1 draft already present. Verify both remain pinned and unchanged; a Q1 draft can still save and complete through the existing API, while a new draft pins Q2/M1. Verify exact catalog delta (10 changed, 145 identical), Q2 as sole current questionnaire, and identical M1 requirements.
+
+- [X] T069 Record the approved Q2/Q1/M1 behavior, exact ten descriptions and self-assessment wording criterion in `spec.md`; add the compatible additive migration approach to `plan.md`; add this phase before implementation. Keep the Spec Kit change scoped to the existing feature.
+- [X] T070 Update `docs/V2/autoevaluacion-matriz-vigente.md` as the normative Q2 catalog and update the questionnaire-version examples/semantics in `contracts/assessment-api.md`, `quickstart.md` and `data-model.md`. Keep Q1 source history immutable and identify M1 as unchanged.
+- [X] T071 Extend/add Testcontainers migration coverage that migrates through V5, seeds a completed Q1 attempt and a Q1 draft with answers/results, then applies V6 and asserts preserved versions, Q1 descriptions, answers and results, exact 10/145 catalog diff, sole current Q2, and unchanged M1.
+- [X] T072 Add API/service integration coverage proving a Q1 draft can be recovered, saved and completed using its pinned catalog after Q2 is current; verify a new draft uses Q2/M1. Assert identical numeric answers with unchanged M1 yield unchanged Matching and Skill Gap calculations. Do not change matching or gap production code.
+- [X] T073 Add `V6__publish_questionnaire_q2.sql` to copy Q1 to Q2 and replace only the approved ten texts; do not edit V1–V5 or add schema changes. Switch current questionnaire atomically and leave M1 unchanged.
+- [X] T074 Run targeted migration/history tests and `mvn -f backend/pom.xml test`; run `git diff --check`. Record actual results and update progress/history. Preserve unrelated local changes; no commit or push.
+
+**Execution order**: T069/T070 establish approved requirements and normative documentation. T073 adds the immutable Q2 publication; T071/T072 validate migration and compatibility behavior; T074 records actual validation and handoff.

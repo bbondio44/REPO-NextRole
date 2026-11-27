@@ -6,6 +6,24 @@
 
 ## Clarifications
 
+### Session 2026-11-26 — publicación del cuestionario Q2
+
+- Se aprueba una nueva versión Q2 del cuestionario para actualizar exactamente diez descripciones de opciones. Q1, sus 31 preguntas y 155 opciones permanecen inmutables. Las otras 145 opciones se copian sin cambios.
+- La nueva versión conserva los 31 identificadores, enunciados, posiciones y cinco niveles por competencia. Se reutiliza M1 sin modificar requisitos ni clasificaciones; no cambian Matching ni el cálculo de brechas.
+- Los intentos, incluidos borradores activos, conservan las versiones de cuestionario y matriz fijadas al crearse. Los borradores Q1 se recuperan y completan con el catálogo Q1; los intentos nuevos usan Q2/M1.
+- Criterio general de diseño aprobado para las opciones: describir las capacidades que la persona declara poseer y evitar explicaciones que puedan inducirla a seleccionar un nivel de conocimiento que realmente no posee.
+- Las diez descripciones Q2 aprobadas son:
+  - `rest-api-consumption`, nivel 0: «No comprendo cómo se realizan solicitudes a una API REST existente ni cómo se utiliza la información que devuelve.»
+  - `rest-api-consumption`, nivel 1: «Comprendo cómo una aplicación realiza solicitudes HTTP a una API REST existente y utiliza las respuestas obtenidas.»
+  - `rest-api-development`, nivel 1: «Comprendo cómo funciona una API REST desde la perspectiva de su desarrollo y qué función cumplen los endpoints, los métodos HTTP y las respuestas JSON.»
+  - `api-testing`, nivel 1: «Comprendo cómo se verifica el comportamiento de una API y qué aspectos se deben comprobar al probar sus endpoints.»
+  - `api-testing`, nivel 2: «Puedo enviar solicitudes sencillas a una API utilizando herramientas como Postman y comprobar si la respuesta coincide con un resultado esperado simple.»
+  - `programming-fundamentals`, nivel 3: «Tengo experiencia desarrollando programas para resolver problemas habituales, organizando la lógica en funciones y verificando que los resultados obtenidos sean los esperados.»
+  - `programming-fundamentals`, nivel 4: «Puedo comparar diferentes formas de resolver un problema, evaluar la lógica y organización del código, y justificar las decisiones de implementación tomadas.»
+  - `object-oriented-programming`, nivel 4: «Puedo evaluar el diseño de clases y objetos, identificar problemas en la distribución de responsabilidades, cohesión o acoplamiento, y mejorar el modelo utilizando abstracciones y relaciones adecuadas.»
+  - `web-interface-development`, nivel 3: «Tengo experiencia desarrollando y adaptando interfaces con formularios, componentes reutilizables e interacciones, verificando su funcionamiento y visualización en diferentes tamaños de pantalla.»
+  - `data-cleaning-preparation`, nivel 2: «Puedo identificar problemas sencillos, como duplicados, valores faltantes o formatos incorrectos, y aplicar un tratamiento apropiado con herramientas de análisis de datos.»
+
 ### Session 2026-11-25
 
 - No quedan ambigüedades funcionales abiertas para esta ampliación. Inicio muestra el recorrido solo con borrador activo; sin borrador muestra una tarjeta motivacional y, si hay historial, la última evaluación.
@@ -209,6 +227,7 @@ Como estudiante, quiero que Roles y Formación orienten el siguiente acceso usan
 - **FR-057**: `source_attempt_id` MUST conservarse como referencia opcional a la evaluación completa de origen cuando aplique; su existencia MUST NOT provocar copia de respuestas. No se elimina ni altera la columna, las migraciones aplicadas ni los borradores existentes.
 - **FR-058**: Roles y Formación MUST distinguir los estados de carga/error de un vacío real. Una consulta pendiente MUST NOT mostrar estados vacíos y un fallo MUST comunicar que los datos no pudieron obtenerse en lugar de fingir ausencia de evaluaciones.
 - **FR-059**: La selección histórica explícita MUST conservar su `attemptId` a través de las rutas de resultados y vistas asociadas. Cada ranking, diagnóstico, brecha o recomendación consultada debe derivarse exclusivamente del intento seleccionado; el borrador actual o la última evaluación de otro contexto MUST NOT sustituirlo.
+- **FR-060**: La publicación aprobada del cuestionario Q2 MUST cambiar exactamente las diez descripciones enumeradas en la aclaración del 2026-11-26. Q1 MUST permanecer inmutable; Q2 MUST conservar los mismos 31 códigos, preguntas, posiciones y 155 niveles, con las otras 145 descripciones idénticas a Q1. M1, sus 186 requisitos, clasificaciones, Matching y cálculo de brechas MUST NOT cambiar. Los intentos existentes MUST seguir usando las versiones fijadas al crearse; los nuevos MUST usar Q2/M1. Las opciones MUST describir capacidades declaradas y evitar explicaciones que puedan inducir a seleccionar un nivel no poseído.
 
 ## Decisiones aprobadas
 
@@ -280,6 +299,9 @@ No quedan cuestiones funcionales abiertas que bloqueen la implementación de est
 - **SC-031**: Roles directo muestra el último ranking persistido; con borrador añade la aclaración de contexto y no presenta enlaces de exploración, mientras que sin borrador permite explorar. El `attemptId` histórico conserva el intento solicitado; sin historial se muestra el vacío adaptado al borrador, sin resultados ficticios.
 - **SC-032**: Formación sin evaluación aplicable o con borrador muestra el texto aprobado y no ofrece «Explorar roles» ni reutiliza contexto de otro intento; con historial y sin borrador invita a Roles. No exige objetivo permanente ni cambia recomendaciones existentes por rol.
 - **SC-033**: Tras descartar un borrador con éxito, Roles vuelve a permitir explorar la última evaluación completada y Formación vuelve a invitar a explorar Roles; no se restaura una selección anterior. Al navegar desde el historial, cada resultado, diagnóstico, brecha o recomendación mantiene el mismo `attemptId` y nunca mezcla datos de otro intento.
+- **SC-034**: Tras publicar Q2, Q1 conserva exactamente 31 preguntas y 155 descripciones; Q2 conserva esos mismos códigos, preguntas y posiciones, y cambia exactamente las diez descripciones aprobadas. Las otras 145 opciones son idénticas entre versiones.
+- **SC-035**: Q2 es la única versión actual del cuestionario y M1 permanece intacta y actual. Un borrador Q1 puede recuperarse, guardar respuestas y completarse con Q1; un intento nuevo queda fijado a Q2/M1.
+- **SC-036**: Las respuestas, versiones, descripciones servidas y resultados persistidos de intentos Q1 completados no cambian. Para un mismo mapa de respuestas numéricas, Q1/M1 y Q2/M1 producen los mismos Matching y brechas deterministas.
 
 ## Assumptions
 

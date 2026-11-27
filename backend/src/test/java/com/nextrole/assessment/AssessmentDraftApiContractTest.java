@@ -56,7 +56,7 @@ class AssessmentDraftApiContractTest {
                 new HttpEntity<>(firstUser), Map.class);
         assertEquals(HttpStatus.CREATED, created.getStatusCode());
         assertEquals("DRAFT", created.getBody().get("status"));
-        assertEquals("Q1", created.getBody().get("questionnaireVersion"));
+        assertEquals("Q2", created.getBody().get("questionnaireVersion"));
         assertEquals("M1", created.getBody().get("matrixVersion"));
         String attemptId = created.getBody().get("attemptId").toString();
 

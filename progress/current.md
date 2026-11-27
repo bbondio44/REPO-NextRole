@@ -2,28 +2,21 @@
 
 **Actualizado:** 2026-11-26
 **Rama activa:** `develop-v2`
-**Checkpoint estable conocido:** `49e5e1a` — `Completa rediseño de Inicio y unifica el flujo de autoevaluaciones V2`
-**Estado Git al inicio de esta ejecución:** HEAD estaba 3 commits por delante de la referencia local `origin/develop-v2`; no se realizó fetch. Los cambios locales previos permanecen sin descartar.
+**Checkpoint base al iniciar:** `589da77` — `Implementa servicio Skill Gap V2 y valida contexto histórico`
+**Estado Git al inicio:** `develop-v2` coincidía con la referencia local `origin/develop-v2`; no se realizó fetch. Los cambios locales previos permanecen sin descartar.
 
-## Estado actual
+## Estado actual — publicación de cuestionario Q2
 
-- **Etapa:** implementación de `002-skill-gap-v2` completada y validada técnicamente.
-- **Implementado:** servicio backend de lectura bajo demanda y endpoint REST V2 autenticado `GET /api/v2/assessment-attempts/{attemptId}/skill-gaps/{roleId}`. Usa el intento completado propiedad del usuario, las respuestas del intento, el catálogo/cuestionario y la matriz versionados, además de `GapPolicy.amount`. Devuelve la estructura aprobada por competencia y no persiste diagnósticos.
-- **Límites preservados:** no se implementaron pantallas, componentes ni navegación V2; Skill Gap V1 permanece; no se modificaron Matching V2, fórmula de matching, competencias, ponderaciones, datos históricos ni esquema/migraciones.
-- **Spec Kit:** `002-skill-gap-v2` mantiene el alcance aprobado y sus 10 tareas están completadas. T025 de `001-autoevaluacion-matching` se cerró con aserciones Testcontainers para un único borrador y conservación de versiones fijadas. T040 y T049 continúan pendientes de revisión visual manual, no relacionadas con esta API.
-- **Próximo paso:** revisión del resultado por el usuario. No se realizaron commits ni push.
-- **Decisiones/bloqueos:** no quedan decisiones funcionales ni bloqueos técnicos abiertos dentro del alcance de 002. Las pantallas consumidoras, priorización, Formación, IA y Learning permanecen para especificaciones futuras.
-
-## Validaciones de esta etapa
-
-- Backend completo: `mvn -f backend/pom.xml test` — **38 pruebas, 0 fallos, 0 errores, 0 omitidas** (2026-11-26). Incluye pruebas unitarias, API/contrato y Testcontainers; `AssessmentHistoryIntegrationTest` pasó con T025.
-- Docker/Testcontainers: Docker Desktop 28.5.1 y PostgreSQL 16.11 detectados durante la suite. El primer intento de consultar Docker directamente desde el sandbox no tuvo acceso al socket; la suite se ejecutó con acceso aprobado y confirmó disponibilidad.
-- Build backend: incluido en el ciclo Maven de compilación y pruebas, correcto.
-- Frontend build/lint/tests: no ejecutados en esta etapa; no hubo cambios frontend ni se implementó interfaz V2.
-- Validación visual/manual: no aplica al alcance backend de 002. Las revisiones manuales de etapas anteriores T040/T049 siguen pendientes.
-- Consistencia documental: spec, plan, research, contrato, quickstart, tasks y progreso revisados; T025 ya no figura pendiente.
-- `git diff --check`: pasa tras retirar espacios finales de este archivo; Git solo emite avisos de conversión de fin de línea en archivos existentes.
-
+- **Actualizado:** 2026-11-26. **Rama:** `develop-v2`. **Checkpoint base al iniciar:** `589da77` (`Implementa servicio Skill Gap V2 y valida contexto histórico`). No se cambió de rama.
+- **Etapa:** Q2/M1 implementado, aplicado y validado en la base local de desarrollo; checkpoint aprobado y preparado.
+- **Implementado:** migración aditiva V6 publica Q2 como única versión actual del cuestionario. Q2 conserva los 31 códigos, preguntas y niveles; cambia exactamente las diez descripciones aprobadas y copia las otras 145 desde Q1. M1 y el código productivo de Matching/Skill Gap no cambian.
+- **Historial:** Q1 y los intentos/drafts fijados a Q1 permanecen disponibles. Testcontainers verificó un intento Q1 completado con respuestas/resultados, un borrador con respuestas tras la actualización, su recuperación/guardado/finalización, y un nuevo intento Q2/M1. Para las mismas respuestas se mantuvieron los puntajes por rol y brechas por competencia.
+- **Spec Kit:** fase 17 añadida a `001-autoevaluacion-matching`; T069–T074 completadas tras validaciones. T040 y T049 siguen pendientes, no pertenecen a esta modificación.
+- **Base local:** antes de V6, Flyway V5, Q1/M1 actuales, Q1 con 31 preguntas/155 opciones y 30 intentos, 693 respuestas, 17 conjuntos de resultados y 102 resultados por rol. Tras `docker compose up -d --build backend`, Flyway quedó en V6; Q2 es la única versión actual (31/155), Q1 permanece disponible, M1 sigue actual con 186 requisitos y los cuatro conteos de registros históricos permanecen idénticos. No se recreó el volumen.
+- **Validaciones:** las pruebas previas siguen registradas: suite completa (40 pruebas) y validaciones dirigidas (12 pruebas). En este cierre, `mvn -f backend/pom.xml '-Dtest=AssessmentQuestionnaireQ2MigrationIntegrationTest,AssessmentHistoryIntegrationTest,AssessmentAttemptServiceTest,AssessmentDraftApiContractTest' test` pasó (11 pruebas, 0 fallos/errores/omitidas) en bases PostgreSQL desechables de Testcontainers. El backend reportó `/actuator/health` UP; el catálogo y compatibilidad histórica quedaron cubiertos por las pruebas de integración. El GET local sin autenticación al catálogo devolvió 401, esperado por la protección del endpoint. `git diff --check` pasó.
+- **No ejecutado:** pruebas frontend (sin cambios frontend), solicitudes a proveedores de IA ni operaciones sobre datos experimentales. No se recreó el volumen PostgreSQL ni se ejecutó ninguna operación destructiva.
+- **Archivos de alcance:** `V6__publish_questionnaire_q2.sql`, pruebas de evaluación/versionado/migración, catálogo normativo y artefactos de `specs/001-autoevaluacion-matching/`.
+- **Próximo paso:** revisión del checkpoint de Q2/M1 creado en esta sesión. Push no autorizado.
 ## Cambios locales que deben preservarse
 
 Mantener todos los cambios previos que ya existían antes de la implementación de Skill Gap V2, entre ellos `AGENTS.md`, documentación README, `docker-compose.yml`, documentos de guía, `progress/current.md`, artefactos de `specs/001-autoevaluacion-matching/` y `testing/README.md`.
@@ -32,6 +25,7 @@ Archivos locales no rastreados que no deben eliminarse ni incorporarse automáti
 
 - `package-lock.local-backup.json`
 - `tatus`
+- `experiments/`
 - `progress/history.md`
 - `docs/GUIA_SDD_NEXTROLE.md`
 

@@ -2,6 +2,8 @@
 
 **Estado**: Referencia definitiva de NextRole V2 para 31 preguntas y requisitos técnicos de seis roles.
 
+**Cuestionario vigente:** Q2. **Matriz vigente:** M1. Q1 conserva su catálogo publicado original; cada intento histórico continúa consultando la versión fijada al crearse.
+
 ## Prioridad de las fuentes
 
 1. Decisiones explícitas y definitivas aprobadas para NextRole V2 y consolidadas aquí.
@@ -36,8 +38,8 @@ El catálogo vigente contiene una pregunta por competencia y cinco opciones de r
 - **Nivel 0:** No conozco conceptos como variables, condiciones, ciclos o funciones.
 - **Nivel 1:** Comprendo para qué sirven estos elementos y puedo reconocer cómo se utilizan en programas sencillos.
 - **Nivel 2:** Puedo escribir o modificar programas sencillos utilizando variables, condiciones, ciclos y funciones, comprendiendo su funcionamiento.
-- **Nivel 3:** Tengo experiencia desarrollando programas para resolver problemas habituales, organizando la lógica en funciones e identificando y corrigiendo errores.
-- **Nivel 4:** Puedo analizar diferentes formas de resolver un problema, identificar errores lógicos, mejorar la organización del código y justificar las decisiones tomadas.
+- **Nivel 3:** Tengo experiencia desarrollando programas para resolver problemas habituales, organizando la lógica en funciones y verificando que los resultados obtenidos sean los esperados.
+- **Nivel 4:** Puedo comparar diferentes formas de resolver un problema, evaluar la lógica y organización del código, y justificar las decisiones de implementación tomadas.
 
 ### Pregunta 2 — Algoritmos y resolución eficiente de problemas
 
@@ -67,7 +69,7 @@ El catálogo vigente contiene una pregunta por competencia y cinco opciones de r
 - **Nivel 1:** Comprendo conceptos como clases, objetos, atributos y métodos, y para qué se utilizan.
 - **Nivel 2:** Puedo crear clases y objetos sencillos, aplicar encapsulamiento y establecer relaciones básicas entre ellos.
 - **Nivel 3:** Puedo modelar y desarrollar aplicaciones utilizando encapsulamiento, interfaces, herencia o polimorfismo cuando corresponde, comprendiendo el propósito de cada decisión.
-- **Nivel 4:** Puedo evaluar diferentes diseños orientados a objetos, identificar problemas de responsabilidad, cohesión o acoplamiento y mejorar el modelo utilizando relaciones y mecanismos adecuados.
+- **Nivel 4:** Puedo evaluar el diseño de clases y objetos, identificar problemas en la distribución de responsabilidades, cohesión o acoplamiento, y mejorar el modelo utilizando abstracciones y relaciones adecuadas.
 
 ### Pregunta 5 — Principios de diseño y arquitectura básica
 
@@ -103,8 +105,8 @@ El catálogo vigente contiene una pregunta por competencia y cinco opciones de r
 
 **Pregunta:** ¿Qué experiencia tenés integrando aplicaciones con servicios externos mediante APIs REST?
 
-- **Nivel 0:** No conozco qué es una API.
-- **Nivel 1:** Comprendo qué es una API REST y cómo permite intercambiar información entre aplicaciones mediante HTTP.
+- **Nivel 0:** No comprendo cómo se realizan solicitudes a una API REST existente ni cómo se utiliza la información que devuelve.
+- **Nivel 1:** Comprendo cómo una aplicación realiza solicitudes HTTP a una API REST existente y utiliza las respuestas obtenidas.
 - **Nivel 2:** Puedo realizar solicitudes a una API existente, enviar parámetros sencillos y utilizar las respuestas obtenidas.
 - **Nivel 3:** Puedo integrar APIs en una aplicación, enviar información, procesar respuestas y manejar errores habituales.
 - **Nivel 4:** Puedo evaluar diferentes alternativas de integración, gestionar autenticación, paginación y fallos de comunicación, y diseñar soluciones robustas según las necesidades de la aplicación.
@@ -114,7 +116,7 @@ El catálogo vigente contiene una pregunta por competencia y cinco opciones de r
 **Pregunta:** ¿Qué experiencia tenés desarrollando APIs REST para exponer funcionalidades y datos de una aplicación?
 
 - **Nivel 0:** No conozco cómo se desarrolla una API.
-- **Nivel 1:** Comprendo qué son endpoints, métodos HTTP y respuestas JSON, y para qué se utilizan.
+- **Nivel 1:** Comprendo cómo funciona una API REST desde la perspectiva de su desarrollo y qué función cumplen los endpoints, los métodos HTTP y las respuestas JSON.
 - **Nivel 2:** Puedo desarrollar endpoints sencillos para consultar o modificar información y comprender cómo se procesan las solicitudes.
 - **Nivel 3:** Tengo experiencia desarrollando APIs REST con operaciones de consulta y modificación de datos, validaciones y respuestas HTTP adecuadas.
 - **Nivel 4:** Puedo diseñar APIs con contratos claros, organizar responsabilidades, gestionar errores consistentemente y justificar decisiones para facilitar su integración y mantenimiento.
@@ -136,7 +138,7 @@ El catálogo vigente contiene una pregunta por competencia y cinco opciones de r
 - **Nivel 0:** No conozco cómo se desarrolla una interfaz web.
 - **Nivel 1:** Comprendo para qué sirven HTML, CSS y JavaScript, y cómo se relacionan para construir interfaces.
 - **Nivel 2:** Puedo crear o modificar interfaces sencillas con elementos visuales e interacciones básicas, comprendiendo su funcionamiento.
-- **Nivel 3:** Tengo experiencia desarrollando y adaptando interfaces con formularios, componentes reutilizables e integración con servicios, verificando su funcionamiento en diferentes tamaños de pantalla.
+- **Nivel 3:** Tengo experiencia desarrollando y adaptando interfaces con formularios, componentes reutilizables e interacciones, verificando su funcionamiento y visualización en diferentes tamaños de pantalla.
 - **Nivel 4:** Puedo evaluar la organización y calidad de una interfaz, identificar problemas de accesibilidad, interacción, adaptación a dispositivos o mantenimiento y mejorar su estructura según los requisitos.
 
 ### Pregunta 12 — Gestión de estado
@@ -236,8 +238,8 @@ El catálogo vigente contiene una pregunta por competencia y cinco opciones de r
 **Pregunta:** ¿Qué experiencia tenés probando APIs para verificar que sus endpoints funcionen correctamente?
 
 - **Nivel 0:** No conozco cómo se prueba una API.
-- **Nivel 1:** Comprendo qué es una API y cómo se pueden verificar sus solicitudes y respuestas.
-- **Nivel 2:** Puedo realizar solicitudes sencillas a una API, utilizando herramientas como Postman, e interpretar las respuestas obtenidas.
+- **Nivel 1:** Comprendo cómo se verifica el comportamiento de una API y qué aspectos se deben comprobar al probar sus endpoints.
+- **Nivel 2:** Puedo enviar solicitudes sencillas a una API utilizando herramientas como Postman y comprobar si la respuesta coincide con un resultado esperado simple.
 - **Nivel 3:** Tengo experiencia probando endpoints de APIs, verificando métodos HTTP, códigos de respuesta, datos devueltos y comportamientos ante entradas válidas e inválidas.
 - **Nivel 4:** Tengo experiencia diseñando y ejecutando pruebas de APIs que contemplan autenticación, validaciones, errores y distintos escenarios de integración, identificando problemas y proponiendo mejoras en su funcionamiento.
 
@@ -257,7 +259,7 @@ El catálogo vigente contiene una pregunta por competencia y cinco opciones de r
 
 - **Nivel 0:** No conozco cómo se limpian o preparan conjuntos de datos.
 - **Nivel 1:** Comprendo que los datos pueden contener errores, valores faltantes, duplicados o formatos inconsistentes que afectan su análisis.
-- **Nivel 2:** Puedo identificar y corregir problemas sencillos, como registros duplicados, valores faltantes o formatos incorrectos, utilizando herramientas de análisis de datos.
+- **Nivel 2:** Puedo identificar problemas sencillos, como duplicados, valores faltantes o formatos incorrectos, y aplicar un tratamiento apropiado con herramientas de análisis de datos.
 - **Nivel 3:** Tengo experiencia limpiando y preparando conjuntos de datos, identificando inconsistencias, aplicando transformaciones y verificando que la información sea adecuada para su análisis.
 - **Nivel 4:** Tengo experiencia preparando conjuntos de datos de mayor complejidad, evaluando distintas estrategias de limpieza, identificando problemas de calidad y justificando las transformaciones realizadas.
 

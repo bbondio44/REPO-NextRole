@@ -8,6 +8,7 @@ import com.nextrole.data.AssessmentMatrixVersion;
 import com.nextrole.data.AssessmentMatrixVersionRepository;
 import com.nextrole.data.AssessmentQuestionnaireVersion;
 import com.nextrole.data.AssessmentQuestionnaireVersionRepository;
+import com.nextrole.data.UserAccountRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -45,6 +46,7 @@ class AssessmentHistoryIntegrationTest {
     @Autowired AssessmentAnswerRepository answers;
     @Autowired AssessmentQuestionnaireVersionRepository questionnaireVersions;
     @Autowired AssessmentMatrixVersionRepository matrixVersions;
+    @Autowired UserAccountRepository users;
 
     @Test
     @SuppressWarnings("unchecked")
@@ -95,6 +97,47 @@ class AssessmentHistoryIntegrationTest {
         Map<String, Object> historicalDetail = detail(user, originalId);
         assertEquals("M1", historicalDetail.get("matrixVersion"));
         assertEquals(31, ((Map<String, Object>) historicalDetail.get("answers")).size());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void q1DraftCanContinueAndCompleteAfterQ2BecomesCurrent() {
+        String email = "history-q1-draft-" + UUID.randomUUID() + "@example.test";
+        HttpHeaders user = register(email);
+        UUID userId = users.findByEmailIgnoreCase(email).orElseThrow().id;
+        UUID q1Id = UUID.fromString("00000000-0000-0000-0000-000000000001");
+        UUID m1Id = UUID.fromString("00000000-0000-0000-0000-000000000002");
+        UUID draftId = UUID.randomUUID();
+        attempts.save(new AssessmentAttempt(draftId, userId, AssessmentAttemptStatus.DRAFT,
+                q1Id, m1Id, java.time.Instant.now()));
+
+        Map<String, Object> recovered = createReevaluation(user);
+        assertEquals(draftId.toString(), recovered.get("attemptId"));
+        assertEquals("Q1", recovered.get("questionnaireVersion"));
+        assertEquals("M1", recovered.get("matrixVersion"));
+        List<Map<String, Object>> q1Questions = (List<Map<String, Object>>) recovered.get("questions");
+        assertEquals(31, q1Questions.size());
+        for (int i = 0; i < q1Questions.size(); i++) save(user, draftId.toString(), q1Questions.get(i), i % 5);
+        complete(user, draftId.toString());
+
+        Map<String, Object> historical = detail(user, draftId.toString());
+        assertEquals("Q1", historical.get("questionnaireVersion"));
+        assertEquals("M1", historical.get("matrixVersion"));
+        assertEquals(31, ((Map<String, Object>) historical.get("answers")).size());
+        assertEquals(6, ((List<?>) historical.get("results")).size());
+
+        Map<String, Object> newAttempt = createReevaluation(user);
+        assertEquals("Q2", newAttempt.get("questionnaireVersion"));
+        assertEquals("M1", newAttempt.get("matrixVersion"));
+        String q2AttemptId = newAttempt.get("attemptId").toString();
+        List<Map<String, Object>> q2Questions = (List<Map<String, Object>>) newAttempt.get("questions");
+        for (int i = 0; i < q2Questions.size(); i++) save(user, q2AttemptId, q2Questions.get(i), i % 5);
+        complete(user, q2AttemptId);
+
+        Map<String, Object> q2Completed = detail(user, q2AttemptId);
+        assertEquals(scoreSnapshot(historical), scoreSnapshot(q2Completed));
+        assertEquals(skillGaps(user, draftId.toString()).get("competencies"),
+                skillGaps(user, q2AttemptId).get("competencies"));
     }
 
     @Test
@@ -172,6 +215,22 @@ class AssessmentHistoryIntegrationTest {
 
     private Map<String, Object> detail(HttpHeaders user, String attemptId) {
         return rest.exchange(url("/api/v2/assessment-attempts/" + attemptId), HttpMethod.GET,
+                new HttpEntity<>(user), Map.class).getBody();
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<String> scoreSnapshot(Map<String, Object> detail) {
+        List<Map<String, Object>> results = (List<Map<String, Object>>) detail.get("results");
+        return results.stream()
+                .map(result -> result.get("roleId") + "|" + result.get("scoreNumerator") + "|"
+                        + result.get("scoreDenominator") + "|" + result.get("displayPercentage"))
+                .sorted().toList();
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> skillGaps(HttpHeaders user, String attemptId) {
+        return rest.exchange(url("/api/v2/assessment-attempts/" + attemptId
+                        + "/skill-gaps/data-analyst-jr"), HttpMethod.GET,
                 new HttpEntity<>(user), Map.class).getBody();
     }
 
