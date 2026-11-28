@@ -2,23 +2,22 @@
 
 **Actualizado:** 2026-11-27
 **Rama activa:** `develop-v2`
-**HEAD/checkpoint:** `55ff734` — `Reorganiza Inicio e integra la introducción de autoevaluación`; Checkpoint 1 de Explainability permanece en `9f90c9af9aafd46226ee8a2f76accfff65299a68`.
-**Estado Git:** `develop-v2` está tres commits por delante y dos por detrás de `origin/develop-v2`. El staging estaba vacío al preparar el cierre selectivo de Checkpoint 2; quedan cambios locales paralelos que deben preservarse.
+**HEAD/checkpoint:** `1409ec1` — `feat: implementa el motor de Explainability`; incluye el commit selectivo de Checkpoint 2. Checkpoint 1 permanece en `9f90c9af9aafd46226ee8a2f76accfff65299a68`.
+**Estado Git:** `develop-v2` está cuatro commits por delante y dos por detrás de `origin/develop-v2`. El Checkpoint 3 está sin commit; permanecen modificaciones locales paralelas y el staging debe revisarse antes de cualquier operación Git.
 
-## Estado actual — Implement, Explainability Checkpoint 2
+## Estado actual — Implement, Explainability Checkpoint 3
 
-- Checkpoint 1 quedó en `9f90c9a`. En este checkpoint se completaron T008, T009 y T012–T017: contexto histórico determinístico, DTOs serializables, validación estricta, puerto/fake, adaptador OpenRouter con RestClient y servicio de generación inicial.
-- T010 está parcialmente verificada: los tests del servicio pasan; las pruebas dependientes del controller/contrato HTTP se conservan para el checkpoint que implemente el controller. T031 permanece abierta: está agregado el fake válido básico de T014; faltan sus escenarios extendidos de error.
-- El contexto toma el intento completado propietario, descripciones de niveles de su cuestionario fijado, matching persistido, y las brechas e importancia de Skill Gap V2 mediante llamadas directas a servicios Spring. Solo calcula `trainingPriority`; no recalcula matching ni gaps.
-- El JSON backend tiene orden de propiedades explícito, números/valores compatibles con el contrato Pydantic y excluye identificadores/versions locales. `context_hash` es SHA-256 de los bytes UTF-8 del JSON determinístico enviado por Java. Python define equivalencia semántica, pero no una canonicalización byte-a-byte compartida; no se afirma que los hashes entre lenguajes coincidan.
-- La generación inicial valida propiedad y estado COMPLETED; reclama una fila única antes de invocar al proveedor fuera de transacción; valida antes de persistir y finaliza mediante token/CAS. Reutiliza éxito y no llama de nuevo para estados GENERATING o FAILED. No se añadieron rutas públicas, retry manual ni recuperación de leases.
-- V5 continúa íntegro, SHA-256 `84C45ABE0D028E4ADB7376E387597993D196F5F2C8990596D853D11FDCF23AF5`.
-- `mvn -f backend/pom.xml test`: 69 pruebas, 0 fallos, 0 errores, 0 omitidas. Incluyó migraciones y persistencia en PostgreSQL/Testcontainers desechable; no se migró la base de desarrollo.
-- No se realizaron llamadas reales a OpenRouter ni otros proveedores, costos, cambios frontend, cambios Docker, commits de Checkpoint 2 ni push.
+- Checkpoint 1 quedó en `9f90c9a`; Checkpoint 2 se publicó localmente en `1409ec1` (`feat: implementa el motor de Explainability`). En Checkpoint 3 se completaron T010, T018, T021, T023, T025, T026, T028, T029, T031 y T038.
+- La API autenticada GET/generate/retry valida propiedad, intento COMPLETED y rol vigente. GET es lectura pura: no crea ni actualiza filas ni invoca al proveedor, incluso ante lease vencido. Generate solo inicia si no existe fila; reusa éxitos, no reintenta fallos, y devuelve GENERATING sin duplicar llamadas. Retry exige acción explícita y reclama solo FAILED o GENERATING vencido mediante CAS.
+- Se cubrieron intentos Q1/Q2 separados, respuestas versionadas, matching persistido, snapshots históricos de rol y reutilización inmutable tras cambiar catálogo/modelo/prompt. No se recalcula matching ni Skill Gap; generación conserva llamadas directas a servicios internos y prioridad local determinística.
+- Recuperación y concurrencia PostgreSQL verificaron reclamaciones únicas para generación/retry, GET de lease vencido sin escritura, fencing de respuestas tardías y contador de intentos informativo. Los errores de timeout, proveedor/rate limit y respuesta inválida se traducen a errores HTTP seguros; metadatos ausentes siguen nulos.
+- Fake de pruebas cubre respuesta válida/inválida, timeout, indisponibilidad, rate limit y demora sincronizada. El test-first dejó fallos iniciales por ausencia de API/recovery/escenarios fake; las fallas posteriores de pruebas fueron del fixture (propiedades singleton no reiniciadas y binding de `Instant` en JdbcTemplate), corregidas y verificadas.
+- `mvn -f backend/pom.xml test`: 86 pruebas, 0 fallos, 0 errores, 0 omitidas. Pruebas de persistencia, migración, API y concurrencia utilizaron PostgreSQL desechable/Testcontainers.
+- Prompt V5 permanece íntegro, SHA-256 `84C45ABE0D028E4ADB7376E387597993D196F5F2C8990596D853D11FDCF23AF5`. No se migró la base de desarrollo, no se modificó frontend/Docker ni los experimentos, y no se realizaron llamadas reales a IA ni costos.
 
-## Próximo paso — Checkpoint 3
+## Próximo paso — revisión del Checkpoint 3
 
-Crear el commit selectivo aprobado del motor de Explainability; después avanzar exclusivamente con las tareas de API, historial y recuperación autorizadas para Checkpoint 3. No incluir ni alterar cambios paralelos ni publicar commits.
+Revisar el diff de Checkpoint 3 y esperar la aprobación antes de crear otro commit o comenzar Checkpoint 4. No incluir ni alterar cambios paralelos ni publicar commits.
 
 ## Trabajo paralelo de Inicio e identidad visual
 

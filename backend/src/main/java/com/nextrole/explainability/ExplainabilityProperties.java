@@ -15,6 +15,7 @@ public class ExplainabilityProperties {
     private Duration responseTimeout = Duration.ofSeconds(45);
     private int maxOutputTokens = 1200;
     private Duration lease = Duration.ofMinutes(2);
+    private Duration pollInterval = Duration.ofSeconds(2);
 
     public String getProvider() { return provider; }
     public void setProvider(String provider) { this.provider = provider; }
@@ -34,4 +35,6 @@ public class ExplainabilityProperties {
     public void setMaxOutputTokens(int maxOutputTokens) { this.maxOutputTokens = maxOutputTokens; }
     public Duration getLease() { return lease; }
     public void setLease(Duration lease) { this.lease = lease; }
+    public Duration getPollInterval() { return pollInterval; }
+    public void setPollInterval(Duration pollInterval) { this.pollInterval = pollInterval; }
 }

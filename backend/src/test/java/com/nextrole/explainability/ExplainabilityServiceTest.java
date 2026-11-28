@@ -2,6 +2,7 @@ package com.nextrole.explainability;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nextrole.assessment.AssessmentAttemptService;
+import com.nextrole.assessment.RoleCatalogService;
 import com.nextrole.common.ApiProblem;
 import com.nextrole.data.AssessmentAttempt;
 import com.nextrole.data.AssessmentAttemptStatus;
@@ -36,6 +37,7 @@ class ExplainabilityServiceTest {
             + "\"highlightedCompetencyIds\":[\"api-testing\"]}";
 
     @Mock private AssessmentAttemptService attempts;
+    @Mock private RoleCatalogService roles;
     @Mock private ExplainabilityDiagnosticRepository diagnostics;
     @Mock private ExplainabilityContextService contexts;
     @Mock private DiagnosisGenerator generator;
@@ -51,9 +53,10 @@ class ExplainabilityServiceTest {
                         new ExplainabilityCompetencyContext.LevelContext(1, "Comprendo pruebas"),
                         new ExplainabilityCompetencyContext.LevelContext(2, "Puedo probar"),
                         ExplainabilityCompetencyContext.Classification.ESSENTIAL, 1, 2)));
-        service = new ExplainabilityService(attempts, diagnostics, contexts, generator,
+        service = new ExplainabilityService(attempts, roles, diagnostics, contexts, generator,
                 new ExplainabilityPromptCatalog(), new DiagnosisValidator(new ObjectMapper()), properties,
                 new ObjectMapper());
+        lenient().when(roles.one(ROLE_ID)).thenReturn(new RoleCatalogService.RoleDescription(ROLE_ID, "QA", "Descripción guardada"));
     }
 
     @Test
@@ -108,10 +111,10 @@ class ExplainabilityServiceTest {
                 .thenReturn(Optional.of(diagnostic(ExplainabilityDiagnosticStatus.FAILED)));
 
         var generating = service.generateInitial(USER_ID, ATTEMPT_ID, ROLE_ID);
-        var failed = service.generateInitial(USER_ID, ATTEMPT_ID, ROLE_ID);
+        ApiProblem failed = assertThrows(ApiProblem.class, () -> service.generateInitial(USER_ID, ATTEMPT_ID, ROLE_ID));
 
         assertEquals(ExplainabilityDiagnosticStatus.GENERATING, generating.status());
-        assertEquals(ExplainabilityDiagnosticStatus.FAILED, failed.status());
+        assertEquals("DIAGNOSIS_RETRY_REQUIRED", failed.code());
         verifyNoInteractions(contexts, generator);
         verify(diagnostics, never()).createGenerating(any(), any(), anyString(), any(), any(), anyString(), anyString());
     }
@@ -205,6 +208,8 @@ class ExplainabilityServiceTest {
         ReflectionTestUtils.setField(diagnostic, "status", status);
         ReflectionTestUtils.setField(diagnostic, "failureCode",
                 status == ExplainabilityDiagnosticStatus.FAILED ? "PROVIDER_ERROR" : null);
+        ReflectionTestUtils.setField(diagnostic, "leaseUntil",
+                status == ExplainabilityDiagnosticStatus.GENERATING ? Instant.now().plusSeconds(30) : null);
         ReflectionTestUtils.setField(diagnostic, "roleNameSnapshot", "QA");
         ReflectionTestUtils.setField(diagnostic, "roleDescriptionSnapshot", "Historical description");
         return diagnostic;
