@@ -58,12 +58,19 @@ public class ExplainabilityController {
             return new ApiProblem(HttpStatus.SERVICE_UNAVAILABLE, code,
                     "El servicio de diagnóstico no está disponible en este momento");
         }
+        if ("PROVIDER_RATE_LIMITED".equals(code)) {
+            return new ApiProblem(HttpStatus.SERVICE_UNAVAILABLE, code,
+                    "El proveedor de diagnÃ³stico alcanzÃ³ un lÃ­mite temporal");
+        }
         if ("PROVIDER_TIMEOUT".equals(code)) {
             return new ApiProblem(HttpStatus.GATEWAY_TIMEOUT, code,
                     "El servicio de diagnóstico demoró demasiado en responder");
         }
+        boolean providerResponseInvalid = code != null && (code.endsWith("_PROVIDER_RESPONSE")
+                || code.startsWith("INVALID_DIAGNOSIS_") || "INVALID_COMPETENCY_REFERENCE".equals(code)
+                || "EMPTY_PROVIDER_CONTENT".equals(code));
         return new ApiProblem(HttpStatus.BAD_GATEWAY,
-                "INVALID_PROVIDER_RESPONSE".equals(code) ? code : "PROVIDER_ERROR",
+                providerResponseInvalid ? "INVALID_PROVIDER_RESPONSE" : "PROVIDER_ERROR",
                 "No se pudo validar o generar el diagnóstico");
     }
 

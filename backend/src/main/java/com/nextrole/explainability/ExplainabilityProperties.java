@@ -13,7 +13,7 @@ public class ExplainabilityProperties {
     private String openrouterApiKey = "";
     private Duration connectTimeout = Duration.ofSeconds(3);
     private Duration responseTimeout = Duration.ofSeconds(45);
-    private int maxOutputTokens = 1200;
+    private int maxOutputTokens = 5000;
     private Duration lease = Duration.ofMinutes(2);
     private Duration pollInterval = Duration.ofSeconds(2);
 

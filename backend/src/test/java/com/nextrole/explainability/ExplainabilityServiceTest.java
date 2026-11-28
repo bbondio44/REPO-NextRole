@@ -178,12 +178,12 @@ class ExplainabilityServiceTest {
                 "{\"currentSituation\":\"x\",\"recommendedFocus\":\"y\",\"importanceExplanation\":\"z\",\"professionalRelevance\":\"w\",\"highlightedCompetencyIds\":[\"not-in-context\"]}",
                 properties.getModel(), null, "fake", null, null));
         when(diagnostics.completeFailure(eq(ATTEMPT_ID), eq(ROLE_ID), any(),
-                eq("INVALID_PROVIDER_RESPONSE"))).thenReturn(1);
+                eq("INVALID_COMPETENCY_REFERENCE"))).thenReturn(1);
 
         var result = service.generateInitial(USER_ID, ATTEMPT_ID, ROLE_ID);
 
         assertEquals(ExplainabilityDiagnosticStatus.FAILED, result.status());
-        assertEquals("INVALID_PROVIDER_RESPONSE", result.failureCode());
+        assertEquals("INVALID_COMPETENCY_REFERENCE", result.failureCode());
         assertNull(result.diagnosis());
         verify(diagnostics, never()).completeSuccess(any(), anyString(), any(), anyString(), anyString(), anyString(),
                 any(), anyString(), anyString(), anyString(), any(), any(), any(), any(), any(), anyString(), anyString());

@@ -1,5 +1,8 @@
 package com.nextrole.explainability;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nextrole.assessment.AssessmentCompletionService;
 import com.nextrole.data.ExplainabilityDiagnosticRepository;
 import com.nextrole.data.ExplainabilityDiagnosticStatus;
 import com.nextrole.explainability.support.FakeDiagnosisGenerator;
@@ -18,6 +21,9 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.util.UUID;
+import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -45,6 +51,9 @@ class ExplainabilityServiceIntegrationTest {
     @Autowired private ExplainabilityDiagnosticRepository diagnostics;
     @Autowired private FakeDiagnosisGenerator fake;
     @Autowired private JdbcTemplate jdbc;
+    @Autowired private AssessmentCompletionService completion;
+    @Autowired private ExplainabilityContextService contexts;
+    @Autowired private ObjectMapper mapper;
     private UUID userId;
     private UUID attemptId;
 
@@ -119,6 +128,56 @@ class ExplainabilityServiceIntegrationTest {
         assertEquals("Comprendo cómo una aplicación realiza solicitudes HTTP a una API REST existente y utiliza las respuestas obtenidas.",
                 apiCompetency.current().description());
         assertEquals(1, fake.invocationCount());
+    }
+
+    @Test
+    void allQ2M1ExperimentFixturesMatchTheBackendMatchingAndSkillGapServices() throws Exception {
+        Path fixtureRoot = Path.of("..", "experiments", "explainability", "cases", "q2-m1");
+        JsonNode manifest = mapper.readTree(Files.readString(fixtureRoot.resolve("manifest.json")));
+        assertEquals("Q2", manifest.path("questionnaireVersion").asText());
+        assertEquals("M1", manifest.path("matrixVersion").asText());
+        JsonNode fixtures = manifest.path("fixtures");
+        assertEquals(24, fixtures.size());
+
+        Map<String, UUID> attemptsByCategory = new java.util.HashMap<>();
+        Map<String, UUID> usersByCategory = new java.util.HashMap<>();
+        for (JsonNode fixture : fixtures) {
+            String category = fixture.path("category").asText();
+            if (attemptsByCategory.containsKey(category)) continue;
+            UUID q2User = UUID.randomUUID();
+            UUID q2Attempt = UUID.randomUUID();
+            jdbc.update("INSERT INTO users(id,email,first_name,last_name,password_hash,role) VALUES (?, ?, 'Fixture', 'User', 'hash', 'STUDENT')",
+                    q2User, "q2-fixture-" + category + "-" + q2User + "@example.test");
+            jdbc.update("""
+                    INSERT INTO assessment_attempts(id,user_id,status,questionnaire_version_id,matrix_version_id,created_at)
+                    VALUES (?, ?, 'DRAFT', ?, ?, now())
+                    """, q2Attempt, q2User, Q2, M1);
+            JsonNode levels = fixture.path("answerLevels");
+            var fields = levels.fields();
+            while (fields.hasNext()) {
+                var entry = fields.next();
+                jdbc.update("""
+                        INSERT INTO assessment_answers(attempt_id,questionnaire_version_id,competency_code,level)
+                        VALUES (?, ?, ?, ?)
+                        """, q2Attempt, Q2, entry.getKey(), entry.getValue().asInt());
+            }
+            completion.complete(q2User, q2Attempt);
+            attemptsByCategory.put(category, q2Attempt);
+            usersByCategory.put(category, q2User);
+        }
+
+        for (JsonNode fixture : fixtures) {
+            String fixtureId = fixture.path("fixtureId").asText();
+            String category = fixture.path("category").asText();
+            String roleId = fixture.path("contextFile").asText().substring("contexts/".length())
+                    .replace("-" + category + ".json", "");
+            UUID attempt = attemptsByCategory.get(category);
+            UUID user = usersByCategory.get(category);
+            ExplainabilityContext actual = contexts.build(user, attempt, roleId);
+            JsonNode expected = mapper.readTree(Files.readString(fixtureRoot.resolve(fixture.path("contextFile").asText())));
+            JsonNode actualJson = mapper.readTree(actual.canonicalJson(mapper));
+            assertEquals(expected, actualJson, fixtureId);
+        }
     }
 
     @TestConfiguration

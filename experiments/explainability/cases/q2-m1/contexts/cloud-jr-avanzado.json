@@ -1,0 +1,338 @@
+{
+  "roleId": "cloud-jr",
+  "roleName": "Cloud",
+  "roleDescription": "Se encarga de implementar, administrar y mantener infraestructura y servicios en la nube. Sus responsabilidades incluyen configurar recursos de procesamiento, almacenamiento y redes, automatizar tareas operativas y monitorear el funcionamiento de los sistemas. Contribuye a que las soluciones sean seguras, confiables, escalables y eficientes en el uso de recursos.",
+  "matchingPercentage": 88.9,
+  "competencies": [
+    {
+      "id": "programming-fundamentals",
+      "name": "Fundamentos de programación",
+      "current": {
+        "level": 3,
+        "description": "Tengo experiencia desarrollando programas para resolver problemas habituales, organizando la lógica en funciones y verificando que los resultados obtenidos sean los esperados."
+      },
+      "required": {
+        "level": 2,
+        "description": "Puedo escribir o modificar programas sencillos utilizando variables, condiciones, ciclos y funciones, comprendiendo su funcionamiento."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "algorithms",
+      "name": "Algoritmos y resolución eficiente de problemas",
+      "current": {
+        "level": 3,
+        "description": "Puedo seleccionar diferentes soluciones algorítmicas según el problema, comprobar sus resultados y reconocer diferencias de eficiencia."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo qué es un algoritmo y cómo se utiliza para realizar tareas como buscar, recorrer u ordenar información."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "basic-architecture",
+      "name": "Principios de diseño y arquitectura básica",
+      "current": {
+        "level": 3,
+        "description": "Puedo organizar una aplicación en componentes o capas con responsabilidades definidas, comprendiendo por qué resulta conveniente esa estructura."
+      },
+      "required": {
+        "level": 2,
+        "description": "Puedo organizar una aplicación sencilla en clases, funciones o módulos, diferenciando sus responsabilidades principales."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "sql-queries",
+      "name": "Consultas SQL",
+      "current": {
+        "level": 1,
+        "description": "Comprendo qué es SQL y cómo permite consultar y modificar información almacenada en tablas."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo qué es SQL y cómo permite consultar y modificar información almacenada en tablas."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "database-modeling",
+      "name": "Modelado de bases de datos",
+      "current": {
+        "level": 4,
+        "description": "Puedo evaluar diferentes alternativas de modelado, identificar problemas de redundancia o integridad, aplicar normalización cuando corresponde y justificar decisiones según los requisitos."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo qué son tablas, columnas, claves primarias y relaciones entre entidades."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "rest-api-consumption",
+      "name": "Consumo de APIs REST",
+      "current": {
+        "level": 3,
+        "description": "Puedo integrar APIs en una aplicación, enviar información, procesar respuestas y manejar errores habituales."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo cómo una aplicación realiza solicitudes HTTP a una API REST existente y utiliza las respuestas obtenidas."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "debugging",
+      "name": "Depuración y resolución de errores",
+      "current": {
+        "level": 3,
+        "description": "Puedo reproducir errores, investigar sus causas y corregir problemas habituales, verificando los resultados."
+      },
+      "required": {
+        "level": 2,
+        "description": "Puedo interpretar errores sencillos y realizar correcciones con orientación."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "git-version-control",
+      "name": "Git y control de versiones",
+      "current": {
+        "level": 3,
+        "description": "Puedo gestionar ramas, commits, merges y conflictos habituales durante el desarrollo de un proyecto."
+      },
+      "required": {
+        "level": 2,
+        "description": "Puedo registrar cambios, trabajar con repositorios y realizar operaciones básicas de control de versiones."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "integration-collaboration",
+      "name": "Integración y colaboración en proyectos",
+      "current": {
+        "level": 4,
+        "description": "Tengo experiencia práctica colaborando activamente en integraciones, detectando incompatibilidades, resolviendo problemas entre componentes y proponiendo mejoras para facilitar el trabajo conjunto."
+      },
+      "required": {
+        "level": 2,
+        "description": "Tengo experiencia trabajando en equipo sobre tareas asignadas, comunicando avances y siguiendo acuerdos del equipo."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "docker-containers",
+      "name": "Docker y contenedores",
+      "current": {
+        "level": 3,
+        "description": "Tengo experiencia configurando y utilizando contenedores en proyectos, creando imágenes con Dockerfile y trabajando con Docker Compose."
+      },
+      "required": {
+        "level": 2,
+        "description": "Puedo ejecutar contenedores existentes y realizar configuraciones sencillas para utilizar aplicaciones o servicios."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "testing-fundamentals",
+      "name": "Fundamentos y tipos de testing",
+      "current": {
+        "level": 3,
+        "description": "Tengo experiencia aplicando diferentes tipos de pruebas según las funcionalidades y necesidades de una aplicación."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo para qué sirven las pruebas de software y por qué son importantes para detectar errores."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "test-execution-documentation",
+      "name": "Ejecución y documentación de pruebas",
+      "current": {
+        "level": 3,
+        "description": "Tengo experiencia ejecutando pruebas sobre distintas funcionalidades, documentando resultados, identificando comportamientos incorrectos y verificando correcciones."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo cómo se ejecuta una prueba y por qué es importante registrar sus resultados."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "defect-management",
+      "name": "Gestión de defectos",
+      "current": {
+        "level": 2,
+        "description": "Puedo identificar y reportar defectos sencillos, describiendo el problema, los pasos para reproducirlo y el resultado esperado."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo qué es un defecto y por qué es importante comunicarlo y documentarlo."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "api-testing",
+      "name": "Pruebas de APIs",
+      "current": {
+        "level": 2,
+        "description": "Puedo enviar solicitudes sencillas a una API utilizando herramientas como Postman y comprobar si la respuesta coincide con un resultado esperado simple."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo cómo se verifica el comportamiento de una API y qué aspectos se deben comprobar al probar sus endpoints."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "exploratory-data-analysis",
+      "name": "Análisis exploratorio de datos",
+      "current": {
+        "level": 3,
+        "description": "Tengo experiencia realizando análisis exploratorios sobre conjuntos de datos, identificando patrones, tendencias, valores atípicos y relaciones relevantes."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo para qué sirve explorar datos y cómo permite identificar características, patrones o tendencias."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "data-visualization-dashboards",
+      "name": "Visualización de datos y dashboards",
+      "current": {
+        "level": 3,
+        "description": "Tengo experiencia creando visualizaciones y dashboards para presentar indicadores, comparar resultados e identificar tendencias."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo para qué sirven los gráficos y dashboards y cómo permiten presentar información."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "business-metrics-interpretation",
+      "name": "Interpretación de métricas de negocio",
+      "current": {
+        "level": 2,
+        "description": "Puedo interpretar indicadores sencillos, identificar variaciones y explicar qué representan sus resultados."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo qué son los indicadores de negocio y cómo permiten evaluar resultados en relación con determinados objetivos."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "cloud-computing-fundamentals",
+      "name": "Fundamentos de Cloud Computing",
+      "current": {
+        "level": 2,
+        "description": "Conozco los servicios básicos de una plataforma cloud y puedo realizar configuraciones o tareas sencillas con orientación."
+      },
+      "required": {
+        "level": 3,
+        "description": "Tengo experiencia utilizando y configurando servicios cloud para desplegar aplicaciones, almacenar información o administrar recursos básicos."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 1,
+      "trainingPriority": 2
+    },
+    {
+      "id": "linux-operating-systems",
+      "name": "Linux y sistemas operativos",
+      "current": {
+        "level": 3,
+        "description": "Tengo experiencia utilizando Linux para administrar archivos, permisos, procesos y servicios, y realizar configuraciones habituales."
+      },
+      "required": {
+        "level": 3,
+        "description": "Tengo experiencia utilizando Linux para administrar archivos, permisos, procesos y servicios, y realizar configuraciones habituales."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "networking-fundamentals",
+      "name": "Fundamentos de redes",
+      "current": {
+        "level": 1,
+        "description": "Reconozco conceptos básicos como direcciones IP, puertos y protocolos de comunicación."
+      },
+      "required": {
+        "level": 3,
+        "description": "Tengo experiencia utilizando herramientas de red para verificar conexiones, realizar pruebas de comunicación e identificar problemas habituales."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 2,
+      "trainingPriority": 4
+    },
+    {
+      "id": "scripting-automation",
+      "name": "Automatización de tareas mediante scripts (Bash, PowerShell o Python)",
+      "current": {
+        "level": 2,
+        "description": "Puedo ejecutar y modificar scripts sencillos para automatizar tareas básicas."
+      },
+      "required": {
+        "level": 3,
+        "description": "Puedo crear scripts para automatizar tareas concretas, como procesar archivos, ejecutar comandos o realizar verificaciones."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 1,
+      "trainingPriority": 2
+    },
+    {
+      "id": "infrastructure-monitoring-diagnostics",
+      "name": "Monitoreo y diagnóstico de infraestructura",
+      "current": {
+        "level": 2,
+        "description": "Puedo consultar métricas y registros sencillos para identificar el estado de un sistema."
+      },
+      "required": {
+        "level": 3,
+        "description": "Tengo experiencia utilizando herramientas de monitoreo, interpretando métricas y registros e identificando problemas habituales de rendimiento o disponibilidad."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 1,
+      "trainingPriority": 2
+    }
+  ]
+}

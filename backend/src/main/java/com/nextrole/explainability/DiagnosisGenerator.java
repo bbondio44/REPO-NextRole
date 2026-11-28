@@ -24,7 +24,15 @@ public interface DiagnosisGenerator {
         PROVIDER_ERROR,
         PROVIDER_UNAVAILABLE,
         PROVIDER_TIMEOUT,
-        INVALID_PROVIDER_RESPONSE
+        PROVIDER_RATE_LIMITED,
+        PROVIDER_HTTP_ERROR,
+        MALFORMED_PROVIDER_RESPONSE,
+        EMPTY_PROVIDER_CONTENT,
+        TRUNCATED_PROVIDER_RESPONSE,
+        INVALID_PROVIDER_RESPONSE,
+        INVALID_DIAGNOSIS_JSON,
+        INVALID_DIAGNOSIS_SCHEMA,
+        INVALID_COMPETENCY_REFERENCE
     }
 
     final class GenerationException extends RuntimeException {

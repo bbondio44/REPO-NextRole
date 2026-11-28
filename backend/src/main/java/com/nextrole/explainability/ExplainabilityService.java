@@ -11,6 +11,8 @@ import com.nextrole.data.ExplainabilityDiagnosticRepository;
 import com.nextrole.data.ExplainabilityDiagnosticStatus;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.Optional;
@@ -21,6 +23,7 @@ import java.util.stream.Collectors;
 /** Coordinates synchronous diagnosis generation without holding a database transaction during provider I/O. */
 @Service
 public class ExplainabilityService {
+    private static final Logger log = LoggerFactory.getLogger(ExplainabilityService.class);
     private final AssessmentAttemptService attempts;
     private final RoleCatalogService roles;
     private final ExplainabilityDiagnosticRepository diagnostics;
@@ -137,9 +140,11 @@ public class ExplainabilityService {
             Set<String> competencyIds = context.competencies().stream()
                     .map(ExplainabilityCompetencyContext::id).collect(Collectors.toUnmodifiableSet());
             diagnosis = validator.validate(generated.rawResponse(), competencyIds);
+        } catch (DiagnosisValidator.ValidationException e) {
+            return fail(attemptId, roleId, generationToken, e.failureCode().name());
         } catch (IllegalArgumentException e) {
             return fail(attemptId, roleId, generationToken,
-                    DiagnosisGenerator.FailureCode.INVALID_PROVIDER_RESPONSE.name());
+                    DiagnosisGenerator.FailureCode.INVALID_DIAGNOSIS_SCHEMA.name());
         }
 
         DiagnosisGenerator.Usage usage = generated.usage();
@@ -157,6 +162,7 @@ public class ExplainabilityService {
     }
 
     private GenerationOutcome fail(UUID attemptId, String roleId, UUID generationToken, String failureCode) {
+        log.warn("Explainability generation failed: category={}", failureCode);
         int updated = diagnostics.completeFailure(attemptId, roleId, generationToken, failureCode);
         if (updated == 1) return new GenerationOutcome(ExplainabilityDiagnosticStatus.FAILED,
                 null, null, null, null, null, null, failureCode, null, null, true);

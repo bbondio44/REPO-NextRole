@@ -8,6 +8,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientResponseException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.net.SocketTimeoutException;
@@ -15,6 +17,7 @@ import java.net.http.HttpTimeoutException;
 
 @Component
 public class OpenRouterDiagnosisGenerator implements DiagnosisGenerator {
+    private static final Logger log = LoggerFactory.getLogger(OpenRouterDiagnosisGenerator.class);
     private final RestClient client;
     private final ExplainabilityProperties properties;
     private final ObjectMapper mapper;
@@ -49,10 +52,15 @@ public class OpenRouterDiagnosisGenerator implements DiagnosisGenerator {
             long durationMs = (System.nanoTime() - started) / 1_000_000;
             return parseResponse(body, durationMs);
         } catch (RestClientResponseException e) {
-            if (e.getStatusCode().value() == 429 || e.getStatusCode().is5xxServerError()) {
+            int status = e.getStatusCode().value();
+            log.warn("OpenRouter returned HTTP status {}", status);
+            if (status == 429) {
+                throw new GenerationException(FailureCode.PROVIDER_RATE_LIMITED);
+            }
+            if (e.getStatusCode().is5xxServerError()) {
                 throw new GenerationException(FailureCode.PROVIDER_UNAVAILABLE);
             }
-            throw new GenerationException(FailureCode.PROVIDER_ERROR);
+            throw new GenerationException(FailureCode.PROVIDER_HTTP_ERROR);
         } catch (ResourceAccessException e) {
             if (hasTimeoutCause(e)) throw new GenerationException(FailureCode.PROVIDER_TIMEOUT);
             throw new GenerationException(FailureCode.PROVIDER_UNAVAILABLE);
@@ -68,6 +76,7 @@ public class OpenRouterDiagnosisGenerator implements DiagnosisGenerator {
         request.put("model", properties.getModel());
         request.put("stream", false);
         request.put("max_tokens", properties.getMaxOutputTokens());
+        request.putObject("response_format").put("type", "json_object");
         request.putObject("provider").put("allow_fallbacks", false);
         var messages = request.putArray("messages");
         messages.addObject().put("role", "system").put("content", prompt.content());
@@ -76,12 +85,22 @@ public class OpenRouterDiagnosisGenerator implements DiagnosisGenerator {
     }
 
     private GenerationResult parseResponse(String body, long durationMs) {
+        if (body == null || body.isBlank()) throw new GenerationException(FailureCode.EMPTY_PROVIDER_CONTENT);
         try {
             JsonNode response = mapper.readTree(body);
             JsonNode choices = response == null ? null : response.path("choices");
-            if (choices == null || !choices.isArray() || choices.isEmpty()) throw invalidResponse();
-            JsonNode content = choices.get(0).path("message").path("content");
-            if (!content.isTextual()) throw invalidResponse();
+            if (response == null || !response.isObject() || !choices.isArray() || choices.isEmpty()
+                    || !choices.get(0).isObject()) throw malformedResponse();
+            JsonNode choice = choices.get(0);
+            JsonNode finishReason = choice.get("finish_reason");
+            if (finishReason != null && finishReason.isTextual() && "length".equals(finishReason.textValue())) {
+                throw new GenerationException(FailureCode.TRUNCATED_PROVIDER_RESPONSE);
+            }
+            JsonNode message = choice.get("message");
+            if (message == null || !message.isObject()) throw malformedResponse();
+            JsonNode content = message.get("content");
+            if (content == null || !content.isTextual()) throw malformedResponse();
+            if (content.textValue().isBlank()) throw new GenerationException(FailureCode.EMPTY_PROVIDER_CONTENT);
             JsonNode usageNode = response.path("usage");
             Usage usage = usageNode.isObject() ? new Usage(
                     nullableLong(usageNode.get("prompt_tokens")),
@@ -94,7 +113,7 @@ public class OpenRouterDiagnosisGenerator implements DiagnosisGenerator {
         } catch (GenerationException e) {
             throw e;
         } catch (Exception e) {
-            throw invalidResponse();
+            throw malformedResponse();
         }
     }
 
@@ -113,7 +132,7 @@ public class OpenRouterDiagnosisGenerator implements DiagnosisGenerator {
         return false;
     }
 
-    private static GenerationException invalidResponse() {
-        return new GenerationException(FailureCode.INVALID_PROVIDER_RESPONSE);
+    private static GenerationException malformedResponse() {
+        return new GenerationException(FailureCode.MALFORMED_PROVIDER_RESPONSE);
     }
 }

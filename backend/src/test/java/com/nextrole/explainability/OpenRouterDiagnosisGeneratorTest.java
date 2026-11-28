@@ -33,17 +33,18 @@ class OpenRouterDiagnosisGeneratorTest {
     }
 
     @Test
-    void sendsOnlyTheConfiguredModelAndPromptContextWithoutFallbackOrStructuredOutputFlags() throws Exception {
+    void sendsConfiguredModelPromptJsonModeAndNoFallback() throws Exception {
+        properties.setMaxOutputTokens(6000);
         server.expect(requestTo(ENDPOINT))
                 .andExpect(method(org.springframework.http.HttpMethod.POST))
                 .andExpect(header("Authorization", "Bearer test-only-secret"))
                 .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.model").value(MODEL))
                 .andExpect(jsonPath("$.stream").value(false))
-                .andExpect(jsonPath("$.max_tokens").value(1200))
+                .andExpect(jsonPath("$.max_tokens").value(6000))
                 .andExpect(jsonPath("$.provider.allow_fallbacks").value(false))
                 .andExpect(jsonPath("$.models").doesNotExist())
-                .andExpect(jsonPath("$.response_format").doesNotExist())
+                .andExpect(jsonPath("$.response_format.type").value("json_object"))
                 .andExpect(jsonPath("$.messages[0].role").value("system"))
                 .andExpect(jsonPath("$.messages[0].content").value("approved prompt"))
                 .andExpect(jsonPath("$.messages[1].role").value("user"))
@@ -69,6 +70,60 @@ class OpenRouterDiagnosisGeneratorTest {
     }
 
     @Test
+    void classifiesTruncatedProviderOutputWithoutValidatingPartialJson() {
+        server.expect(requestTo(ENDPOINT)).andRespond(withSuccess("""
+                {"choices":[{"finish_reason":"length","message":{"content":"{\\\"currentSituation\\\":"}}]}
+                """, MediaType.APPLICATION_JSON));
+
+        var error = assertThrows(DiagnosisGenerator.GenerationException.class,
+                () -> generator().generate(context(), new ExplainabilityPromptCatalog.PromptResource(
+                        "explainability-v5", "approved prompt", "a".repeat(64))));
+
+        server.verify();
+        assertEquals("TRUNCATED_PROVIDER_RESPONSE", error.failureCode().name());
+    }
+
+    @Test
+    void distinguishesEmptyContentFromMalformedProviderEnvelope() {
+        server.expect(requestTo(ENDPOINT)).andRespond(withSuccess(
+                "{\"choices\":[{\"finish_reason\":\"stop\",\"message\":{\"content\":\"  \"}}]}", MediaType.APPLICATION_JSON));
+        var empty = assertThrows(DiagnosisGenerator.GenerationException.class,
+                () -> generator().generate(context(), new ExplainabilityPromptCatalog.PromptResource(
+                        "explainability-v5", "approved prompt", "a".repeat(64))));
+        server.verify();
+        assertEquals("EMPTY_PROVIDER_CONTENT", empty.failureCode().name());
+
+        server.reset();
+        server.expect(requestTo(ENDPOINT)).andRespond(withSuccess("{\"choices\":[]}", MediaType.APPLICATION_JSON));
+        var malformed = assertThrows(DiagnosisGenerator.GenerationException.class,
+                () -> generator().generate(context(), new ExplainabilityPromptCatalog.PromptResource(
+                        "explainability-v5", "approved prompt", "a".repeat(64))));
+        server.verify();
+        assertEquals("MALFORMED_PROVIDER_RESPONSE", malformed.failureCode().name());
+    }
+
+    @Test
+    void distinguishesProviderHttpRateLimitAndOtherHttpErrors() {
+        server.expect(requestTo(ENDPOINT)).andRespond(withStatus(org.springframework.http.HttpStatus.TOO_MANY_REQUESTS)
+                .body("sensitive provider body").contentType(MediaType.APPLICATION_JSON));
+        var limited = assertThrows(DiagnosisGenerator.GenerationException.class,
+                () -> generator().generate(context(), new ExplainabilityPromptCatalog.PromptResource(
+                        "explainability-v5", "approved prompt", "a".repeat(64))));
+        server.verify();
+        assertEquals("PROVIDER_RATE_LIMITED", limited.failureCode().name());
+        assertFalse(limited.getMessage().contains("sensitive provider body"));
+
+        server.reset();
+        server.expect(requestTo(ENDPOINT)).andRespond(withStatus(org.springframework.http.HttpStatus.BAD_REQUEST)
+                .body("sensitive provider body").contentType(MediaType.APPLICATION_JSON));
+        var clientError = assertThrows(DiagnosisGenerator.GenerationException.class,
+                () -> generator().generate(context(), new ExplainabilityPromptCatalog.PromptResource(
+                        "explainability-v5", "approved prompt", "a".repeat(64))));
+        server.verify();
+        assertEquals("PROVIDER_HTTP_ERROR", clientError.failureCode().name());
+    }
+
+    @Test
     void mapsUpstreamRateLimitsToSanitizedFailureWithoutRetainingProviderBody() {
         server.expect(requestTo(ENDPOINT)).andRespond(withStatus(org.springframework.http.HttpStatus.TOO_MANY_REQUESTS)
                 .body("provider-secret-detail").contentType(MediaType.APPLICATION_JSON));
@@ -78,7 +133,7 @@ class OpenRouterDiagnosisGeneratorTest {
                         "explainability-v5", "approved prompt", "a".repeat(64))));
 
         server.verify();
-        assertEquals(DiagnosisGenerator.FailureCode.PROVIDER_UNAVAILABLE, error.failureCode());
+        assertEquals("PROVIDER_RATE_LIMITED", error.failureCode().name());
         assertFalse(error.getMessage().contains("provider-secret-detail"));
     }
 
@@ -98,7 +153,7 @@ class OpenRouterDiagnosisGeneratorTest {
                 () -> generator().generate(context(), new ExplainabilityPromptCatalog.PromptResource(
                         "explainability-v5", "approved prompt", "a".repeat(64))));
         server.verify();
-        assertEquals(DiagnosisGenerator.FailureCode.INVALID_PROVIDER_RESPONSE, invalid.failureCode());
+        assertEquals("MALFORMED_PROVIDER_RESPONSE", invalid.failureCode().name());
     }
 
     @Test

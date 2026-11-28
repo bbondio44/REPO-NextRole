@@ -38,7 +38,7 @@ nextrole:
     openrouter-api-key: ${OPENROUTER_API_KEY:}
     connect-timeout: ${EXPLAINABILITY_CONNECT_TIMEOUT:3s}
     response-timeout: ${EXPLAINABILITY_RESPONSE_TIMEOUT:45s}
-    max-output-tokens: ${EXPLAINABILITY_MAX_OUTPUT_TOKENS:1200}
+    max-output-tokens: ${EXPLAINABILITY_MAX_OUTPUT_TOKENS:5000}
     lease: ${EXPLAINABILITY_GENERATION_LEASE:2m}
     poll-interval: ${EXPLAINABILITY_POLL_INTERVAL:2s}
   security:

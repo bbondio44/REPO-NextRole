@@ -35,7 +35,7 @@ class ExplainabilityPromptConfigurationTest {
         assertEquals("", properties.getOpenrouterApiKey());
         assertEquals(java.time.Duration.ofSeconds(3), properties.getConnectTimeout());
         assertEquals(java.time.Duration.ofSeconds(45), properties.getResponseTimeout());
-        assertEquals(1200, properties.getMaxOutputTokens());
+        assertEquals(5000, properties.getMaxOutputTokens());
         assertEquals(java.time.Duration.ofMinutes(2), properties.getLease());
     }
 

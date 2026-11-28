@@ -1,0 +1,278 @@
+{
+  "roleId": "data-analyst-jr",
+  "roleName": "Data Analyst",
+  "roleDescription": "Se encarga de transformar datos en información útil para la toma de decisiones. Sus responsabilidades incluyen obtener, limpiar, procesar y analizar datos, identificar patrones e interpretar indicadores de negocio. Utiliza técnicas estadísticas y herramientas de visualización para comunicar resultados, fundamentar conclusiones y contribuir a la resolución de problemas.",
+  "matchingPercentage": 45.3,
+  "competencies": [
+    {
+      "id": "programming-fundamentals",
+      "name": "Fundamentos de programación",
+      "current": {
+        "level": 1,
+        "description": "Comprendo para qué sirven estos elementos y puedo reconocer cómo se utilizan en programas sencillos."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo para qué sirven estos elementos y puedo reconocer cómo se utilizan en programas sencillos."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "algorithms",
+      "name": "Algoritmos y resolución eficiente de problemas",
+      "current": {
+        "level": 0,
+        "description": "No conozco qué es un algoritmo ni cómo se utiliza para resolver problemas."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo qué es un algoritmo y cómo se utiliza para realizar tareas como buscar, recorrer u ordenar información."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 1,
+      "trainingPriority": 1
+    },
+    {
+      "id": "data-structures",
+      "name": "Estructuras de datos",
+      "current": {
+        "level": 1,
+        "description": "Comprendo para qué sirven estructuras como arreglos, listas, conjuntos, pilas, colas o mapas."
+      },
+      "required": {
+        "level": 2,
+        "description": "Puedo utilizar estructuras de datos habituales, como listas, conjuntos y mapas, para almacenar, buscar y procesar información, comprendiendo sus diferencias básicas."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 1,
+      "trainingPriority": 1
+    },
+    {
+      "id": "sql-queries",
+      "name": "Consultas SQL",
+      "current": {
+        "level": 0,
+        "description": "No conozco SQL ni para qué se utiliza."
+      },
+      "required": {
+        "level": 3,
+        "description": "Tengo experiencia utilizando SQL para resolver necesidades de una aplicación, relacionar información de distintas tablas y verificar que las consultas produzcan los resultados esperados."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 3,
+      "trainingPriority": 6
+    },
+    {
+      "id": "database-modeling",
+      "name": "Modelado de bases de datos",
+      "current": {
+        "level": 2,
+        "description": "Puedo diseñar tablas y relaciones sencillas, identificando entidades, atributos y claves."
+      },
+      "required": {
+        "level": 2,
+        "description": "Puedo diseñar tablas y relaciones sencillas, identificando entidades, atributos y claves."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "rest-api-consumption",
+      "name": "Consumo de APIs REST",
+      "current": {
+        "level": 0,
+        "description": "No comprendo cómo se realizan solicitudes a una API REST existente ni cómo se utiliza la información que devuelve."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo cómo una aplicación realiza solicitudes HTTP a una API REST existente y utiliza las respuestas obtenidas."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 1,
+      "trainingPriority": 1
+    },
+    {
+      "id": "business-rules",
+      "name": "Implementación de reglas de negocio",
+      "current": {
+        "level": 1,
+        "description": "Comprendo que las aplicaciones deben cumplir condiciones y restricciones definidas por sus requisitos."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo que las aplicaciones deben cumplir condiciones y restricciones definidas por sus requisitos."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "debugging",
+      "name": "Depuración y resolución de errores",
+      "current": {
+        "level": 1,
+        "description": "Puedo reconocer mensajes de error, pero necesito ayuda para comprenderlos."
+      },
+      "required": {
+        "level": 2,
+        "description": "Puedo interpretar errores sencillos y realizar correcciones con orientación."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 1,
+      "trainingPriority": 1
+    },
+    {
+      "id": "git-version-control",
+      "name": "Git y control de versiones",
+      "current": {
+        "level": 1,
+        "description": "Comprendo para qué sirve Git y conceptos como repositorios, commits y ramas."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo para qué sirve Git y conceptos como repositorios, commits y ramas."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "integration-collaboration",
+      "name": "Integración y colaboración en proyectos",
+      "current": {
+        "level": 1,
+        "description": "Participé de manera limitada en un proyecto grupal, realizando tareas sencillas con orientación de otros integrantes."
+      },
+      "required": {
+        "level": 2,
+        "description": "Tengo experiencia trabajando en equipo sobre tareas asignadas, comunicando avances y siguiendo acuerdos del equipo."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 1,
+      "trainingPriority": 2
+    },
+    {
+      "id": "test-execution-documentation",
+      "name": "Ejecución y documentación de pruebas",
+      "current": {
+        "level": 1,
+        "description": "Comprendo cómo se ejecuta una prueba y por qué es importante registrar sus resultados."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo cómo se ejecuta una prueba y por qué es importante registrar sus resultados."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "exploratory-data-analysis",
+      "name": "Análisis exploratorio de datos",
+      "current": {
+        "level": 1,
+        "description": "Comprendo para qué sirve explorar datos y cómo permite identificar características, patrones o tendencias."
+      },
+      "required": {
+        "level": 3,
+        "description": "Tengo experiencia realizando análisis exploratorios sobre conjuntos de datos, identificando patrones, tendencias, valores atípicos y relaciones relevantes."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 2,
+      "trainingPriority": 4
+    },
+    {
+      "id": "data-cleaning-preparation",
+      "name": "Limpieza y preparación de datos",
+      "current": {
+        "level": 1,
+        "description": "Comprendo que los datos pueden contener errores, valores faltantes, duplicados o formatos inconsistentes que afectan su análisis."
+      },
+      "required": {
+        "level": 3,
+        "description": "Tengo experiencia limpiando y preparando conjuntos de datos, identificando inconsistencias, aplicando transformaciones y verificando que la información sea adecuada para su análisis."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 2,
+      "trainingPriority": 4
+    },
+    {
+      "id": "data-visualization-dashboards",
+      "name": "Visualización de datos y dashboards",
+      "current": {
+        "level": 1,
+        "description": "Comprendo para qué sirven los gráficos y dashboards y cómo permiten presentar información."
+      },
+      "required": {
+        "level": 3,
+        "description": "Tengo experiencia creando visualizaciones y dashboards para presentar indicadores, comparar resultados e identificar tendencias."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 2,
+      "trainingPriority": 4
+    },
+    {
+      "id": "applied-statistics",
+      "name": "Estadística aplicada",
+      "current": {
+        "level": 1,
+        "description": "Comprendo conceptos como promedio, mediana, porcentajes y variabilidad."
+      },
+      "required": {
+        "level": 3,
+        "description": "Tengo experiencia utilizando técnicas estadísticas descriptivas para analizar datos, comparar resultados e identificar tendencias o diferencias relevantes."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 2,
+      "trainingPriority": 4
+    },
+    {
+      "id": "business-metrics-interpretation",
+      "name": "Interpretación de métricas de negocio",
+      "current": {
+        "level": 1,
+        "description": "Comprendo qué son los indicadores de negocio y cómo permiten evaluar resultados en relación con determinados objetivos."
+      },
+      "required": {
+        "level": 3,
+        "description": "Tengo experiencia analizando métricas de negocio, relacionándolas con objetivos, identificando tendencias y comunicando conclusiones basadas en los datos."
+      },
+      "classification": "ESSENTIAL",
+      "gap": 2,
+      "trainingPriority": 4
+    },
+    {
+      "id": "cloud-computing-fundamentals",
+      "name": "Fundamentos de Cloud Computing",
+      "current": {
+        "level": 1,
+        "description": "Comprendo qué es cloud computing y para qué se utilizan sus principales tipos de servicios."
+      },
+      "required": {
+        "level": 1,
+        "description": "Comprendo qué es cloud computing y para qué se utilizan sus principales tipos de servicios."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 0,
+      "trainingPriority": 0
+    },
+    {
+      "id": "scripting-automation",
+      "name": "Automatización de tareas mediante scripts (Bash, PowerShell o Python)",
+      "current": {
+        "level": 0,
+        "description": "No sé qué es un script ni cómo se utiliza."
+      },
+      "required": {
+        "level": 2,
+        "description": "Puedo ejecutar y modificar scripts sencillos para automatizar tareas básicas."
+      },
+      "classification": "COMPLEMENTARY",
+      "gap": 2,
+      "trainingPriority": 2
+    }
+  ]
+}
