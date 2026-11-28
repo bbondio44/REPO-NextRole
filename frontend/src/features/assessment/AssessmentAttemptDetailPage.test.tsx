@@ -78,7 +78,7 @@ describe('AssessmentAttemptDetailPage', () => {
     expect(screen.getByText('72.0%')).toBeInTheDocument()
     expect(screen.getByText('Ver otros roles').closest('details')).not.toHaveAttribute('open')
     expect(screen.getAllByRole('link', { name: /Explorar rol/ })).toHaveLength(6)
-    expect(screen.getAllByRole('link', { name: /Explorar rol/ })[0]).toHaveAttribute('href', '/roles/backend-dev-jr?attemptId=attempt-old')
+    expect(screen.getAllByRole('link', { name: /Explorar rol/ })[0]).toHaveAttribute('href', '/formacion/roles/backend-dev-jr?attemptId=attempt-old')
   })
 
   it('shows answers from the selected evaluation only after opening the disclosure', async () => {

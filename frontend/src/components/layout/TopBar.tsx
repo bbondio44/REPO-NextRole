@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 
 import { LogoMark } from '@/components/ui/Logo'
 
@@ -7,10 +7,11 @@ interface TopBarProps {
   title?: string
   subtitle?: string
   showBack?: boolean
+  backTo?: string
   right?: ReactNode
 }
 
-export function TopBar({ title, subtitle, showBack, right }: TopBarProps) {
+export function TopBar({ title, subtitle, showBack, backTo, right }: TopBarProps) {
   const navigate = useNavigate()
 
   return (
@@ -18,15 +19,27 @@ export function TopBar({ title, subtitle, showBack, right }: TopBarProps) {
       <div className="mx-auto flex max-w-md items-center justify-between">
         <div className="flex items-center gap-2.5">
           {showBack ? (
-            <button
-              onClick={() => navigate(-1)}
-              aria-label="Volver"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
-            >
-              <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
-                <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+            backTo ? (
+              <Link
+                to={backTo}
+                aria-label="Volver"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </Link>
+            ) : (
+              <button
+                onClick={() => navigate(-1)}
+                aria-label="Volver"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-neutral-500 hover:bg-neutral-100"
+              >
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path d="M15 19l-7-7 7-7" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            )
           ) : (
             <LogoMark />
           )}

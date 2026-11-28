@@ -18,6 +18,7 @@ import { ProfilePage } from '@/features/profile/ProfilePage'
 import { RoleDetailPage } from '@/features/roles/RoleDetailPage'
 import { RolesSuggestedPage } from '@/features/roles/RolesSuggestedPage'
 import { SkillGapPage } from '@/features/skill-gap/SkillGapPage'
+import { RoleFormationPage } from '@/features/explainability/RoleFormationPage'
 
 function Protected({ children }: { children: ReactNode }) {
   return (
@@ -55,6 +56,8 @@ export function AppRouter() {
       <Route path="/roles/:roleId" element={<Protected><RoleDetailPage /></Protected>} />
       <Route path="/roles/:roleId/brechas" element={<Protected><SkillGapPage /></Protected>} />
       <Route path="/roles/:roleId/formacion" element={<Protected><LearningPage /></Protected>} />
+
+      <Route path="/formacion/roles/:roleId" element={<Protected><RoleFormationPage /></Protected>} />
 
       <Route path="/formacion" element={<Protected><LearningIndexPage /></Protected>} />
 

@@ -3,6 +3,7 @@ import mascotLaptop from '@/assets/brand/mascot-laptop.png'
 import mascotThinking from '@/assets/brand/mascot-thinking.png'
 import mascotThumbsUp from '@/assets/brand/mascot-thumbsup.png'
 import mascotWave from '@/assets/brand/mascot-wave.png'
+import mascotPointing from '@/assets/nextrole-mascot-animation/mascot-animation/mascot-pointing.png'
 
 const POSES = {
   wave: mascotWave,
@@ -10,6 +11,7 @@ const POSES = {
   cool: mascotCool,
   thinking: mascotThinking,
   thumbsUp: mascotThumbsUp,
+  pointing: mascotPointing,
 } as const
 
 export type MascotPose = keyof typeof POSES

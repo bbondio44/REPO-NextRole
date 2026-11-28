@@ -63,7 +63,7 @@ describe('RolesSuggestedPage V2', () => {
     expect(screen.getByRole('heading', { name: 'QA', level: 3 })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Data Analyst', level: 3 })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'Cloud', level: 3 })).toBeInTheDocument()
-    expect(screen.getAllByRole('link').filter((link) => link.getAttribute('href')?.startsWith('/roles/'))).toHaveLength(6)
+    expect(screen.getAllByRole('link').filter((link) => link.getAttribute('href')?.startsWith('/formacion/roles/'))).toHaveLength(6)
     expect(screen.getByText('Puesto 1')).toBeInTheDocument()
     expect(screen.getByText(/no son una certificación/)).toBeInTheDocument()
   })
@@ -92,7 +92,7 @@ describe('RolesSuggestedPage V2', () => {
     renderPage()
 
     await screen.findByRole('heading', { name: 'QA' })
-    const qaLink = screen.getAllByRole('link').find((link) => link.getAttribute('href') === '/roles/qa-jr?attemptId=attempt-77')
+    const qaLink = screen.getAllByRole('link').find((link) => link.getAttribute('href') === '/formacion/roles/qa-jr?attemptId=attempt-77')
     expect(qaLink).toBeInTheDocument()
   })
 

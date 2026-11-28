@@ -50,7 +50,7 @@ El diagnóstico exitoso guardará `role_name_snapshot` y `role_description_snaps
 
 ### Frontend y rutas
 
-Crear la nueva pantalla y componentes bajo `frontend/src/features/explainability/` o la convención de features equivalente, usando `AppShell`, TopBar, mascota y primitives vigentes; centralizar emblema SVG y paleta por `roleId` en `frontend/src/features/roles/roleVisuals.ts` (ubicación concreta a validar cuando se reciban los SVG). Cada imagen oficial se agrega bajo `frontend/src/assets/roles/` sin editar sus trazados.
+Crear la nueva pantalla y componentes bajo `frontend/src/features/explainability/` o la convención de features equivalente, usando `AppShell`, TopBar, mascota y primitives vigentes; centralizar emblema SVG y paleta por `roleId` en `frontend/src/features/roles/roleVisuals.ts`. Los seis emblemas oficiales ya suministrados se utilizan directamente desde `frontend/src/assets/logos-roles/`, sin moverlos, duplicarlos ni editar sus trazados.
 
 Los enlaces compartidos del ranking actual e histórico hoy apuntan a `/roles/:roleId?attemptId=...`. Su destino V2 propuesto es `/formacion/roles/:roleId?attemptId=...`; la nueva ruta cae bajo `/formacion` para activar la pestaña Formación y conserva ambos IDs. Regresar usa `/roles?attemptId=...`. Este destino evita reemplazar el consumidor existente `/roles/:roleId/formacion`, que sigue atendiendo `LearningPage` V1, y conserva `/roles/:roleId`/`RoleDetailPage` mientras lo use algún acceso directo o flujo V1. La ruta general `/formacion` sigue intacta. Los botones mantienen texto, orden y estilo; solo cambia el `to` para resultados V2.
 
@@ -105,7 +105,7 @@ Credencial exclusivamente de variable/secret de backend, nunca Vite, frontend, l
 
 ## Identidad visual y navegación
 
-La pantalla V2 reutiliza `AppShell`, `TopBar`, `BottomNav`, `Mascot`, `Card` y `ProgressBar`; la pestaña Formación coincide por prefijo `/formacion`. La identidad específica se resuelve con un mapa del frontend `roleId → nombre visual/SVG/paleta`; backend solo expone nombre y descripción textual. No se incorporan archivos SVG hasta que el usuario entregue los seis recursos. El módulo Learning V1 y la ruta `/roles/:roleId/formacion` permanecen con sus consumidores actuales.
+La pantalla V2 reutiliza `AppShell`, `TopBar`, `BottomNav`, `Mascot`, `Card` y `ProgressBar`; la pestaña Formación coincide por prefijo `/formacion`. La identidad específica se resuelve con un mapa del frontend `roleId → nombre visual/SVG/paleta`; backend solo expone nombre y descripción textual. Los seis SVG oficiales suministrados se utilizan directamente sin editar sus trazados. El módulo Learning V1 y la ruta `/roles/:roleId/formacion` permanecen con sus consumidores actuales.
 
 ## Reconciliación documental aplicada
 
@@ -145,7 +145,7 @@ backend/src/main/resources/
 frontend/src/
 ├── features/explainability/     # página y estados diagnóstico
 ├── features/roles/roleVisuals.ts
-└── assets/roles/*.svg           # recursos oficiales a recibir antes de Implement
+└── assets/logos-roles/*.svg     # seis recursos oficiales suministrados por el usuario
 specs/003-explainability-formacion/
 ├── plan.md
 ├── research.md

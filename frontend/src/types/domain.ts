@@ -48,6 +48,37 @@ export interface AssessmentHistoryItem {
   results: AssessmentRoleResult[]
 }
 
+export interface ExplainabilityRoleCatalogEntry {
+  roleId: string
+  name: string
+  description: string
+}
+
+export interface DiagnosisContent {
+  currentSituation: string
+  recommendedFocus: string
+  importanceExplanation: string
+  professionalRelevance: string
+  highlightedCompetencyIds: string[]
+}
+
+export type ExplainabilityDiagnosisStatus = 'NOT_STARTED' | 'GENERATING' | 'SUCCEEDED' | 'FAILED'
+
+export interface ExplainabilityDiagnosisResponse {
+  attemptId: string
+  roleId: string
+  status: ExplainabilityDiagnosisStatus
+  roleName?: string | null
+  roleDescription?: string | null
+  diagnosis?: DiagnosisContent | null
+  model?: string | null
+  promptVersion?: string | null
+  generatedAt?: string | null
+  retryAfterSeconds?: number | null
+  failureCode?: string | null
+  canRetry?: boolean | null
+}
+
 export const ASSESSMENT_ROLE_NAME: Record<string, string> = {
   'backend-dev-jr': 'Backend',
   'frontend-dev-jr': 'Frontend',

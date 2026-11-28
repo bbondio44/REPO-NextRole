@@ -11,6 +11,8 @@ import type {
   AssessmentHistoryItem,
   AssessmentCatalog,
   AssessmentSavedAnswer,
+  ExplainabilityDiagnosisResponse,
+  ExplainabilityRoleCatalogEntry,
   AcademicProfile,
   KnowledgeLevel,
   LearningResource,
@@ -191,6 +193,30 @@ export async function getOrStartAssessment(): Promise<AssessmentAttempt> {
 export async function getAssessmentAttempt(attemptId: string): Promise<AssessmentAttempt> {
   const response = await authenticatedFetch(`/api/v2/assessment-attempts/${encodeURIComponent(attemptId)}`)
   return response.json() as Promise<AssessmentAttempt>
+}
+
+export async function getRoleCatalogEntry(roleId: string): Promise<ExplainabilityRoleCatalogEntry> {
+  const response = await authenticatedFetch(`/api/v2/roles/${encodeURIComponent(roleId)}`)
+  return response.json() as Promise<ExplainabilityRoleCatalogEntry>
+}
+
+function diagnosisPath(attemptId: string, roleId: string): string {
+  return `/api/v2/assessment-attempts/${encodeURIComponent(attemptId)}/diagnoses/${encodeURIComponent(roleId)}`
+}
+
+export async function getDiagnosis(attemptId: string, roleId: string): Promise<ExplainabilityDiagnosisResponse> {
+  const response = await authenticatedFetch(diagnosisPath(attemptId, roleId))
+  return response.json() as Promise<ExplainabilityDiagnosisResponse>
+}
+
+export async function generateDiagnosis(attemptId: string, roleId: string): Promise<ExplainabilityDiagnosisResponse> {
+  const response = await authenticatedFetch(`${diagnosisPath(attemptId, roleId)}/generate`, { method: 'POST' })
+  return response.json() as Promise<ExplainabilityDiagnosisResponse>
+}
+
+export async function retryDiagnosis(attemptId: string, roleId: string): Promise<ExplainabilityDiagnosisResponse> {
+  const response = await authenticatedFetch(`${diagnosisPath(attemptId, roleId)}/retry`, { method: 'POST' })
+  return response.json() as Promise<ExplainabilityDiagnosisResponse>
 }
 
 export async function saveAssessmentAnswer(

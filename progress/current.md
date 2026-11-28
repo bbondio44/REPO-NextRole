@@ -1,24 +1,24 @@
 # Estado vigente de NextRole V2
 
-**Actualizado:** 2026-11-27
+**Actualizado:** 2026-11-28
 **Rama activa:** `develop-v2`
-**HEAD/checkpoint:** `1409ec1` — `feat: implementa el motor de Explainability`; incluye el commit selectivo de Checkpoint 2. Checkpoint 1 permanece en `9f90c9af9aafd46226ee8a2f76accfff65299a68`.
-**Estado Git:** `develop-v2` está cuatro commits por delante y dos por detrás de `origin/develop-v2`. El Checkpoint 3 está sin commit; permanecen modificaciones locales paralelas y el staging debe revisarse antes de cualquier operación Git.
+**HEAD/checkpoint:** `3b0e415bc52703944ef942fd590884f460256878` — `feat: incorpora API, historial y recuperación de Explainability` (Checkpoint 3).
+**Estado Git:** `develop-v2` está cinco commits por delante y dos por detrás de `origin/develop-v2`. No se sincronizó con el remoto. Los dos commits remotos conocidos modifican únicamente README.md. Checkpoint 4 permanece local y sin commit.
 
-## Estado actual — Implement, Explainability Checkpoint 3
+## Estado actual — Implement, Explainability Checkpoint 4
 
-- Checkpoint 1 quedó en `9f90c9a`; Checkpoint 2 se publicó localmente en `1409ec1` (`feat: implementa el motor de Explainability`). En Checkpoint 3 se completaron T010, T018, T021, T023, T025, T026, T028, T029, T031 y T038.
-- La API autenticada GET/generate/retry valida propiedad, intento COMPLETED y rol vigente. GET es lectura pura: no crea ni actualiza filas ni invoca al proveedor, incluso ante lease vencido. Generate solo inicia si no existe fila; reusa éxitos, no reintenta fallos, y devuelve GENERATING sin duplicar llamadas. Retry exige acción explícita y reclama solo FAILED o GENERATING vencido mediante CAS.
-- Se cubrieron intentos Q1/Q2 separados, respuestas versionadas, matching persistido, snapshots históricos de rol y reutilización inmutable tras cambiar catálogo/modelo/prompt. No se recalcula matching ni Skill Gap; generación conserva llamadas directas a servicios internos y prioridad local determinística.
-- Recuperación y concurrencia PostgreSQL verificaron reclamaciones únicas para generación/retry, GET de lease vencido sin escritura, fencing de respuestas tardías y contador de intentos informativo. Los errores de timeout, proveedor/rate limit y respuesta inválida se traducen a errores HTTP seguros; metadatos ausentes siguen nulos.
-- Fake de pruebas cubre respuesta válida/inválida, timeout, indisponibilidad, rate limit y demora sincronizada. El test-first dejó fallos iniciales por ausencia de API/recovery/escenarios fake; las fallas posteriores de pruebas fueron del fixture (propiedades singleton no reiniciadas y binding de `Instant` en JdbcTemplate), corregidas y verificadas.
-- `mvn -f backend/pom.xml test`: 86 pruebas, 0 fallos, 0 errores, 0 omitidas. Pruebas de persistencia, migración, API y concurrencia utilizaron PostgreSQL desechable/Testcontainers.
-- Prompt V5 permanece íntegro, SHA-256 `84C45ABE0D028E4ADB7376E387597993D196F5F2C8990596D853D11FDCF23AF5`. No se migró la base de desarrollo, no se modificó frontend/Docker ni los experimentos, y no se realizaron llamadas reales a IA ni costos.
+- Se implementó la pantalla V2 `/formacion/roles/:roleId?attemptId=...`, manteniendo `/formacion`, `/roles/:roleId`, `/roles/:roleId/formacion` y los demás consumidores V1. Los botones «Explorar rol» del ranking V2 conservan su apariencia y ahora abren directamente Formación. La flecha vuelve a `/roles?attemptId=...`.
+- El encabezado consulta el rol y el intento seleccionado de forma independiente al diagnóstico. Usa porcentaje y fecha persistidos, muestra cuestionario/matriz, aplica snapshots de nombre/descripción en diagnósticos exitosos y conserva la aclaración de que la autoevaluación no es una certificación.
+- El diagnóstico presenta cuatro secciones en una tarjeta de rol; estados de generación, éxito, error, polling cada dos segundos, límite visual de 120 segundos y reintento solo por acción manual. Un GET no genera; las claves están aisladas por intento/rol y el remount/StrictMode no duplica la generación inicial.
+- El plan de formación permanece como tarjeta independiente «Próximamente». No se implementó Learning ni contenido ficticio.
+- El mapa `roleId → emblema/paleta` utiliza los seis SVG originales de `frontend/src/assets/logos-roles/`. Los archivos no se movieron ni modificaron; el build confirma su importación. Las paletas aprobadas pasan la comprobación de contraste AA usada en pruebas. La mascota original utiliza poses `thinking` y `pointing`, con movimiento reducido respetado.
+- Se completaron y verificaron T011, T019, T020, T022, T024, T027, T030, T032, T033, T034, T035 y T039. T040 continúa pendiente porque no se realizó una revisión visual manual en móvil/escritorio con lector de pantalla.
+- Harness: las pruebas iniciales fallaron por falta de RoleFormationPage/mapa y por destinos antiguos; tras implementar y actualizar expectativas obsoletas del ranking, pasaron. `npm.cmd --prefix frontend test`: 22 archivos, 109 pruebas aprobadas. `npm.cmd --prefix frontend run build`: aprobado; Vite informa un aviso de chunk JS >500 kB. `npm.cmd --prefix frontend run lint`: aprobado con una advertencia preexistente en `SessionContext.tsx:45`.
+- No se modificó backend, Matching, Skill Gap, base de datos, Docker, prompt V5 ni experimentos. No se realizaron llamadas a proveedores de IA ni se generaron costos. No se realizó validación visual manual ni captura de pantalla.
 
-## Próximo paso — revisión del Checkpoint 3
+## Próximo paso — revisión del Checkpoint 4
 
-Revisar el diff de Checkpoint 3 y esperar la aprobación antes de crear otro commit o comenzar Checkpoint 4. No incluir ni alterar cambios paralelos ni publicar commits.
-
+Revisar los cambios locales del frontend y documentación, así como la lista de pruebas y el estado de T040. No crear otro commit ni hacer push hasta recibir la aprobación del usuario.
 ## Trabajo paralelo de Inicio e identidad visual
 
 - Se preservan los cambios locales de Inicio, Habilidades, navegación inferior y el recorrido de autoevaluación, junto con las adiciones paralelas de `specs/001-autoevaluacion-matching/`. No forman parte del commit de Explainability.

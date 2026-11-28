@@ -8,14 +8,15 @@ interface AppShellProps {
   title?: string
   subtitle?: string
   showBack?: boolean
+  backTo?: string
   right?: ReactNode
   compactBottomNavSpacing?: boolean
 }
 
-export function AppShell({ children, title, subtitle, showBack, right, compactBottomNavSpacing = false }: AppShellProps) {
+export function AppShell({ children, title, subtitle, showBack, backTo, right, compactBottomNavSpacing = false }: AppShellProps) {
   return (
     <div className="min-h-dvh bg-app-background">
-      <TopBar title={title} subtitle={subtitle} showBack={showBack} right={right} />
+      <TopBar title={title} subtitle={subtitle} showBack={showBack} backTo={backTo} right={right} />
       <main className={`mx-auto max-w-md px-4 ${compactBottomNavSpacing ? 'pb-[calc(4.5rem_+_env(safe-area-inset-bottom))]' : 'pb-[calc(6rem_+_env(safe-area-inset-bottom))]'} pt-4`}>
         {children}
       </main>

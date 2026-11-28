@@ -38,7 +38,7 @@ export function AssessmentResultsRanking({ attemptId, results, showExploreAction
           <div className="flex flex-wrap items-end justify-between gap-3">
             <p className="text-4xl font-extrabold leading-none text-primary-700">{topResult.displayPercentage}%</p>
             {showExploreActions && (
-              <Link to={`/roles/${encodeURIComponent(topResult.roleId)}?attemptId=${encodeURIComponent(attemptId)}`}>
+              <Link to={`/formacion/roles/${encodeURIComponent(topResult.roleId)}?attemptId=${encodeURIComponent(attemptId)}`}>
                 <Button variant="secondary">Explorar rol →</Button>
               </Link>
             )}
@@ -56,7 +56,7 @@ export function AssessmentResultsRanking({ attemptId, results, showExploreAction
             <p className="mt-3 text-2xl font-extrabold leading-none text-neutral-950">{result.displayPercentage}%</p>
             <p className="mt-1 text-xs text-neutral-500">Preparación técnica</p>
             {showExploreActions && (
-              <Link className="mt-3 block" to={`/roles/${encodeURIComponent(result.roleId)}?attemptId=${encodeURIComponent(attemptId)}`}>
+              <Link className="mt-3 block" to={`/formacion/roles/${encodeURIComponent(result.roleId)}?attemptId=${encodeURIComponent(attemptId)}`}>
                 <Button fullWidth variant="secondary" className="px-2 py-2 text-xs">Explorar rol →</Button>
               </Link>
             )}
@@ -79,7 +79,7 @@ export function AssessmentResultsRanking({ attemptId, results, showExploreAction
                 <div className="flex shrink-0 items-center gap-2">
                   <Badge tone={scoreTone(Number(result.displayPercentage))}>{result.displayPercentage}%</Badge>
                   {showExploreActions && (
-                    <Link to={`/roles/${encodeURIComponent(result.roleId)}?attemptId=${encodeURIComponent(attemptId)}`}>
+                    <Link to={`/formacion/roles/${encodeURIComponent(result.roleId)}?attemptId=${encodeURIComponent(attemptId)}`}>
                       <Button variant="secondary" className="px-3 py-2 text-xs">Explorar rol →</Button>
                     </Link>
                   )}
